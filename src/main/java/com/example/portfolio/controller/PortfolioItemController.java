@@ -1,5 +1,63 @@
 package com.example.portfolio.controller;
 
-public class PortfolioItemController {
-}
+import com.example.portfolio.dto.PortfolioItemRequest;
+import com.example.portfolio.dto.PortfolioItemResponse;
+import com.example.portfolio.model.AssetType;
+import com.example.portfolio.service.PortfolioItemService;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1/portfolio-items")
+public class PortfolioItemController {
+
+    private final PortfolioItemService service;
+
+    public PortfolioItemController(PortfolioItemService service) {
+        this.service = service;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<PortfolioItemResponse>> getAll(
+            @RequestParam(required = false) AssetType type) {
+        return ResponseEntity.ok(service.findAll(type));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<PortfolioItemResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.findById(id));
+    }
+
+    @PostMapping
+    public ResponseEntity<PortfolioItemResponse> create(
+            @Valid @RequestBody PortfolioItemRequest request,
+            UriComponentsBuilder ucb) {
+        PortfolioItemResponse created = service.create(request);
+        URI location = ucb.path("/api/v1/portfolio-items/{id}")
+                .buildAndExpand(created.getId()).toUri();
+        return ResponseEntity.created(location).body(created);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<PortfolioItemResponse> update(
+            @PathVariable Long id,
+            @Valid @RequestBody PortfolioItemRequest request) {
+        return ResponseEntity.ok(service.update(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/refresh-price")
+    public ResponseEntity<PortfolioItemResponse> refreshPrice(@PathVariable Long id) {
+        return ResponseEntity.ok(service.refreshPrice(id));
+    }
+}
