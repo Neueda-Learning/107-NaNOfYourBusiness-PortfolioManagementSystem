@@ -1,64 +1,52 @@
 package com.example.portfolio.model;
 
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PortfolioItem {
-    private Long id;
-    private AssetType type;
-    private String symbolOrName;
-    private BigDecimal quantity;
-    private BigDecimal purchasePrice;
-    private LocalDate purchaseDate;
-    private BigDecimal currentPrice;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+	private Long id;
 
-    public PortfolioItem() {
-    }
+	@NotNull(message = "type is required")
+	private AssetType type;
 
-    public PortfolioItem(Long id, AssetType type, String symbolOrName, BigDecimal quantity,
-                         BigDecimal purchasePrice, LocalDate purchaseDate, BigDecimal currentPrice,
-                         LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
-        this.type = type;
-        this.symbolOrName = symbolOrName;
-        this.quantity = quantity;
-        this.purchasePrice = purchasePrice;
-        this.purchaseDate = purchaseDate;
-        this.currentPrice = currentPrice;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
+	@NotBlank(message = "symbolOrName is required")
+	@Size(max = 100, message = "symbolOrName must be at most 100 characters")
+	private String symbolOrName;
 
-    public Long getId() {
-        return id;
-    }
+	@NotNull(message = "quantity is required")
+	@DecimalMin(value = "0.0001", inclusive = true, message = "quantity must be greater than 0")
+	private BigDecimal quantity;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	@NotNull(message = "purchasePrice is required")
+	@DecimalMin(value = "0.0001", inclusive = true, message = "purchasePrice must be greater than 0")
+	private BigDecimal purchasePrice;
 
-    public AssetType getType() {
-        return type;
-    }
+	@NotNull(message = "purchaseDate is required")
+	@PastOrPresent(message = "purchaseDate must not be in the future")
+	private LocalDate purchaseDate;
 
-    public void setType(AssetType type) {
-        this.type = type;
-    }
+	@DecimalMin(value = "0.0001", inclusive = true, message = "currentPrice must be greater than 0 when provided")
+	private BigDecimal currentPrice;
 
-    public String getSymbolOrName() {
-        return symbolOrName;
-    }
-
-    public void setSymbolOrName(String symbolOrName) {
-        this.symbolOrName = symbolOrName;
-    }
-
-    public BigDecimal getQuantity() {
-        return quantity;
-    }
+	private LocalDateTime createdAt;
+	private LocalDateTime updatedAt;
+}
 
     public void setQuantity(BigDecimal quantity) {
         this.quantity = quantity;
