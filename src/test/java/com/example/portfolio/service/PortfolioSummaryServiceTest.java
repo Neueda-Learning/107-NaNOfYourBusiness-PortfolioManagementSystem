@@ -1,69 +1,86 @@
 package com.example.portfolio.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
-
 import com.example.portfolio.dto.PortfolioSummaryResponse;
 import com.example.portfolio.model.AssetType;
+import com.example.portfolio.model.PortfolioItem;
 import com.example.portfolio.repository.PortfolioItemRepository;
-import java.math.BigDecimal;
-import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PortfolioSummaryServiceTest {
 
-	@Mock
-	private PortfolioItemRepository portfolioItemRepository;
+    @Mock
+    private PortfolioItemRepository repository;
 
-	@InjectMocks
-	private PortfolioSummaryService portfolioSummaryService;
+    private PortfolioSummaryService service;
 
-	@Test
-	void getPortfolioSummary_shouldAggregateTotalsAndAllocation() {
-		when(portfolioItemRepository.findItemsForSummary()).thenReturn(
-			List.of(
-				new PortfolioItemRepository.SummaryItemRow(
-					AssetType.STOCK,
-					new BigDecimal("10"),
-					new BigDecimal("100"),
-					new BigDecimal("130")
-				),
-				new PortfolioItemRepository.SummaryItemRow(
-					AssetType.BOND,
-					new BigDecimal("5"),
-					new BigDecimal("200"),
-					null
-				)
-			)
-		);
+    @BeforeEach
+    void setUp() {
+        service = new PortfolioSummaryService(repository);
+    }
 
-		PortfolioSummaryResponse response = portfolioSummaryService.getPortfolioSummary();
+    @Test
+    void getSummary_returnsZerosForEmptyPortfolio() {
+        when(repository.findAll()).thenReturn(List.of());
 
-		assertEquals(new BigDecimal("2300.00"), response.getTotalValue());
-		assertEquals(new BigDecimal("2000.00"), response.getTotalCost());
-		assertEquals(new BigDecimal("300.00"), response.getTotalGainLoss());
-		assertEquals(new BigDecimal("15.00"), response.getTotalGainLossPercent());
-		assertEquals(2, response.getItemCount());
-		assertEquals(2, response.getAllocationByType().size());
-	}
+        PortfolioSummaryResponse response = service.getSummary();
 
-	@Test
-	void getPortfolioSummary_shouldReturnZerosForEmptyPortfolio() {
-		when(portfolioItemRepository.findItemsForSummary()).thenReturn(List.of());
+        assertThat(response.getTotalValue()).isEqualByComparingTo("0.00");
+        assertThat(response.getTotalCost()).isEqualByComparingTo("0.00");
+        assertThat(response.getTotalGainLoss()).isEqualByComparingTo("0.00");
+        assertThat(response.getTotalGainLossPercent()).isEqualByComparingTo("0");
+        assertThat(response.getItemCount()).isZero();
+        assertThat(response.getAllocationByType()).hasSize(3);
+        assertThat(response.getAllocationByType()).allMatch(e -> e.getCount() == 0);
+    }
 
-		PortfolioSummaryResponse response = portfolioSummaryService.getPortfolioSummary();
+    @Test
+    void getSummary_calculatesTotalsAndAllocation() {
+        PortfolioItem stock = new PortfolioItem();
+        stock.setType(AssetType.STOCK);
+        stock.setSymbolOrName("AAPL");
+        stock.setQuantity(new BigDecimal("10"));
+        stock.setPurchasePrice(new BigDecimal("100.00"));
+        stock.setPurchaseDate(LocalDate.of(2025, 1, 1));
+        stock.setCurrentPrice(new BigDecimal("120.00"));
 
-		assertEquals(new BigDecimal("0.00"), response.getTotalValue());
-		assertEquals(new BigDecimal("0.00"), response.getTotalCost());
-		assertEquals(new BigDecimal("0.00"), response.getTotalGainLoss());
-		assertEquals(new BigDecimal("0.00"), response.getTotalGainLossPercent());
-		assertEquals(0, response.getItemCount());
-		assertEquals(0, response.getAllocationByType().size());
-	}
+        PortfolioItem bond = new PortfolioItem();
+        bond.setType(AssetType.BOND);
+        bond.setSymbolOrName("GOVT10Y");
+        bond.setQuantity(new BigDecimal("5"));
+        bond.setPurchasePrice(new BigDecimal("95.00"));
+        bond.setPurchaseDate(LocalDate.of(2025, 1, 1));
+        bond.setCurrentPrice(new BigDecimal("98.00"));
+
+        when(repository.findAll()).thenReturn(List.of(stock, bond));
+
+        PortfolioSummaryResponse response = service.getSummary();
+
+        assertThat(response.getTotalValue()).isEqualByComparingTo("1690.00");
+        assertThat(response.getTotalCost()).isEqualByComparingTo("1475.00");
+        assertThat(response.getTotalGainLoss()).isEqualByComparingTo("215.00");
+        assertThat(response.getTotalGainLossPercent()).isEqualByComparingTo("14.58");
+        assertThat(response.getItemCount()).isEqualTo(2);
+        assertThat(response.getAllocationByType())
+                .extracting(PortfolioSummaryResponse.AllocationEntry::getType)
+                .containsExactly("STOCK", "BOND", "MUTUAL_FUND");
+        assertThat(response.getAllocationByType().get(0).getPercent()).isEqualByComparingTo("71.01");
+        assertThat(response.getAllocationByType().get(0).getCount()).isEqualTo(1);
+        assertThat(response.getAllocationByType().get(1).getPercent()).isEqualByComparingTo("28.99");
+        assertThat(response.getAllocationByType().get(1).getCount()).isEqualTo(1);
+        assertThat(response.getAllocationByType().get(2).getPercent()).isEqualByComparingTo("0");
+        assertThat(response.getAllocationByType().get(2).getCount()).isEqualTo(0);
+    }
 }
 

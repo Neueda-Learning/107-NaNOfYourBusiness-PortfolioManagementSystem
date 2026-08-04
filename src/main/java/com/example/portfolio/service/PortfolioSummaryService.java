@@ -2,83 +2,77 @@ package com.example.portfolio.service;
 
 import com.example.portfolio.dto.PortfolioSummaryResponse;
 import com.example.portfolio.model.AssetType;
+import com.example.portfolio.model.PortfolioItem;
 import com.example.portfolio.repository.PortfolioItemRepository;
+import org.springframework.stereotype.Service;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.EnumMap;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import org.springframework.stereotype.Service;
+import java.util.stream.Collectors;
 
 @Service
 public class PortfolioSummaryService {
-	private static final BigDecimal ZERO = BigDecimal.ZERO;
-	private static final BigDecimal ONE_HUNDRED = new BigDecimal("100");
 
-	private final PortfolioItemRepository portfolioItemRepository;
+    private final PortfolioItemRepository repository;
 
-	public PortfolioSummaryService(PortfolioItemRepository portfolioItemRepository) {
-		this.portfolioItemRepository = portfolioItemRepository;
-	}
+    public PortfolioSummaryService(PortfolioItemRepository repository) {
+        this.repository = repository;
+    }
 
-	public PortfolioSummaryResponse getPortfolioSummary() {
-		List<PortfolioItemRepository.SummaryItemRow> items = portfolioItemRepository.findItemsForSummary();
+    public PortfolioSummaryResponse getSummary() {
+        List<PortfolioItem> items = repository.findAll();
 
-		BigDecimal totalValue = ZERO;
-		BigDecimal totalCost = ZERO;
-		Map<AssetType, BigDecimal> allocationValues = new EnumMap<>(AssetType.class);
+        BigDecimal totalValue = items.stream()
+                .filter(i -> i.getCurrentPrice() != null)
+                .map(i -> i.getCurrentPrice().multiply(i.getQuantity()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-		for (PortfolioItemRepository.SummaryItemRow item : items) {
-			BigDecimal itemCost = item.quantity().multiply(item.purchasePrice());
-			BigDecimal effectiveCurrentPrice = item.currentPrice() == null ? item.purchasePrice() : item.currentPrice();
-			BigDecimal itemValue = item.quantity().multiply(effectiveCurrentPrice);
+        BigDecimal totalCost = items.stream()
+                .map(i -> i.getPurchasePrice().multiply(i.getQuantity()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-			totalCost = totalCost.add(itemCost);
-			totalValue = totalValue.add(itemValue);
-			allocationValues.merge(item.type(), itemValue, BigDecimal::add);
-		}
+        BigDecimal totalGainLoss = totalValue.subtract(totalCost).setScale(2, RoundingMode.HALF_UP);
 
-		BigDecimal totalGainLoss = totalValue.subtract(totalCost);
-		BigDecimal totalGainLossPercent = calculatePercentage(totalGainLoss, totalCost, 2);
+        BigDecimal totalGainLossPercent = totalCost.compareTo(BigDecimal.ZERO) != 0
+                ? totalGainLoss.divide(totalCost, 4, RoundingMode.HALF_UP)
+                        .multiply(BigDecimal.valueOf(100))
+                        .setScale(2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
 
-		return new PortfolioSummaryResponse(
-			totalValue.setScale(2, RoundingMode.HALF_UP),
-			totalCost.setScale(2, RoundingMode.HALF_UP),
-			totalGainLoss.setScale(2, RoundingMode.HALF_UP),
-			totalGainLossPercent,
-			items.size(),
-			buildAllocationByType(allocationValues, totalValue)
-		);
-	}
+        // Value per type
+        Map<AssetType, BigDecimal> valueByType = Arrays.stream(AssetType.values())
+                .collect(Collectors.toMap(t -> t, t -> BigDecimal.ZERO));
+        Map<AssetType, Integer> countByType = Arrays.stream(AssetType.values())
+                .collect(Collectors.toMap(t -> t, t -> 0));
+        for (PortfolioItem item : items) {
+            countByType.merge(item.getType(), 1, Integer::sum);
+            if (item.getCurrentPrice() != null) {
+                BigDecimal v = item.getCurrentPrice().multiply(item.getQuantity());
+                valueByType.merge(item.getType(), v, BigDecimal::add);
+            }
+        }
 
-	private List<PortfolioSummaryResponse.AllocationByType> buildAllocationByType(
-		Map<AssetType, BigDecimal> allocationValues,
-		BigDecimal totalValue
-	) {
-		List<PortfolioSummaryResponse.AllocationByType> allocationByType = new ArrayList<>();
+        List<PortfolioSummaryResponse.AllocationEntry> allocation = Arrays.stream(AssetType.values())
+                .map(type -> {
+                    BigDecimal value = valueByType.get(type).setScale(2, RoundingMode.HALF_UP);
+                    BigDecimal percent = totalValue.compareTo(BigDecimal.ZERO) != 0
+                            ? value.divide(totalValue, 4, RoundingMode.HALF_UP)
+                                    .multiply(BigDecimal.valueOf(100))
+                                    .setScale(2, RoundingMode.HALF_UP)
+                            : BigDecimal.ZERO;
+                    return new PortfolioSummaryResponse.AllocationEntry(type.name(), value, percent, countByType.get(type));
+                })
+                .toList();
 
-		for (Map.Entry<AssetType, BigDecimal> entry : allocationValues.entrySet()) {
-			allocationByType.add(
-				new PortfolioSummaryResponse.AllocationByType(
-					entry.getKey(),
-					entry.getValue().setScale(2, RoundingMode.HALF_UP),
-					calculatePercentage(entry.getValue(), totalValue, 1)
-				)
-			);
-		}
-
-		return allocationByType;
-	}
-
-	private BigDecimal calculatePercentage(BigDecimal numerator, BigDecimal denominator, int scale) {
-		if (denominator.compareTo(ZERO) == 0) {
-			return ZERO.setScale(scale, RoundingMode.HALF_UP);
-		}
-
-		return numerator
-			.multiply(ONE_HUNDRED)
-			.divide(denominator, scale, RoundingMode.HALF_UP);
-	}
+        return new PortfolioSummaryResponse(
+                totalValue.setScale(2, RoundingMode.HALF_UP),
+                totalCost.setScale(2, RoundingMode.HALF_UP),
+                totalGainLoss,
+                totalGainLossPercent,
+                items.size(),
+                allocation);
+    }
 }
-

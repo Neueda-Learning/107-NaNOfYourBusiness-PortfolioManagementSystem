@@ -1,121 +1,124 @@
 package com.example.portfolio.dto;
 
-import com.example.portfolio.model.AssetType;
 import java.math.BigDecimal;
 import java.util.List;
 
 public class PortfolioSummaryResponse {
-	private BigDecimal totalValue;
-	private BigDecimal totalCost;
-	private BigDecimal totalGainLoss;
-	private BigDecimal totalGainLossPercent;
-	private int itemCount;
-	private List<AllocationByType> allocationByType;
+    private BigDecimal totalValue;
+    private BigDecimal totalCost;
+    private BigDecimal totalGainLoss;
+    private BigDecimal totalGainLossPercent;
+    private int itemCount;
+    private List<AllocationEntry> allocationByType;
 
-	public PortfolioSummaryResponse() {
-	}
+    public static class AllocationEntry {
+        private String type;
+        private BigDecimal value;
+        private BigDecimal percent;
+        private int count;
 
-	public PortfolioSummaryResponse(
-		BigDecimal totalValue,
-		BigDecimal totalCost,
-		BigDecimal totalGainLoss,
-		BigDecimal totalGainLossPercent,
-		int itemCount,
-		List<AllocationByType> allocationByType
-	) {
-		this.totalValue = totalValue;
-		this.totalCost = totalCost;
-		this.totalGainLoss = totalGainLoss;
-		this.totalGainLossPercent = totalGainLossPercent;
-		this.itemCount = itemCount;
-		this.allocationByType = allocationByType;
-	}
+        public AllocationEntry() {
+        }
 
-	public BigDecimal getTotalValue() {
-		return totalValue;
-	}
+        public AllocationEntry(String type, BigDecimal value, BigDecimal percent, int count) {
+            this.type = type;
+            this.value = value;
+            this.percent = percent;
+            this.count = count;
+        }
 
-	public void setTotalValue(BigDecimal totalValue) {
-		this.totalValue = totalValue;
-	}
+        public String getType() {
+            return type;
+        }
 
-	public BigDecimal getTotalCost() {
-		return totalCost;
-	}
+        public void setType(String type) {
+            this.type = type;
+        }
 
-	public void setTotalCost(BigDecimal totalCost) {
-		this.totalCost = totalCost;
-	}
+        public BigDecimal getValue() {
+            return value;
+        }
 
-	public BigDecimal getTotalGainLoss() {
-		return totalGainLoss;
-	}
+        public void setValue(BigDecimal value) {
+            this.value = value;
+        }
 
-	public void setTotalGainLoss(BigDecimal totalGainLoss) {
-		this.totalGainLoss = totalGainLoss;
-	}
+        public BigDecimal getPercent() {
+            return percent;
+        }
 
-	public BigDecimal getTotalGainLossPercent() {
-		return totalGainLossPercent;
-	}
+        public void setPercent(BigDecimal percent) {
+            this.percent = percent;
+        }
 
-	public void setTotalGainLossPercent(BigDecimal totalGainLossPercent) {
-		this.totalGainLossPercent = totalGainLossPercent;
-	}
+        public int getCount() {
+            return count;
+        }
 
-	public int getItemCount() {
-		return itemCount;
-	}
+        public void setCount(int count) {
+            this.count = count;
+        }
+    }
 
-	public void setItemCount(int itemCount) {
-		this.itemCount = itemCount;
-	}
+    public PortfolioSummaryResponse() {
+    }
 
-	public List<AllocationByType> getAllocationByType() {
-		return allocationByType;
-	}
+    public PortfolioSummaryResponse(BigDecimal totalValue, BigDecimal totalCost, BigDecimal totalGainLoss,
+                                    BigDecimal totalGainLossPercent, int itemCount,
+                                    List<AllocationEntry> allocationByType) {
+        this.totalValue = totalValue;
+        this.totalCost = totalCost;
+        this.totalGainLoss = totalGainLoss;
+        this.totalGainLossPercent = totalGainLossPercent;
+        this.itemCount = itemCount;
+        this.allocationByType = allocationByType;
+    }
 
-	public void setAllocationByType(List<AllocationByType> allocationByType) {
-		this.allocationByType = allocationByType;
-	}
+    public BigDecimal getTotalValue() {
+        return totalValue;
+    }
 
-	public static class AllocationByType {
-		private AssetType type;
-		private BigDecimal value;
-		private BigDecimal percent;
+    public void setTotalValue(BigDecimal totalValue) {
+        this.totalValue = totalValue;
+    }
 
-		public AllocationByType() {
-		}
+    public BigDecimal getTotalCost() {
+        return totalCost;
+    }
 
-		public AllocationByType(AssetType type, BigDecimal value, BigDecimal percent) {
-			this.type = type;
-			this.value = value;
-			this.percent = percent;
-		}
+    public void setTotalCost(BigDecimal totalCost) {
+        this.totalCost = totalCost;
+    }
 
-		public AssetType getType() {
-			return type;
-		}
+    public BigDecimal getTotalGainLoss() {
+        return totalGainLoss;
+    }
 
-		public void setType(AssetType type) {
-			this.type = type;
-		}
+    public void setTotalGainLoss(BigDecimal totalGainLoss) {
+        this.totalGainLoss = totalGainLoss;
+    }
 
-		public BigDecimal getValue() {
-			return value;
-		}
+    public BigDecimal getTotalGainLossPercent() {
+        return totalGainLossPercent;
+    }
 
-		public void setValue(BigDecimal value) {
-			this.value = value;
-		}
+    public void setTotalGainLossPercent(BigDecimal totalGainLossPercent) {
+        this.totalGainLossPercent = totalGainLossPercent;
+    }
 
-		public BigDecimal getPercent() {
-			return percent;
-		}
+    public int getItemCount() {
+        return itemCount;
+    }
 
-		public void setPercent(BigDecimal percent) {
-			this.percent = percent;
-		}
-	}
+    public void setItemCount(int itemCount) {
+        this.itemCount = itemCount;
+    }
+
+    public List<AllocationEntry> getAllocationByType() {
+        return allocationByType;
+    }
+
+    public void setAllocationByType(List<AllocationEntry> allocationByType) {
+        this.allocationByType = allocationByType;
+    }
 }
-

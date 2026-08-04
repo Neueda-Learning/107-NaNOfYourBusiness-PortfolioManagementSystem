@@ -1,0 +1,94 @@
+@import "./variables.css";
+
+/* ── Reset & Base ────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  background: var(--color-bg);
+  min-height: 100vh;
+}
+
+/* ── App Header ──────────────────────────────────────── */
+.app-header {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-4) var(--space-8);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.app-header__title {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+/* ── Tab Navigation ──────────────────────────────────── */
+.tab-nav {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  gap: 0;
+  padding: 0 var(--space-8);
+  overflow-x: auto;
+}
+
+.tab-nav__btn {
+  padding: var(--space-4) var(--space-5);
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.tab-nav__btn:hover {
+  color: var(--color-primary);
+}
+
+.tab-nav__btn.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+/* ── Tab Panels ──────────────────────────────────────── */
+.tab-panel { display: none; padding: var(--space-8); }
+.tab-panel.active { display: block; }
+
+/* ── Dashboard Two-Column Layout ─────────────────────── */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  max-width: 1200px;
+}
+
+.dashboard-grid--full { grid-column: 1 / -1; }
+
+@media (max-width: 768px) {
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .tab-nav { padding: 0 var(--space-4); }
+  .tab-panel { padding: var(--space-4); }
+  .app-header { padding: var(--space-4); }
+}
+
+/* ── Summary Cards Row ───────────────────────────────── */
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 640px) {
+  .summary-cards { grid-template-columns: 1fr; }
+}
+

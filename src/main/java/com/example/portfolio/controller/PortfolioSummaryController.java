@@ -10,15 +10,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/portfolio")
 public class PortfolioSummaryController {
-	private final PortfolioSummaryService portfolioSummaryService;
 
-	public PortfolioSummaryController(PortfolioSummaryService portfolioSummaryService) {
-		this.portfolioSummaryService = portfolioSummaryService;
-	}
+    private final PortfolioSummaryService service;
 
-	@GetMapping("/summary")
-	public ResponseEntity<PortfolioSummaryResponse> getPortfolioSummary() {
-		return ResponseEntity.ok(portfolioSummaryService.getPortfolioSummary());
-	}
+    public PortfolioSummaryController(PortfolioSummaryService service) {
+        this.service = service;
+    }
+
+    @GetMapping("/summary")
+    public ResponseEntity<PortfolioSummaryResponse> getSummary() {
+        return ResponseEntity.ok(service.getSummary());
+    }
 }
-

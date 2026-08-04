@@ -5,4 +5,3 @@ public enum AssetType {
 	BOND,
 	MUTUAL_FUND
 }
-

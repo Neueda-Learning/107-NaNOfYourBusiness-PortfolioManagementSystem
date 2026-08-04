@@ -1,5 +1,69 @@
 package com.example.portfolio.exception;
 
-public class GlobalExceptionHandler {
-}
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
+        List<Map<String, String>> fieldErrors = ex.getBindingResult().getFieldErrors().stream()
+                .map(e -> Map.of("field", e.getField(), "message", e.getDefaultMessage()))
+                .toList();
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("status", 400);
+        body.put("error", "VALIDATION_ERROR");
+        body.put("message", "Validation failed");
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("fieldErrors", fieldErrors);
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<Map<String, Object>> handleMissingParam(MissingServletRequestParameterException ex) {
+        return badRequest("VALIDATION_ERROR", ex.getMessage());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
+        return badRequest("BAD_REQUEST", ex.getMessage());
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNotFound(ResourceNotFoundException ex) {
+        return error(HttpStatus.NOT_FOUND, "NOT_FOUND", ex.getMessage());
+    }
+
+    @ExceptionHandler(ExternalApiException.class)
+    public ResponseEntity<Map<String, Object>> handleExternalApi(ExternalApiException ex) {
+        return error(HttpStatus.BAD_GATEWAY, "EXTERNAL_API_ERROR", ex.getMessage());
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleGeneral(Exception ex) {
+        return error(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "An unexpected error occurred");
+    }
+
+    private ResponseEntity<Map<String, Object>> badRequest(String errorCode, String message) {
+        return error(HttpStatus.BAD_REQUEST, errorCode, message);
+    }
+
+    private ResponseEntity<Map<String, Object>> error(HttpStatus status, String errorCode, String message) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("status", status.value());
+        body.put("error", errorCode);
+        body.put("message", message);
+        body.put("timestamp", LocalDateTime.now().toString());
+        return ResponseEntity.status(status).body(body);
+    }
+}
