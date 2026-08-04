@@ -42,6 +42,7 @@ class PortfolioSummaryServiceTest {
         assertThat(response.getTotalGainLossPercent()).isEqualByComparingTo("0");
         assertThat(response.getItemCount()).isZero();
         assertThat(response.getAllocationByType()).hasSize(3);
+        assertThat(response.getAllocationByType()).allMatch(e -> e.getCount() == 0);
     }
 
     @Test
@@ -75,8 +76,11 @@ class PortfolioSummaryServiceTest {
                 .extracting(PortfolioSummaryResponse.AllocationEntry::getType)
                 .containsExactly("STOCK", "BOND", "MUTUAL_FUND");
         assertThat(response.getAllocationByType().get(0).getPercent()).isEqualByComparingTo("71.01");
+        assertThat(response.getAllocationByType().get(0).getCount()).isEqualTo(1);
         assertThat(response.getAllocationByType().get(1).getPercent()).isEqualByComparingTo("28.99");
+        assertThat(response.getAllocationByType().get(1).getCount()).isEqualTo(1);
         assertThat(response.getAllocationByType().get(2).getPercent()).isEqualByComparingTo("0");
+        assertThat(response.getAllocationByType().get(2).getCount()).isEqualTo(0);
     }
 }
 

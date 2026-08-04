@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portfolio Manager</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/css/variables.css" />
+  <link rel="stylesheet" href="/css/layout.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+
+  <!-- Chart.js via CDN (must load before our modules) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ── Header ───────────────────────────────────── -->
+  <header class="app-header">
+    <span style="font-size:1.4rem;">📈</span>
+    <h1 class="app-header__title">Portfolio Manager</h1>
+  </header>
+
+  <!-- ── Tab Navigation ───────────────────────────── -->
+  <nav class="tab-nav" role="tablist" aria-label="Main navigation">
+    <button class="tab-nav__btn" data-tab="dashboard"     role="tab">Dashboard</button>
+    <button class="tab-nav__btn" data-tab="stocks"        role="tab">Stocks</button>
+    <button class="tab-nav__btn" data-tab="mutual-funds"  role="tab">Mutual Funds</button>
+    <button class="tab-nav__btn" data-tab="bonds"         role="tab">Bonds</button>
+    <button class="tab-nav__btn" data-tab="support"       role="tab">Support</button>
+  </nav>
+
+  <!-- ════════════════════════════════════════════════
+       DASHBOARD PANEL
+       ════════════════════════════════════════════════ -->
+  <section class="tab-panel" data-panel="dashboard" role="tabpanel" aria-label="Dashboard">
+
+    <!-- Loading state (full-panel) -->
+    <div id="dashboard-loading" class="loading" style="display:none;">
+      <div class="spinner"></div>
+      <span>Loading portfolio…</span>
+    </div>
+
+    <!-- Error state -->
+    <div id="dashboard-error" class="error-state" style="display:none;">
+      <span class="error-state__icon">⚠️</span>
+      <div class="error-state__body">
+        <p class="error-state__message" id="dashboard-error-msg">
+          Could not load portfolio data.
+        </p>
+        <button class="btn-retry" onclick="window.__reloadDashboard()">Retry</button>
+      </div>
+    </div>
+
+    <!-- Empty state (portfolio has no holdings) -->
+    <div id="dashboard-empty" class="empty-state" style="display:none;">
+      <div class="empty-state__icon">📭</div>
+      <p class="empty-state__text">
+        Your portfolio is empty. Add your first holding using the Stocks, Bonds,
+        or Mutual Funds tab.
+      </p>
+    </div>
+
+    <!-- Main content (hidden until data is ready) -->
+    <div id="dashboard-content" style="display:none;">
+      <div class="dashboard-grid">
+
+        <!-- Summary cards row -->
+        <div class="summary-cards">
+
+          <!-- Total Value -->
+          <div class="card">
+            <p class="card__title">Total Value</p>
+            <p class="card__value card__value--neutral" id="card-total-value">—</p>
+            <p class="card__sub">Current market value</p>
+          </div>
+
+          <!-- Total Gain / Loss -->
+          <div class="card">
+            <p class="card__title">Total Gain / Loss</p>
+            <p class="card__value" id="card-gain-loss">—</p>
+            <p class="card__sub" id="card-gain-loss-pct">—</p>
+          </div>
+
+          <!-- Holdings Count -->
+          <div class="card">
+            <p class="card__title">Holdings</p>
+            <p class="card__value card__value--neutral" id="card-item-count">—</p>
+            <p class="card__sub">Total items</p>
+          </div>
+
+        </div><!-- /summary-cards -->
+
+        <!-- Allocation Chart Card -->
+        <div class="chart-card">
+          <div class="chart-card__header">
+            <h2 class="chart-card__title">Allocation by Asset Type</h2>
+          </div>
+          <div class="chart-card__body">
+            <div class="chart-canvas-wrap">
+              <canvas id="allocationChart" role="img" aria-label="Portfolio allocation doughnut chart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Placeholder: performance-over-time chart (US-15, stretch) -->
+        <div class="chart-card">
+          <div class="chart-card__header">
+            <h2 class="chart-card__title">Performance Over Time</h2>
+          </div>
+          <div class="chart-card__body">
+            <div class="empty-state">
+              <div class="empty-state__icon">🚧</div>
+              <p class="empty-state__text">Coming soon — stretch goal (US-15)</p>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /dashboard-grid -->
+    </div><!-- /dashboard-content -->
+
+  </section>
+
+  <!-- ════════════════════════════════════════════════
+       STOCKS PANEL (US-03 — scaffolded)
+       ════════════════════════════════════════════════ -->
+  <section class="tab-panel" data-panel="stocks" role="tabpanel" aria-label="Stocks">
+    <div class="placeholder-panel">
+      <div style="font-size:2rem;margin-bottom:12px;">📊</div>
+      <p>Stocks tab — coming in US-03</p>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════
+       MUTUAL FUNDS PANEL (US-04 — scaffolded)
+       ════════════════════════════════════════════════ -->
+  <section class="tab-panel" data-panel="mutual-funds" role="tabpanel" aria-label="Mutual Funds">
+    <div class="placeholder-panel">
+      <div style="font-size:2rem;margin-bottom:12px;">💼</div>
+      <p>Mutual Funds tab — coming in US-04</p>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════
+       BONDS PANEL (US-05 — scaffolded)
+       ════════════════════════════════════════════════ -->
+  <section class="tab-panel" data-panel="bonds" role="tabpanel" aria-label="Bonds">
+    <div class="placeholder-panel">
+      <div style="font-size:2rem;margin-bottom:12px;">🏦</div>
+      <p>Bonds tab — coming in US-05</p>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════
+       SUPPORT PANEL (static content)
+       ════════════════════════════════════════════════ -->
+  <section class="tab-panel" data-panel="support" role="tabpanel" aria-label="Support">
+    <div style="max-width:640px;">
+      <h2 class="section-title">Support &amp; Help</h2>
+      <div class="card" style="margin-bottom:16px;">
+        <p class="card__title">Contact</p>
+        <p style="margin-top:8px;font-size:0.9rem;color:#475569;">
+          For assistance, reach out to your portfolio administrator or instructor.
+        </p>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <p class="card__title">Known Limitations</p>
+        <ul style="margin-top:8px;font-size:0.9rem;color:#475569;padding-left:20px;line-height:1.8;">
+          <li>Live stock prices are fetched from an external API — data may be delayed.</li>
+          <li>If a price refresh fails, the last known price is retained.</li>
+          <li>Multi-user support and authentication are not available in this version.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <p class="card__title">API Documentation</p>
+        <p style="margin-top:8px;font-size:0.9rem;color:#475569;">
+          Interactive API docs are available at
+          <a href="/swagger-ui.html" target="_blank" rel="noopener"
+             style="color:#2563eb;">/swagger-ui.html</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Entry-point module ────────────────────────── -->
+  <script type="module" src="/js/app.js"></script>
+
+</body>
+</html>
+
