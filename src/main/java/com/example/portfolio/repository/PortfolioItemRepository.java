@@ -3,27 +3,28 @@ package com.example.portfolio.repository;
 import com.example.portfolio.model.AssetType;
 import com.example.portfolio.model.PortfolioItem;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Objects;
 
 @Repository
 public class PortfolioItemRepository {
 
     private final JdbcTemplate jdbc;
+    private final SimpleJdbcInsert insert;
     private final PortfolioItemRowMapper rowMapper = new PortfolioItemRowMapper();
 
     public PortfolioItemRepository(JdbcTemplate jdbc) {
         this.jdbc = jdbc;
+        this.insert = new SimpleJdbcInsert(Objects.requireNonNull(jdbc.getDataSource(), "JdbcTemplate datasource must not be null"))
+                .withTableName("portfolio_item")
+                .usingGeneratedKeyColumns("id");
     }
 
     public List<PortfolioItem> findAll() {
@@ -44,24 +45,17 @@ public class PortfolioItemRepository {
 
     public PortfolioItem save(PortfolioItem item) {
         LocalDateTime now = LocalDateTime.now();
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-        jdbc.update(conn -> {
-            PreparedStatement ps = conn.prepareStatement(
-                    "INSERT INTO portfolio_item (type, symbol_or_name, quantity, purchase_price, purchase_date, current_price, created_at, updated_at) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                    Statement.RETURN_GENERATED_KEYS);
-            ps.setString(1, item.getType().name());
-            ps.setString(2, item.getSymbolOrName());
-            ps.setBigDecimal(3, item.getQuantity());
-            ps.setBigDecimal(4, item.getPurchasePrice());
-            ps.setDate(5, Date.valueOf(item.getPurchaseDate()));
-            ps.setBigDecimal(6, item.getCurrentPrice());
-            ps.setTimestamp(7, Timestamp.valueOf(now));
-            ps.setTimestamp(8, Timestamp.valueOf(now));
-            return ps;
-        }, keyHolder);
+        Number generatedId = insert.executeAndReturnKey(new MapSqlParameterSource()
+                .addValue("type", item.getType().name())
+                .addValue("symbol_or_name", item.getSymbolOrName())
+                .addValue("quantity", item.getQuantity())
+                .addValue("purchase_price", item.getPurchasePrice())
+                .addValue("purchase_date", item.getPurchaseDate())
+                .addValue("current_price", item.getCurrentPrice())
+                .addValue("created_at", now)
+                .addValue("updated_at", now));
 
-        item.setId(keyHolder.getKey().longValue());
+        item.setId(generatedId.longValue());
         item.setCreatedAt(now);
         item.setUpdatedAt(now);
         return item;
@@ -76,9 +70,9 @@ public class PortfolioItemRepository {
                 item.getSymbolOrName(),
                 item.getQuantity(),
                 item.getPurchasePrice(),
-                Date.valueOf(item.getPurchaseDate()),
+                item.getPurchaseDate(),
                 item.getCurrentPrice(),
-                Timestamp.valueOf(now),
+                now,
                 item.getId());
         item.setUpdatedAt(now);
         return item;
@@ -86,7 +80,7 @@ public class PortfolioItemRepository {
 
     public void updateCurrentPrice(Long id, BigDecimal price) {
         jdbc.update("UPDATE portfolio_item SET current_price = ?, updated_at = ? WHERE id = ?",
-                price, Timestamp.valueOf(LocalDateTime.now()), id);
+                price, LocalDateTime.now(), id);
     }
 
     public void deleteById(Long id) {
