@@ -7,8 +7,10 @@
 ## 1. Project Context
 
 - Single-user portfolio management REST API (no authentication/login required).
-- Portfolio holds three asset types: **Stocks**, **Mutual Funds**, **Bonds**.
+- Portfolio MVP holds three asset types: **Stocks**, **Mutual Funds**, **Bonds**.
 - Stock prices are enriched from an **external market data API** (see §7).
+- Customer asks for stock list/search in the app and customer support visibility; support is frontend-first in MVP unless an explicit backend endpoint is added later.
+- SIP and Real Estate are treated as **Phase 2** extensions unless promoted by the instructor.
 - A separate frontend (HTML/CSS/JS) consumes this API — see `API-contract.md`, which is the single source of truth for request/response shapes. **Any endpoint change must be reflected there first.**
 
 ## 2. Assumptions (adjust if wrong)
@@ -47,7 +49,8 @@ com.portfoliomanager
 │   └── RestClientConfig.java        # bean for calling external stock price API
 ├── controller/
 │   ├── PortfolioItemController.java # CRUD for stocks/bonds/mutual funds
-│   └── PortfolioSummaryController.java # dashboard/aggregate endpoints
+│   ├── PortfolioSummaryController.java # dashboard/aggregate endpoints
+│   └── MarketDataController.java       # optional: stock ticker list + quote lookup
 ├── service/
 │   ├── PortfolioItemService.java
 │   ├── PortfolioSummaryService.java
@@ -57,7 +60,7 @@ com.portfoliomanager
 │   └── PortfolioItemRowMapper.java  # RowMapper<PortfolioItem>
 ├── model/
 │   ├── PortfolioItem.java           # plain POJO, not a JPA entity
-│   └── AssetType.java               # enum: STOCK, BOND, MUTUAL_FUND
+│   └── AssetType.java               # enum (MVP): STOCK, BOND, MUTUAL_FUND
 ├── dto/
 │   ├── PortfolioItemRequest.java    # inbound (create/update)
 │   ├── PortfolioItemResponse.java   # outbound
@@ -101,6 +104,8 @@ Add type-specific optional columns (nullable, only populated for the relevant ty
 - Bonds: `couponRate`, `maturityDate`, `faceValue`, `issuer`
 - Mutual Funds: `expenseRatio`, `fundManager`, `category`
 - Stocks: `sector`, `exchange`
+- SIP (if first-class): `sipAmount`, `sipFrequency`, `sipStartDate`
+- Real Estate (if first-class): `propertyName`, `location`, `estimatedValue`, `rentalIncome`
 
 If this grows unwieldy, consider splitting into separate `stock`, `bond`, `mutual_fund` tables (each with its own `RowMapper` and repository methods) instead of one wide table with lots of nullable columns — but only refactor to this once you feel that pain, not before.
 
@@ -136,7 +141,8 @@ Build and test each step before moving to the next:
 3. **Swagger/OpenAPI** — verify every endpoint above is visible and testable at `/swagger-ui.html`.
 4. **External stock price integration** (`MarketDataService`) — see §7.
 5. **Dashboard/summary endpoints** — aggregate totals, allocation breakdown, gain/loss, for the charts on the frontend.
-6. **(Stretch)** performance-over-time endpoint, AI/quantum experiments per the assignment's Appendix E.
+6. **(Optional)** stock discovery endpoints (`/market/supported-tickers`, `/market/quote`) for list/search UX.
+7. **(Stretch)** performance-over-time endpoint, AI/quantum experiments per the assignment's Appendix E.
 
 Exact endpoint names, request/response fields, and status codes must match `API-contract.md`.
 
@@ -181,6 +187,7 @@ Exact endpoint names, request/response fields, and status codes must match `API-
 - [ ] Frontend can list/add/remove items against real endpoints
 - [ ] External stock price service integrated with graceful fallback
 - [ ] Dashboard summary + allocation endpoints powering frontend charts
+- [ ] (Optional) stock discovery endpoints for ticker list/search
 - [ ] Basic test coverage on services and controllers
 - [ ] (Stretch) performance-over-time endpoint, AI/quantum proof-of-concept per assignment Appendix E
 

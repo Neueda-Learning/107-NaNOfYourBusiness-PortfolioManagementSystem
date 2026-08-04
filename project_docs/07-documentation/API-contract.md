@@ -12,8 +12,13 @@
 - **Dates**: ISO-8601 (`YYYY-MM-DD` for dates, `YYYY-MM-DDTHH:mm:ss` for timestamps)
 - **Numbers**: quantities/prices/money are JSON numbers with decimal precision (backend uses `BigDecimal`; frontend should treat them as numbers, not strings)
 - **IDs**: numeric (`Long` on the backend)
-- **Enum values** (`AssetType`): `"STOCK"`, `"BOND"`, `"MUTUAL_FUND"` — always uppercase, exactly as written here
+- **Enum values** (`AssetType`, MVP): `"STOCK"`, `"BOND"`, `"MUTUAL_FUND"` — always uppercase, exactly as written here
 - No authentication headers required (single-user app)
+
+### MVP vs Phase 2 scope note
+
+- **MVP** (this contract): `STOCK`, `BOND`, `MUTUAL_FUND`
+- **Phase 2 extension**: SIP tracking and Real Estate holdings can be introduced by expanding `AssetType` and adding fields/endpoints in a new contract revision.
 
 ### Standard HTTP status codes
 
@@ -64,6 +69,8 @@ Fields marked **(Phase 2)** are optional/type-specific and can be added after th
 | `couponRate`, `maturityDate`, `faceValue`, `issuer` | — | bonds **(Phase 2)** | |
 | `expenseRatio`, `fundManager`, `category` | — | mutual funds **(Phase 2)** | |
 | `sector`, `exchange` | — | stocks **(Phase 2)** | |
+| `sipAmount`, `sipFrequency`, `sipStartDate` | — | SIP **(Phase 2)** | only if SIP becomes a first-class asset type |
+| `propertyName`, `location`, `estimatedValue`, `rentalIncome` | — | real estate **(Phase 2)** | only if real estate becomes a first-class asset type |
 
 ### Example: `PortfolioItemResponse`
 
@@ -196,6 +203,49 @@ If the backend can't yet compute true historical performance (this needs stored 
 | GET | `/api/v1/portfolio/summary` | Dashboard totals + allocation |
 | GET | `/api/v1/portfolio/performance?range=` | Time series for performance chart (stretch) |
 
+## 5.1 Endpoints - Market Data (optional but recommended)
+
+These endpoints support the customer request for listing/searching stocks in the app, independent of owned holdings.
+
+### `GET /api/v1/market/supported-tickers`
+
+Returns known/allowed tickers from the market provider integration (can be static/config-driven in MVP).
+
+- **200**:
+
+```json
+[
+  "AAPL",
+  "AMZN",
+  "C",
+  "TSLA"
+]
+```
+
+### `GET /api/v1/market/quote?ticker=TSLA`
+
+Fetches current quote for a ticker.
+
+- Query param: `ticker` (required)
+- **200**:
+
+```json
+{
+  "ticker": "TSLA",
+  "price": 248.13,
+  "currency": "USD",
+  "asOf": "2026-08-04T09:45:00"
+}
+```
+
+- **400** invalid ticker input
+- **502** upstream provider failure
+
+## 5.2 Customer Support
+
+Customer support is an MVP **frontend concern** (help tab/contact details) and does not require a backend endpoint in v1.
+If later needed, add `POST /api/v1/support/contact` in a future contract revision.
+
 ## 6. External Stock Price Failures
 
 When the external market data service is unavailable:
@@ -210,3 +260,4 @@ Record any change to this contract here so both sides know when to re-sync:
 | Date | Change |
 |---|---|
 | 2026-08-03 | Initial contract drafted |
+| 2026-08-04 | Clarified MVP vs Phase 2 (SIP/Real Estate) and added optional market data/support guidance |
