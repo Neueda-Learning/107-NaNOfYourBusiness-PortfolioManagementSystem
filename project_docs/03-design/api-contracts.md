@@ -116,9 +116,9 @@ Includes all request fields plus computed/managed fields:
   "totalGainLossPercent": 10.32,
   "itemCount": 14,
   "allocationByType": [
-    { "type": "STOCK", "value": 30250.0, "percent": 66.9 },
-    { "type": "BOND", "value": 8000.0, "percent": 17.7 },
-    { "type": "MUTUAL_FUND", "value": 6980.75, "percent": 15.4 }
+    { "type": "STOCK", "value": 30250.0, "percent": 66.9, "count": 9 },
+    { "type": "BOND", "value": 8000.0, "percent": 17.7, "count": 3 },
+    { "type": "MUTUAL_FUND", "value": 6980.75, "percent": 15.4, "count": 2 }
   ]
 }
 ```

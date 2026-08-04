@@ -15,14 +15,16 @@ public class PortfolioSummaryResponse {
         private String type;
         private BigDecimal value;
         private BigDecimal percent;
+        private int count;
 
         public AllocationEntry() {
         }
 
-        public AllocationEntry(String type, BigDecimal value, BigDecimal percent) {
+        public AllocationEntry(String type, BigDecimal value, BigDecimal percent, int count) {
             this.type = type;
             this.value = value;
             this.percent = percent;
+            this.count = count;
         }
 
         public String getType() {
@@ -47,6 +49,14 @@ public class PortfolioSummaryResponse {
 
         public void setPercent(BigDecimal percent) {
             this.percent = percent;
+        }
+
+        public int getCount() {
+            return count;
+        }
+
+        public void setCount(int count) {
+            this.count = count;
         }
     }
 
