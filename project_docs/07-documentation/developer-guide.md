@@ -16,6 +16,16 @@ Quick onboarding guide for contributors working on the Portfolio Manager backend
 3. Start MySQL.
 4. Start Spring Boot app.
 
+### One-time Local DB Password Setup (No per-run env export)
+Create a repo-root `.env` file once and keep local-only values there.
+
+```dotenv
+SPRING_DATASOURCE_PASSWORD=your_local_password
+```
+
+`application.properties` imports this file with `spring.config.import=optional:file:.env[.properties]`, so local runs pick it up automatically.
+Environment variables still override `.env` values when set (CI/prod behavior unchanged).
+
 ```powershell
 .\mvnw spring-boot:run
 ```
@@ -55,4 +65,10 @@ Quick onboarding guide for contributors working on the Portfolio Manager backend
 - [ ] Tests added/updated.
 - [ ] Docs updated in affected folder.
 - [ ] No hardcoded credentials.
+
+## Change Traceability Checklist
+- [ ] US-12: local setup/documentation remains clear for API consumers and contributors.
+- [ ] NFR-10: secrets remain externalized in config (`.env`) rather than Java source.
+- [ ] NFR-17: local development works without repeating shell setup each run.
+- [ ] NFR-19: docs reflect the active local configuration approach.
 

@@ -37,3 +37,8 @@ portfolio_manager.md
 
 
 .github/
+
+# Local developer secrets
+.env
+.env.*
+!.env.example
