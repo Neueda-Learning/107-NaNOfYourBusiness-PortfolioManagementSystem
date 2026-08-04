@@ -10,7 +10,9 @@
 2. View portfolio performance graphically (dashboard with charts)
 3. Add items to the portfolio
 4. Remove items from the portfolio
-5. (Stretch) Edit existing items, AI insights section
+5. Access customer support/help details in-app
+6. (Stretch) Edit existing items, AI insights section
+7. (Stretch) SIP and Real Estate tabs if backend model expands
 
 ## 2. Assumptions (adjust if wrong)
 
@@ -47,12 +49,13 @@ Keep each JS file focused on one concern — this makes it much easier for Copil
 Single `index.html`, structured as:
 
 - **Header** — app title, maybe last-refreshed timestamp for stock prices.
-- **Tab navigation** — `Dashboard | Stocks | Mutual Funds | Bonds`
+- **Tab navigation** — `Dashboard | Stocks | Mutual Funds | Bonds | Support`
 - **Tab panels** (only one visible at a time, toggled via JS + a simple `hidden` attribute or CSS class):
   - **Dashboard panel**: summary cards (total value, total gain/loss, item count) + allocation chart (pie/doughnut by asset type) + a performance-over-time chart if the backend supports it.
   - **Stocks / Mutual Funds / Bonds panels**: each renders the same reusable table/list component, filtered by `type`, with:
     - "Add [Stock/Bond/Fund]" button → opens a modal form
     - Table rows showing key fields (symbol/name, quantity, purchase price, current price, gain/loss) with a **Remove** action per row (and Edit, if you get to it)
+  - **Support panel**: static or config-driven section with contact details, known issues, and escalation guidance.
 
 ## 5. Component Plan
 
@@ -65,6 +68,7 @@ Single `index.html`, structured as:
 - **Add/Edit modal** (`itemForm.js`): simple `<dialog>` element or a CSS-shown div; form fields driven by asset type (see `API-contract.md` for exact fields per type); client-side validation before `POST`/`PUT` (required fields, positive numbers, valid date).
 - **Remove confirmation**: simple `confirm()` dialog is fine for a training project — no need for a custom modal here.
 - **Loading / error states**: every panel should show a lightweight loading indicator while fetching and a plain error message if the fetch fails (don't leave the user looking at a blank table).
+- **Stock list/search (optional)**: add a ticker search input in the Stocks tab backed by optional market endpoints.
 
 ## 6. JavaScript Architecture
 
@@ -96,6 +100,7 @@ Single `index.html`, structured as:
 2. Switching to Stocks/Mutual Funds/Bonds tab (first time) calls `getPortfolioItems(type)` → renders the table for that type; cached in memory for subsequent tab switches within the same session.
 3. Submitting the Add form calls `createPortfolioItem(payload)`; on success, re-fetch that tab's items (and the dashboard summary, since totals changed) and close the modal.
 4. Clicking Remove calls `deletePortfolioItem(id)` after confirmation; on success, remove the row from the table and refresh the dashboard summary.
+5. Opening Support tab displays contact/help data without a backend dependency in MVP.
 
 ## 9. Milestones Checklist
 
@@ -106,8 +111,9 @@ Single `index.html`, structured as:
 - [ ] Remove item flow working end-to-end
 - [ ] Dashboard summary cards populated from backend
 - [ ] Allocation chart rendering via Chart.js
+- [ ] Support/help tab content visible in app
 - [ ] Loading and error states handled on every panel
-- [ ] (Stretch) Edit item flow, performance-over-time chart, AI insights panel
+- [ ] (Stretch) Edit item flow, performance-over-time chart, AI insights panel, SIP/Real Estate tabs
 
 ## 10. Notes for Using Copilot
 

@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Ignore portfolio_manager.md ###
+portfolio_manager.md
