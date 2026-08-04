@@ -144,7 +144,7 @@ class ApiControllerTest {
                 new BigDecimal("215.00"),
                 new BigDecimal("14.58"),
                 2,
-                List.of(new PortfolioSummaryResponse.AllocationEntry("STOCK", new BigDecimal("1200.00"), new BigDecimal("71.01")))
+                List.of(new PortfolioSummaryResponse.AllocationEntry("STOCK", new BigDecimal("1200.00"), new BigDecimal("71.01"), 1))
         );
         when(portfolioSummaryService.getSummary()).thenReturn(response);
 
