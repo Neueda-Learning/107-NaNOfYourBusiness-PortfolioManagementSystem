@@ -8,7 +8,8 @@ const BASE_URL = "/api/v1";
 
 /**
  * Shared fetch wrapper.
- * Throws an Error with a user-friendly message on non-2xx responses.
+ * Throws an Error with structured error info on non-2xx responses.
+ * error.fieldErrors will contain array of { field, message } if available.
  */
 async function apiFetch(path, options = {}) {
   const res = await fetch(`${BASE_URL}${path}`, {
@@ -18,11 +19,18 @@ async function apiFetch(path, options = {}) {
 
   if (!res.ok) {
     let message = `Request failed (${res.status})`;
+    let fieldErrors = null;
+
     try {
       const body = await res.json();
       message = body.message || message;
+      fieldErrors = body.fieldErrors || null;
     } catch (_) { /* ignore parse errors */ }
-    throw new Error(message);
+
+    // Create error object with both message and fieldErrors
+    const err = new Error(message);
+    if (fieldErrors) err.fieldErrors = fieldErrors;
+    throw err;
   }
 
   // 204 No Content

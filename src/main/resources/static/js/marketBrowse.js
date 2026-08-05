@@ -14,6 +14,7 @@ import {
   createPortfolioItem,
   getBatchQuotes,
   getPortfolioItems,
+  getPortfolioSummary,
   getStockCatalog,
   getStockQuote,
   refreshPortfolioItemPrice,
@@ -285,19 +286,68 @@ async function handleFetchQuote() {
 }
 
 function setActionMsg(text, isError = false) {
-  const el = byId("browse-add-result");
-  if (!el) return;
-  el.textContent = text;
-  el.style.color = isError ? cssVar("--color-error-text") : cssVar("--color-gain");
+   const el = byId("browse-add-result");
+   if (!el) return;
+   el.textContent = text;
+   el.style.color = isError ? cssVar("--color-error-text") : cssVar("--color-gain");
+}
+
+function setActionFieldErrors(fieldErrors) {
+   const el = byId("browse-add-result");
+   if (!el) return;
+
+   if (!fieldErrors || fieldErrors.length === 0) return;
+
+   // Build field error message: "field1: error1 | field2: error2"
+   const msg = fieldErrors
+     .map((fe) => `${fe.field}: ${fe.message}`)
+     .join(" | ");
+
+   el.textContent = msg;
+   el.style.color = cssVar("--color-error-text");
 }
 
 function setHoldingsMsg(text, isError = false) {
-  const el = byId("browse-holdings-result");
-  if (!el) return;
-  el.textContent = text;
-  el.style.color = text
-    ? (isError ? cssVar("--color-error-text") : cssVar("--color-gain"))
-    : cssVar("--color-text-faint");
+   const el = byId("browse-holdings-result");
+   if (!el) return;
+   el.textContent = text;
+   el.style.color = text
+     ? (isError ? cssVar("--color-error-text") : cssVar("--color-gain"))
+     : cssVar("--color-text-faint");
+}
+
+/**
+ * Asynchronously refresh the dashboard summary cards if visible on the page.
+ * This ensures portfolio totals update immediately when on the Stocks tab.
+ */
+async function refreshDashboardCardsIfVisible() {
+   try {
+     const summary = await getPortfolioSummary();
+     const fmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+
+     // Update total value card
+     const totalValueEl = byId("card-total-value");
+     if (totalValueEl) totalValueEl.textContent = fmt.format(summary.totalValue ?? 0);
+
+     // Update gain/loss cards
+     const gainLossEl = byId("card-gain-loss");
+     const gainLossPctEl = byId("card-gain-loss-pct");
+     if (gainLossEl && gainLossPctEl) {
+       const gl = parseFloat(summary.totalGainLoss ?? 0);
+       const pct = parseFloat(summary.totalGainLossPercent ?? 0);
+       const sign = gl >= 0 ? "+" : "";
+       gainLossEl.textContent = `${sign}${fmt.format(gl)}`;
+       gainLossPctEl.textContent = `${sign}${pct.toFixed(2)}%`;
+       const cls = gl >= 0 ? "card__value--gain" : "card__value--loss";
+       gainLossEl.className = `card__value ${cls}`;
+     }
+
+     // Update item count card
+     const itemCountEl = byId("card-item-count");
+     if (itemCountEl) itemCountEl.textContent = summary.itemCount ?? 0;
+   } catch (err) {
+     console.warn("Could not refresh dashboard summary:", err.message);
+   }
 }
 
 function buildHoldingsRow(item, livePrices) {
@@ -380,12 +430,13 @@ function wireRowActions(row) {
           priceCell.textContent = fmtNum(updated.currentPrice);
           priceCell.title = "Source: refreshed from market";
         }
-        updateRowGainLoss(row, updated);
-        const idx = heldItems.findIndex((i) => String(i.id) === String(id));
-        if (idx >= 0) heldItems[idx] = { ...heldItems[idx], currentPrice: updated.currentPrice };
-        setHoldingsMsg(`Refreshed ${updated.symbolOrName || row.dataset.ticker} price.`);
-        refreshBtn.textContent = "✓";
-        setTimeout(() => {
+       updateRowGainLoss(row, updated);
+       const idx = heldItems.findIndex((i) => String(i.id) === String(id));
+       if (idx >= 0) heldItems[idx] = { ...heldItems[idx], currentPrice: updated.currentPrice };
+       setHoldingsMsg(`Refreshed ${updated.symbolOrName || row.dataset.ticker} price.`);
+       refreshBtn.textContent = "✓";
+       await refreshDashboardCardsIfVisible();
+       setTimeout(() => {
           refreshBtn.disabled = false;
           refreshBtn.textContent = "↻";
         }, 2000);
@@ -428,17 +479,21 @@ function wireRowActions(row) {
     if (buyBtn) buyBtn.disabled = true;
     if (sellBtn) sellBtn.disabled = true;
 
-    try {
-      const updated = side === "buy"
-        ? await buyPortfolioItem(id, quantity)
-        : await sellPortfolioItem(id, quantity);
-      const verb = side === "buy" ? "Bought" : "Sold";
-      stopLiveTimer();
-      await loadPortfolioStocks();
-      setHoldingsMsg(`${verb} ${fmtNum(quantity, 4).replace(/\.?0+$/, "")} ${updated.symbolOrName} at market price.`);
-      if (typeof window.__markDashboardStale === "function") window.__markDashboardStale();
-    } catch (err) {
-      setHoldingsMsg(`${side === "buy" ? "Buy" : "Sell"} failed: ${err.message}`, true);
+     try {
+       const updated = side === "buy"
+         ? await buyPortfolioItem(id, quantity)
+         : await sellPortfolioItem(id, quantity);
+       const verb = side === "buy" ? "Bought" : "Sold";
+       stopLiveTimer();
+       await loadPortfolioStocks();
+       setHoldingsMsg(`${verb} ${fmtNum(quantity, 4).replace(/\.?0+$/, "")} ${updated.symbolOrName} at market price.`);
+       await refreshDashboardCardsIfVisible();
+       if (typeof window.__markDashboardStale === "function") window.__markDashboardStale();
+     } catch (err) {
+       const msg = err.fieldErrors && err.fieldErrors.length > 0
+         ? err.fieldErrors.map((fe) => `${fe.field}: ${fe.message}`).join(" | ")
+         : err.message;
+       setHoldingsMsg(`${side === "buy" ? "Buy" : "Sell"} failed: ${msg}`, true);
     } finally {
       if (buyBtn) buyBtn.disabled = false;
       if (sellBtn) sellBtn.disabled = false;
@@ -554,56 +609,77 @@ function updatePricesStatus() {
 }
 
 async function handleAddStock() {
-  const query = getNormalizedTicker();
-  const selected = resolveCatalogItem(query);
-  const ticker = selected?.symbol ?? query;
-  const qty = Number(byId("browse-qty")?.value);
-  const purchaseDate = byId("browse-date")?.value;
+   const query = getNormalizedTicker();
+   const selected = resolveCatalogItem(query);
+   const ticker = selected?.symbol ?? query;
+   const qty = Number(byId("browse-qty")?.value);
+   const purchaseDate = byId("browse-date")?.value;
 
-  if (!ticker) {
-    setActionMsg("Enter a ticker first.", true);
-    return;
-  }
-  const tickerInput = byId("browse-ticker");
-  if (tickerInput) tickerInput.value = ticker;
-  if (!purchaseDate) {
-    setActionMsg("Choose a purchase date.", true);
-    return;
-  }
-  if (!Number.isFinite(qty) || qty <= 0) {
-    setActionMsg("Quantity must be greater than 0.", true);
-    return;
-  }
+   // Client-side validation
+   if (!ticker) {
+     setActionMsg("Enter a ticker first.", true);
+     return;
+   }
 
-  // purchasePrice is intentionally omitted for STOCK items.
-  // The backend will auto-fetch the current market price and record it
-  // as the purchase price (see StockPortfolioItemTypeHandler).
-  const payload = {
-    type: "STOCK",
-    symbolOrName: ticker,
-    quantity: qty,
-    purchaseDate,
-  };
+   if (!purchaseDate) {
+     setActionMsg("Choose a purchase date.", true);
+     return;
+   }
 
-  setActionMsg("Adding stock at current market price…");
-  const addBtn = byId("browse-add-btn");
-  if (addBtn) addBtn.disabled = true;
+   // Check date is not in future
+   const selectedDate = new Date(purchaseDate);
+   const today = new Date();
+   today.setHours(0, 0, 0, 0);
+   if (selectedDate > today) {
+     setActionMsg("Purchase date cannot be in the future.", true);
+     return;
+   }
 
-  try {
-    const created = await createPortfolioItem(payload);
-    const price = created.purchasePrice != null ? ` at ${fmtNum(created.purchasePrice)}` : "";
-    setActionMsg(`Added ${created.symbolOrName}${price} (id: ${created.id}).`);
-    const qtyEl = byId("browse-qty");
-    if (qtyEl) qtyEl.value = "";
-    lastQuote = null;
-    stopLiveTimer();
-    await loadPortfolioStocks();
-    if (typeof window.__markDashboardStale === "function") window.__markDashboardStale();
-  } catch (err) {
-    setActionMsg(`Add failed: ${err.message}`, true);
-  } finally {
-    if (addBtn) addBtn.disabled = false;
-  }
+   // Check quantity
+   if (!Number.isFinite(qty) || qty <= 0) {
+     setActionMsg("Quantity must be greater than 0.", true);
+     return;
+   }
+
+   // Confirm ticker value
+   const tickerInput = byId("browse-ticker");
+   if (tickerInput) tickerInput.value = ticker;
+
+   // purchasePrice is intentionally omitted for STOCK items.
+   // The backend will auto-fetch the current market price and record it
+   // as the purchase price (see StockPortfolioItemTypeHandler).
+   const payload = {
+     type: "STOCK",
+     symbolOrName: ticker,
+     quantity: qty,
+     purchaseDate,
+   };
+
+   setActionMsg("Adding stock at current market price…");
+   const addBtn = byId("browse-add-btn");
+   if (addBtn) addBtn.disabled = true;
+
+   try {
+     const created = await createPortfolioItem(payload);
+     const price = created.purchasePrice != null ? ` at ${fmtNum(created.purchasePrice)}` : "";
+     setActionMsg(`Added ${created.symbolOrName}${price} (id: ${created.id}).`);
+     const qtyEl = byId("browse-qty");
+     if (qtyEl) qtyEl.value = "";
+     lastQuote = null;
+     stopLiveTimer();
+     await loadPortfolioStocks();
+     await refreshDashboardCardsIfVisible();
+     if (typeof window.__markDashboardStale === "function") window.__markDashboardStale();
+   } catch (err) {
+     // Check if err has fieldErrors from backend validation
+     if (err.fieldErrors && err.fieldErrors.length > 0) {
+       setActionFieldErrors(err.fieldErrors);
+     } else {
+       setActionMsg(`Add failed: ${err.message}`, true);
+     }
+   } finally {
+     if (addBtn) addBtn.disabled = false;
+   }
 }
 
 export async function loadMarketBrowse() {
