@@ -16,9 +16,16 @@ pipeline {
             }
         }
 
+        stage('Build Maven') {
+            steps {
+                sh 'chmod +x mvnw'
+                sh './mvnw clean package -DskipTests'
+            }
+        }
+
         stage('Stop Existing Containers') {
             steps {
-                sh 'docker-compose down || true'
+                sh 'docker-compose down'
             }
         }
 
