@@ -23,7 +23,11 @@ public class PortfolioItemRequest {
     @Positive(message = "quantity must be greater than 0")
     private BigDecimal quantity;
 
-    @NotNull(message = "purchasePrice is required")
+    /**
+     * Required for BOND and MUTUAL_FUND.
+     * For STOCK items this field is optional — the backend auto-fetches the current
+     * market price and records it as the purchase price when omitted.
+     */
     @Positive(message = "purchasePrice must be greater than 0")
     private BigDecimal purchasePrice;
 

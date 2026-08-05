@@ -48,6 +48,11 @@ public class PortfolioItemService {
     }
 
     public PortfolioItemResponse create(PortfolioItemRequest request) {
+        // For non-STOCK asset types the caller must supply purchasePrice explicitly,
+        // since there is no market-data auto-fill for those types.
+        if (request.getType() != AssetType.STOCK && request.getPurchasePrice() == null) {
+            throw new IllegalArgumentException("purchasePrice is required for " + request.getType() + " holdings");
+        }
         PortfolioItem item = mapper.toModel(request);
         handlerRegistry.resolve(item.getType()).applyCreateDefaults(item);
         return mapper.toResponse(repository.save(item));
