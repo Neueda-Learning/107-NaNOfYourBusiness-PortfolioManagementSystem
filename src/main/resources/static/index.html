@@ -189,20 +189,142 @@
   </section>
 
   <!-- ════════════════════════════════════════════════
-       STOCKS PANEL
+       STOCKS PANEL  (US-03)
        ════════════════════════════════════════════════ -->
   <section class="tab-panel" data-panel="stocks" role="tabpanel" aria-label="Stocks">
-    <div class="placeholder-panel">
-      <div class="placeholder-panel__icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect x="3"  y="12" width="4" height="8"/>
-          <rect x="10" y="8"  width="4" height="12"/>
-          <rect x="17" y="4"  width="4" height="16"/>
-        </svg>
-      </div>
-      <p class="placeholder-panel__label">Stocks coming in US-03</p>
-      <span class="placeholder-panel__badge">In Progress</span>
+    <div class="stocks-layout">
+
+      <!-- ── Left sidebar: Quote lookup + Add form ──────── -->
+      <aside class="stocks-sidebar">
+
+        <!-- Quote Lookup card -->
+        <div class="card stagger-child">
+          <p class="card__title">Stock Quote Lookup</p>
+
+          <div class="stock-autocomplete">
+            <div class="form-group">
+              <label class="form-label" for="browse-ticker">Ticker / Company</label>
+              <input id="browse-ticker" type="text" class="input-field"
+                     placeholder="e.g. RELIANCE.NS"
+                     autocomplete="off" spellcheck="false" />
+            </div>
+            <div id="browse-ticker-dropdown" class="stock-autocomplete__dropdown" style="display:none;"></div>
+          </div>
+
+          <button id="browse-fetch-btn" class="btn-primary" style="width:100%;margin-top:var(--space-3);">
+            Get Quote
+          </button>
+
+          <div id="browse-quote" class="quote-result" aria-live="polite">
+            Enter a ticker above and click <em>Get Quote</em>.
+          </div>
+        </div>
+
+        <!-- Add to Portfolio card -->
+        <div class="card stagger-child">
+          <p class="card__title">Add to Portfolio</p>
+
+          <div class="form-group">
+            <label class="form-label" for="browse-qty">Quantity</label>
+            <input id="browse-qty" type="number" class="input-field"
+                   min="0.0001" step="0.0001" placeholder="0" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="browse-purchase-price">Purchase Price</label>
+            <input id="browse-purchase-price" type="number" class="input-field"
+                   min="0.01" step="0.01" placeholder="0.00" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="browse-date">Purchase Date</label>
+            <input id="browse-date" type="date" class="input-field" />
+          </div>
+
+          <button id="browse-add-btn" class="btn-primary" style="width:100%;margin-top:var(--space-4);">
+            Add Stock
+          </button>
+
+          <div id="browse-add-result" class="action-msg" aria-live="polite"></div>
+        </div>
+
+      </aside>
+
+      <!-- ── Main area: Holdings table ──────────────────── -->
+      <main class="stocks-main">
+        <div class="card featured-stocks-card stagger-child" id="featured-stocks-card">
+          <div class="stocks-holdings-header">
+            <p class="card__title" style="margin-bottom:0;">Featured Stocks</p>
+            <div style="display:flex;align-items:center;gap:var(--space-3);">
+              <span id="browse-featured-status" class="prices-status"></span>
+              <button id="browse-refresh-featured-btn" class="btn-secondary" title="Refresh featured prices">Refresh</button>
+            </div>
+          </div>
+
+          <p class="support-body" style="margin-top:0;margin-bottom:var(--space-3);">
+            Showing 24 featured symbols from supported tickers, sorted A-Z.
+          </p>
+
+          <div class="holdings-table-wrap">
+            <table class="holdings-table featured-stocks-table">
+              <thead>
+                <tr>
+                  <th>Ticker</th>
+                  <th>Current Price</th>
+                  <th>As Of</th>
+                </tr>
+              </thead>
+              <tbody id="browse-featured-body">
+                <tr>
+                  <td colspan="3" class="holdings-table__empty">Loading…</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card stocks-holdings-card">
+
+          <div class="stocks-holdings-header">
+            <p class="card__title" style="margin-bottom:0;">My Stock Holdings</p>
+            <div style="display:flex;align-items:center;gap:var(--space-3);">
+              <span id="browse-prices-status" class="prices-status"></span>
+              <button id="browse-refresh-holdings-btn" class="btn-secondary" title="Reload holdings from database">
+                <!-- Refresh icon -->
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="23 4 23 10 17 10"/>
+                  <polyline points="1 20 1 14 7 14"/>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                </svg>
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          <div class="holdings-table-wrap">
+            <table class="holdings-table">
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Qty</th>
+                  <th>Buy Price</th>
+                  <th>Current Price</th>
+                  <th>Gain / Loss</th>
+                  <th>Trade</th>
+                </tr>
+              </thead>
+              <tbody id="browse-holdings-body">
+                <tr>
+                  <td colspan="6" class="holdings-table__empty">Loading…</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </main>
+
     </div>
   </section>
 

@@ -14,7 +14,8 @@ import java.util.Optional;
 import java.util.Objects;
 
 @Repository
-public class PortfolioItemRepository {
+public class
+PortfolioItemRepository {
 
     private final JdbcTemplate jdbc;
     private final SimpleJdbcInsert insert;
@@ -81,6 +82,20 @@ public class PortfolioItemRepository {
     public void updateCurrentPrice(Long id, BigDecimal price) {
         jdbc.update("UPDATE portfolio_item SET current_price = ?, updated_at = ? WHERE id = ?",
                 price, LocalDateTime.now(), id);
+    }
+
+    public void updateHoldingAfterTrade(Long id,
+                                        BigDecimal quantity,
+                                        BigDecimal purchasePrice,
+                                        BigDecimal currentPrice,
+                                        LocalDateTime updatedAt) {
+        jdbc.update(
+                "UPDATE portfolio_item SET quantity = ?, purchase_price = ?, current_price = ?, updated_at = ? WHERE id = ?",
+                quantity,
+                purchasePrice,
+                currentPrice,
+                updatedAt,
+                id);
     }
 
     public void deleteById(Long id) {

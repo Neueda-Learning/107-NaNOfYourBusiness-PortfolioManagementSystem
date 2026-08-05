@@ -6,7 +6,10 @@ import com.example.portfolio.exception.ResourceNotFoundException;
 import com.example.portfolio.mapper.PortfolioItemMapper;
 import com.example.portfolio.model.AssetType;
 import com.example.portfolio.model.PortfolioItem;
+import com.example.portfolio.repository.PortfolioTradeRepository;
 import com.example.portfolio.repository.PortfolioItemRepository;
+import com.example.portfolio.service.portfolio.PortfolioItemTypeHandler;
+import com.example.portfolio.service.portfolio.PortfolioItemTypeHandlerRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,13 +35,19 @@ class PortfolioItemServiceTest {
     private PortfolioItemRepository repository;
 
     @Mock
-    private MarketDataService marketDataService;
+    private PortfolioItemTypeHandlerRegistry handlerRegistry;
+
+    @Mock
+    private PortfolioTradeRepository tradeRepository;
+
+    @Mock
+    private PortfolioItemTypeHandler stockHandler;
 
     private PortfolioItemService service;
 
     @BeforeEach
     void setUp() {
-        service = new PortfolioItemService(repository, new PortfolioItemMapper(), marketDataService);
+        service = new PortfolioItemService(repository, tradeRepository, new PortfolioItemMapper(), handlerRegistry);
     }
 
     @Test
@@ -50,9 +59,10 @@ class PortfolioItemServiceTest {
         request.setPurchasePrice(new BigDecimal("100.00"));
         request.setPurchaseDate(LocalDate.of(2025, 1, 15));
 
-        when(marketDataService.fetchPrice("TCS")).thenReturn(Optional.of(new BigDecimal("123.45")));
+        when(handlerRegistry.resolve(AssetType.STOCK)).thenReturn(stockHandler);
         when(repository.save(any(PortfolioItem.class))).thenAnswer(invocation -> {
             PortfolioItem saved = invocation.getArgument(0);
+            saved.setCurrentPrice(new BigDecimal("123.45"));
             saved.setId(1L);
             saved.setCreatedAt(LocalDateTime.of(2026, 8, 4, 8, 0));
             saved.setUpdatedAt(LocalDateTime.of(2026, 8, 4, 8, 0));
@@ -61,6 +71,7 @@ class PortfolioItemServiceTest {
 
         PortfolioItemResponse response = service.create(request);
 
+        verify(stockHandler).applyCreateDefaults(any(PortfolioItem.class));
         assertThat(response.getId()).isEqualTo(1L);
         assertThat(response.getSymbolOrName()).isEqualTo("TCS");
         assertThat(response.getCurrentPrice()).isEqualByComparingTo("123.45");
@@ -106,7 +117,8 @@ class PortfolioItemServiceTest {
         existing.setPurchaseDate(LocalDate.of(2025, 2, 10));
         existing.setCurrentPrice(new BigDecimal("95.00"));
         when(repository.findById(5L)).thenReturn(Optional.of(existing));
-        when(marketDataService.fetchPriceOrThrow("INFY.NS")).thenReturn(new BigDecimal("110.00"));
+        when(handlerRegistry.resolve(AssetType.STOCK)).thenReturn(stockHandler);
+        when(stockHandler.resolveRefreshedPrice(existing)).thenReturn(new BigDecimal("110.00"));
 
         PortfolioItemResponse response = service.refreshPrice(5L);
 
@@ -115,5 +127,64 @@ class PortfolioItemServiceTest {
         assertThat(response.getCurrentValue()).isEqualByComparingTo("220.00");
         assertThat(response.getGainLoss()).isEqualByComparingTo("40.00");
     }
-}
 
+    @Test
+    void buy_increasesQuantityAndRecalculatesAverageCost() {
+        PortfolioItem existing = new PortfolioItem();
+        existing.setId(11L);
+        existing.setType(AssetType.STOCK);
+        existing.setSymbolOrName("AAPL");
+        existing.setQuantity(new BigDecimal("10"));
+        existing.setPurchasePrice(new BigDecimal("100.00"));
+        existing.setPurchaseDate(LocalDate.of(2025, 1, 1));
+        existing.setCurrentPrice(new BigDecimal("101.00"));
+
+        when(repository.findById(11L)).thenReturn(Optional.of(existing));
+        when(handlerRegistry.resolve(AssetType.STOCK)).thenReturn(stockHandler);
+        when(stockHandler.resolveRefreshedPrice(existing)).thenReturn(new BigDecimal("130.00"));
+
+        PortfolioItemResponse response = service.buy(11L, new BigDecimal("5"));
+
+        verify(repository).updateHoldingAfterTrade(
+                org.mockito.ArgumentMatchers.eq(11L),
+                org.mockito.ArgumentMatchers.eq(new BigDecimal("15")),
+                org.mockito.ArgumentMatchers.eq(new BigDecimal("110.0000")),
+                org.mockito.ArgumentMatchers.eq(new BigDecimal("130.00")),
+                org.mockito.ArgumentMatchers.any());
+        verify(tradeRepository).saveTrade(
+                org.mockito.ArgumentMatchers.eq(existing),
+                org.mockito.ArgumentMatchers.eq(com.example.portfolio.model.TradeSide.BUY),
+                org.mockito.ArgumentMatchers.eq(new BigDecimal("5")),
+                org.mockito.ArgumentMatchers.eq(new BigDecimal("130.00")),
+                org.mockito.ArgumentMatchers.any());
+        assertThat(response.getQuantity()).isEqualByComparingTo("15");
+        assertThat(response.getPurchasePrice()).isEqualByComparingTo("110.0000");
+    }
+
+    @Test
+    void sell_fullQuantity_deletesHoldingAndRecordsTrade() {
+        PortfolioItem existing = new PortfolioItem();
+        existing.setId(12L);
+        existing.setType(AssetType.STOCK);
+        existing.setSymbolOrName("MSFT");
+        existing.setQuantity(new BigDecimal("3"));
+        existing.setPurchasePrice(new BigDecimal("90.00"));
+        existing.setPurchaseDate(LocalDate.of(2025, 1, 1));
+        existing.setCurrentPrice(new BigDecimal("95.00"));
+
+        when(repository.findById(12L)).thenReturn(Optional.of(existing));
+        when(handlerRegistry.resolve(AssetType.STOCK)).thenReturn(stockHandler);
+        when(stockHandler.resolveRefreshedPrice(existing)).thenReturn(new BigDecimal("120.00"));
+
+        PortfolioItemResponse response = service.sell(12L, new BigDecimal("3"));
+
+        verify(tradeRepository).saveTrade(
+                org.mockito.ArgumentMatchers.eq(existing),
+                org.mockito.ArgumentMatchers.eq(com.example.portfolio.model.TradeSide.SELL),
+                org.mockito.ArgumentMatchers.eq(new BigDecimal("3")),
+                org.mockito.ArgumentMatchers.eq(new BigDecimal("120.00")),
+                org.mockito.ArgumentMatchers.any());
+        verify(repository).deleteById(12L);
+        assertThat(response.getQuantity()).isEqualByComparingTo("0");
+    }
+}

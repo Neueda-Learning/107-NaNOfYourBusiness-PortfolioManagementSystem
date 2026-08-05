@@ -67,6 +67,20 @@ export async function deletePortfolioItem(id) {
   return apiFetch(`/portfolio-items/${id}`, { method: "DELETE" });
 }
 
+export async function buyPortfolioItem(id, quantity) {
+  return apiFetch(`/portfolio-items/${id}/buy`, {
+    method: "POST",
+    body: JSON.stringify({ quantity }),
+  });
+}
+
+export async function sellPortfolioItem(id, quantity) {
+  return apiFetch(`/portfolio-items/${id}/sell`, {
+    method: "POST",
+    body: JSON.stringify({ quantity }),
+  });
+}
+
 // ── Market Data ───────────────────────────────────────
 export async function getSupportedTickers() {
   return apiFetch("/market/supported-tickers");
@@ -79,5 +93,25 @@ export async function getStockCatalog() {
 export async function getStockQuote(ticker) {
   const qs = `?ticker=${encodeURIComponent(ticker)}`;
   return apiFetch(`/market/quote${qs}`);
+}
+
+/**
+ * Fetch cached quotes for multiple tickers in one call.
+ * Uses the in-memory cache populated by the backend's scheduled poll (every 10 s).
+ * Returns a map of { "TICKER": { ticker, price, currency, asOf }, ... }
+ */
+export async function getBatchQuotes(tickers) {
+  if (!tickers || tickers.length === 0) return {};
+  const qs = tickers.map(t => `tickers=${encodeURIComponent(t)}`).join("&");
+  return apiFetch(`/market/batch-quotes?${qs}`);
+}
+
+// ── Portfolio Item Actions ────────────────────────────
+/**
+ * Force-refresh the stored currentPrice for a portfolio item from Yahoo Finance.
+ * POST /api/v1/portfolio-items/{id}/refresh-price
+ */
+export async function refreshPortfolioItemPrice(id) {
+  return apiFetch(`/portfolio-items/${id}/refresh-price`, { method: "POST" });
 }
 

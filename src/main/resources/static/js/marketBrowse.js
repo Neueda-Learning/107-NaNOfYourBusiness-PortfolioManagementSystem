@@ -1,305 +1,591 @@
+/**
+ * marketBrowse.js — Stocks tab (US-03)
+ *
+ * Features:
+ *  - Featured stocks browse list (24 symbols, alphabetical) with cached prices
+ *  - Ticker autocomplete from stock catalog
+ *  - Live quote lookup via backend cache
+ *  - Add stock holdings
+ *  - Per-row refresh price + buy/sell actions for existing holdings
+ */
+
 import {
+  buyPortfolioItem,
   createPortfolioItem,
-  deletePortfolioItem,
+  getBatchQuotes,
   getPortfolioItems,
   getStockCatalog,
   getStockQuote,
+  refreshPortfolioItemPrice,
+  sellPortfolioItem,
 } from "./api.js";
 
 let initialized = false;
 let lastQuote = null;
 let stockCatalog = [];
+let featuredTickers = [];
 let filteredTickers = [];
-let activeSuggestionIndex = -1;
+let activeSuggestion = -1;
+let heldItems = [];
+let liveTimer = null;
+const LIVE_INTERVAL = 10_000;
+const FEATURED_COUNT = 24;
 
-function byId(id) {
-  return document.getElementById(id);
+const byId = (id) => document.getElementById(id);
+
+function cssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
-function setText(id, text, color = "#0f172a") {
-  const el = byId(id);
-  if (!el) return;
-  el.textContent = text;
-  el.style.color = color;
-}
-
-function getTodayISODate() {
+function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
-async function loadTickers() {
-  const tickerInput = byId("browse-ticker");
-  if (!tickerInput) return;
+function fmtNum(val, decimals = 2) {
+  if (val == null || isNaN(val)) return "—";
+  return Number(val).toLocaleString("en-IN", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
+}
 
-  setText("browse-quote", "Loading stock catalog...");
+async function loadTickers() {
   try {
     const catalog = await getStockCatalog();
     stockCatalog = Array.isArray(catalog) ? catalog : [];
-    if (!tickerInput.value && stockCatalog.length > 0) {
-      tickerInput.value = stockCatalog[0].symbol;
+    const input = byId("browse-ticker");
+    if (input && !input.value && stockCatalog.length > 0) {
+      input.value = stockCatalog[0].symbol;
     }
-    setText("browse-quote", "Stock catalog loaded. Start typing or click 'Get Quote'.");
   } catch (err) {
     stockCatalog = [];
-    setText("browse-quote", `Could not load stock catalog: ${err.message}`, "#b91c1c");
+    console.warn("Could not load stock catalog:", err.message);
   }
 }
 
-function getDropdownEl() {
-  return byId("browse-ticker-dropdown");
+function pickFeaturedTickersFromCatalog() {
+  featuredTickers = stockCatalog
+    .map((item) => item.symbol)
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b))
+    .slice(0, FEATURED_COUNT);
 }
 
-function closeTickerDropdown() {
-  const dropdown = getDropdownEl();
-  if (!dropdown) return;
-  dropdown.style.display = "none";
-  dropdown.innerHTML = "";
-  activeSuggestionIndex = -1;
+function updateFeaturedStatus() {
+  const el = byId("browse-featured-status");
+  if (el) el.textContent = `Updated ${new Date().toLocaleTimeString()}`;
+}
+
+function renderFeaturedRows(quotes = {}) {
+  const body = byId("browse-featured-body");
+  if (!body) return;
+
+  if (featuredTickers.length === 0) {
+    body.innerHTML = '<tr><td colspan="3" class="holdings-table__empty">No featured stocks configured.</td></tr>';
+    return;
+  }
+
+  body.innerHTML = "";
+  featuredTickers.forEach((ticker) => {
+    const quote = quotes[ticker];
+    const price = quote?.price != null ? fmtNum(quote.price) : "—";
+    const asOf = quote?.asOf ? new Date(quote.asOf).toLocaleTimeString() : "—";
+
+    const tr = document.createElement("tr");
+    tr.dataset.featuredTicker = ticker;
+    tr.innerHTML = `
+      <td class="holdings-table__symbol">
+        <button type="button" class="js-featured-select" data-ticker="${ticker}">${ticker}</button>
+      </td>
+      <td class="holdings-table__price js-featured-price">${price}</td>
+      <td class="holdings-table__price js-featured-asof">${asOf}</td>
+    `;
+    body.appendChild(tr);
+  });
+
+  body.querySelectorAll(".js-featured-select").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const tickerInput = byId("browse-ticker");
+      if (tickerInput) tickerInput.value = btn.dataset.ticker;
+      await handleFetchQuote();
+    });
+  });
+}
+
+async function loadFeaturedStocks() {
+  const body = byId("browse-featured-body");
+  if (!body) return;
+  body.innerHTML = '<tr><td colspan="3" class="holdings-table__empty">Loading…</td></tr>';
+
+  if (featuredTickers.length === 0) {
+    renderFeaturedRows({});
+    return;
+  }
+
+  try {
+    const quotes = await getBatchQuotes(featuredTickers);
+    renderFeaturedRows(quotes);
+    updateFeaturedStatus();
+  } catch (err) {
+    body.innerHTML = `<tr><td colspan="3" class="holdings-table__empty" style="color:var(--color-error-text);">Could not load featured prices: ${err.message}</td></tr>`;
+  }
+}
+
+function closeDropdown() {
+  const d = byId("browse-ticker-dropdown");
+  if (!d) return;
+  d.style.display = "none";
+  d.innerHTML = "";
+  activeSuggestion = -1;
 }
 
 function selectTicker(item) {
   const input = byId("browse-ticker");
-  if (!input) return;
-  input.value = item.symbol;
+  if (input) input.value = item.symbol;
   lastQuote = null;
-  closeTickerDropdown();
+  closeDropdown();
 }
 
-function renderTickerDropdown() {
-  const dropdown = getDropdownEl();
-  if (!dropdown) return;
+function renderDropdown() {
+  const d = byId("browse-ticker-dropdown");
+  if (!d) return;
+  d.innerHTML = "";
 
-  dropdown.innerHTML = "";
   if (filteredTickers.length === 0) {
     const empty = document.createElement("div");
     empty.className = "stock-autocomplete__empty";
     empty.textContent = "No matching tickers";
-    dropdown.appendChild(empty);
-    dropdown.style.display = "block";
+    d.appendChild(empty);
+    d.style.display = "block";
     return;
   }
 
-  filteredTickers.forEach((itemData, index) => {
-    const item = document.createElement("button");
-    item.type = "button";
-    item.className = "stock-autocomplete__item";
-    if (index === activeSuggestionIndex) {
-      item.classList.add("is-active");
-    }
-    item.innerHTML = `
-      <div style="font-weight:600;color:#0f172a;">${itemData.symbol}</div>
-      <div style="font-size:0.8rem;color:#64748b;">${itemData.companyName} · ${itemData.currency}</div>
+  filteredTickers.forEach((item, i) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "stock-autocomplete__item" + (i === activeSuggestion ? " is-active" : "");
+    btn.innerHTML = `
+      <div class="stock-autocomplete__item-symbol">${item.symbol}</div>
+      <div class="stock-autocomplete__item-name">${item.companyName} · ${item.currency}</div>
     `;
-    // mousedown prevents input blur from closing list before click selects.
-    item.addEventListener("mousedown", (evt) => {
-      evt.preventDefault();
-      selectTicker(itemData);
+    btn.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      selectTicker(item);
     });
-    dropdown.appendChild(item);
+    d.appendChild(btn);
   });
-  dropdown.style.display = "block";
+  d.style.display = "block";
 }
 
-function updateTickerSuggestions() {
-  const raw = byId("browse-ticker")?.value || "";
-  const query = raw.trim().toUpperCase();
-
+function updateSuggestions() {
+  const query = (byId("browse-ticker")?.value || "").trim().toUpperCase();
   filteredTickers = !query
     ? stockCatalog.slice(0, 20)
-    : stockCatalog.filter((item) => {
-        const symbol = item.symbol.toUpperCase();
-        const companyName = (item.companyName || "").toUpperCase();
-        return symbol.startsWith(query) || companyName.startsWith(query);
-      }).slice(0, 20);
-
-  activeSuggestionIndex = filteredTickers.length > 0 ? 0 : -1;
-  renderTickerDropdown();
+    : stockCatalog
+      .filter((item) => item.symbol.toUpperCase().startsWith(query)
+        || (item.companyName || "").toUpperCase().startsWith(query))
+      .slice(0, 20);
+  activeSuggestion = filteredTickers.length > 0 ? 0 : -1;
+  renderDropdown();
 }
 
-function handleTickerKeydown(evt) {
+function handleTickerKeydown(e) {
   if (filteredTickers.length === 0) {
-    if (evt.key === "Escape") closeTickerDropdown();
+    if (e.key === "Escape") closeDropdown();
     return;
   }
-
-  if (evt.key === "ArrowDown") {
-    evt.preventDefault();
-    activeSuggestionIndex = (activeSuggestionIndex + 1) % filteredTickers.length;
-    renderTickerDropdown();
-    return;
-  }
-
-  if (evt.key === "ArrowUp") {
-    evt.preventDefault();
-    activeSuggestionIndex = (activeSuggestionIndex - 1 + filteredTickers.length) % filteredTickers.length;
-    renderTickerDropdown();
-    return;
-  }
-
-  if (evt.key === "Enter") {
-    if (activeSuggestionIndex >= 0 && filteredTickers[activeSuggestionIndex]) {
-      evt.preventDefault();
-      selectTicker(filteredTickers[activeSuggestionIndex]);
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    activeSuggestion = (activeSuggestion + 1) % filteredTickers.length;
+    renderDropdown();
+  } else if (e.key === "ArrowUp") {
+    e.preventDefault();
+    activeSuggestion = (activeSuggestion - 1 + filteredTickers.length) % filteredTickers.length;
+    renderDropdown();
+  } else if (e.key === "Enter") {
+    if (activeSuggestion >= 0) {
+      e.preventDefault();
+      selectTicker(filteredTickers[activeSuggestion]);
     }
-    return;
-  }
-
-  if (evt.key === "Escape") {
-    closeTickerDropdown();
+  } else if (e.key === "Escape") {
+    closeDropdown();
   }
 }
 
-function wireOutsideClickClose() {
-  document.addEventListener("click", (evt) => {
-    const wrapper = evt.target.closest(".stock-autocomplete");
-    if (!wrapper) {
-      closeTickerDropdown();
-    }
+function wireOutsideClick() {
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".stock-autocomplete")) closeDropdown();
   });
 }
 
 function getNormalizedTicker() {
-  const raw = byId("browse-ticker")?.value || "";
-  return raw.trim().toUpperCase();
+  return (byId("browse-ticker")?.value || "").trim().toUpperCase();
 }
 
-function resolveCatalogSelection(query) {
+function resolveCatalogItem(query) {
   if (!query) return null;
-
-  const exact = stockCatalog.find((item) =>
-    item.symbol.toUpperCase() === query || (item.companyName || "").toUpperCase() === query
-  );
+  const up = query.toUpperCase();
+  const exact = stockCatalog.find((i) => i.symbol.toUpperCase() === up
+    || (i.companyName || "").toUpperCase() === up);
   if (exact) return exact;
-
-  const prefixMatches = stockCatalog.filter((item) => {
-    const symbol = item.symbol.toUpperCase();
-    const companyName = (item.companyName || "").toUpperCase();
-    return symbol.startsWith(query) || companyName.startsWith(query);
-  });
-
-  return prefixMatches.length === 1 ? prefixMatches[0] : null;
+  const prefix = stockCatalog.filter((i) => i.symbol.toUpperCase().startsWith(up)
+    || (i.companyName || "").toUpperCase().startsWith(up));
+  return prefix.length === 1 ? prefix[0] : null;
 }
 
 async function handleFetchQuote() {
-  const rawQuery = getNormalizedTicker();
-  const selected = resolveCatalogSelection(rawQuery);
-  const ticker = selected?.symbol ?? rawQuery;
+  const query = getNormalizedTicker();
+  const selected = resolveCatalogItem(query);
+  const ticker = selected?.symbol ?? query;
+  const quoteEl = byId("browse-quote");
+
   if (!ticker) {
-    setText("browse-quote", "Please enter a ticker symbol.", "#b91c1c");
+    if (quoteEl) {
+      quoteEl.textContent = "Please enter a ticker symbol.";
+      quoteEl.className = "quote-result quote-result--error";
+    }
     return;
   }
 
-  byId("browse-ticker").value = ticker;
+  const tickerInput = byId("browse-ticker");
+  if (tickerInput) tickerInput.value = ticker;
+  if (quoteEl) {
+    quoteEl.textContent = `Fetching quote for ${ticker}…`;
+    quoteEl.className = "quote-result";
+  }
 
-  setText("browse-quote", `Fetching live quote for ${ticker}...`);
   try {
     const quote = await getStockQuote(ticker);
     lastQuote = quote;
-    setText(
-      "browse-quote",
-      `${quote.ticker}: ${quote.currency} ${Number(quote.price).toFixed(2)}`
-    );
+    const asOf = quote.asOf ? new Date(quote.asOf).toLocaleTimeString() : "—";
+    if (quoteEl) {
+      quoteEl.innerHTML = `
+        <span class="quote-result__ticker">${quote.ticker}</span>
+        <span class="quote-result__price">${quote.currency} ${fmtNum(quote.price)}</span>
+        <span class="quote-result__meta">as of ${asOf} · prices may be delayed ~15 min</span>
+      `;
+      quoteEl.className = "quote-result quote-result--price";
+    }
   } catch (err) {
     lastQuote = null;
-    setText("browse-quote", `Quote error: ${err.message}`, "#b91c1c");
+    if (quoteEl) {
+      quoteEl.textContent = `Quote unavailable: ${err.message}`;
+      quoteEl.className = "quote-result quote-result--error";
+    }
   }
 }
 
-async function loadPortfolioStocks() {
-  const body = byId("browse-holdings-body");
-  if (!body) return;
+function setActionMsg(text, isError = false) {
+  const el = byId("browse-add-result");
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = isError ? cssVar("--color-error-text") : cssVar("--color-gain");
+}
 
-  body.innerHTML = '<tr><td colspan="5" style="padding:10px;color:#64748b;">Loading...</td></tr>';
-  try {
-    const items = await getPortfolioItems("STOCK");
-    if (!items || items.length === 0) {
-      body.innerHTML = '<tr><td colspan="5" style="padding:10px;color:#64748b;">No stocks in portfolio yet.</td></tr>';
+function buildHoldingsRow(item, livePrices) {
+  const symbol = item.symbolOrName;
+  const qty = Number(item.quantity ?? 0);
+  const buyPrice = Number(item.purchasePrice ?? 0);
+  const storedPrice = item.currentPrice != null ? Number(item.currentPrice) : null;
+  const liveQuote = livePrices?.[symbol];
+  const currentPrice = liveQuote ? Number(liveQuote.price) : storedPrice;
+
+  let gainText = "—";
+  let gainCls = "";
+  if (currentPrice != null && qty > 0 && buyPrice > 0) {
+    const gain = (currentPrice - buyPrice) * qty;
+    const gainPct = ((currentPrice - buyPrice) / buyPrice) * 100;
+    const sign = gain >= 0 ? "+" : "";
+    gainCls = gain >= 0 ? "holdings-table__gain--positive" : "holdings-table__gain--negative";
+    gainText = `${sign}${fmtNum(gain)} (${sign}${gainPct.toFixed(2)}%)`;
+  }
+
+  const priceDisplay = currentPrice != null ? fmtNum(currentPrice) : "—";
+  const priceTitle = liveQuote ? "Source: live cache (~10 s)" : "Source: stored";
+
+  const tr = document.createElement("tr");
+  tr.dataset.ticker = symbol;
+  tr.dataset.itemId = item.id;
+  tr.innerHTML = `
+    <td class="holdings-table__symbol">${symbol}</td>
+    <td class="holdings-table__price">${fmtNum(qty, 4).replace(/\.?0+$/, "")}</td>
+    <td class="holdings-table__price">${fmtNum(buyPrice)}</td>
+    <td class="holdings-table__price js-current-price" title="${priceTitle}">${priceDisplay}</td>
+    <td class="holdings-table__gain ${gainCls} js-gain-cell">${gainText}</td>
+    <td class="holdings-table__actions">
+      <button type="button" class="btn-refresh-price js-refresh-btn"
+              data-id="${item.id}" title="Refresh price from market">↻</button>
+      <div class="holdings-trade">
+        <input type="number" min="0.0001" step="0.0001" value="1"
+               class="input-field holdings-trade__qty js-trade-qty"
+               aria-label="Trade quantity for ${symbol}">
+        <button type="button" class="btn-secondary btn-trade-buy js-buy-btn" data-id="${item.id}">Buy</button>
+        <button type="button" class="btn-secondary btn-trade-sell js-sell-btn" data-id="${item.id}">Sell</button>
+      </div>
+    </td>
+  `;
+  return tr;
+}
+
+function updateRowGainLoss(row, item) {
+  const gainCell = row.querySelector(".js-gain-cell");
+  if (!gainCell) return;
+
+  const qty = Number(item.quantity ?? 0);
+  const buyPrice = Number(item.purchasePrice ?? 0);
+  const currentPrice = item.currentPrice != null ? Number(item.currentPrice) : null;
+  if (currentPrice == null || qty <= 0 || buyPrice <= 0) {
+    gainCell.textContent = "—";
+    gainCell.className = "holdings-table__gain js-gain-cell";
+    return;
+  }
+
+  const gain = (currentPrice - buyPrice) * qty;
+  const gainPct = ((currentPrice - buyPrice) / buyPrice) * 100;
+  const sign = gain >= 0 ? "+" : "";
+  const cls = gain >= 0 ? "holdings-table__gain--positive" : "holdings-table__gain--negative";
+  gainCell.textContent = `${sign}${fmtNum(gain)} (${sign}${gainPct.toFixed(2)}%)`;
+  gainCell.className = `holdings-table__gain ${cls} js-gain-cell`;
+}
+
+function wireRowActions(row) {
+  const refreshBtn = row.querySelector(".js-refresh-btn");
+  if (refreshBtn) {
+    refreshBtn.addEventListener("click", async () => {
+      const id = refreshBtn.dataset.id;
+      refreshBtn.disabled = true;
+      refreshBtn.textContent = "…";
+      try {
+        const updated = await refreshPortfolioItemPrice(id);
+        const priceCell = row.querySelector(".js-current-price");
+        if (priceCell && updated.currentPrice != null) {
+          priceCell.textContent = fmtNum(updated.currentPrice);
+          priceCell.title = "Source: refreshed from market";
+        }
+        updateRowGainLoss(row, updated);
+        const idx = heldItems.findIndex((i) => String(i.id) === String(id));
+        if (idx >= 0) heldItems[idx] = { ...heldItems[idx], currentPrice: updated.currentPrice };
+        refreshBtn.textContent = "✓";
+        setTimeout(() => {
+          refreshBtn.disabled = false;
+          refreshBtn.textContent = "↻";
+        }, 2000);
+        if (typeof window.__markDashboardStale === "function") window.__markDashboardStale();
+      } catch (err) {
+        refreshBtn.textContent = "✗";
+        setTimeout(() => {
+          refreshBtn.disabled = false;
+          refreshBtn.textContent = "↻";
+        }, 2000);
+        setActionMsg(`Refresh failed: ${err.message}`, true);
+      }
+    });
+  }
+
+  const buyBtn = row.querySelector(".js-buy-btn");
+  const sellBtn = row.querySelector(".js-sell-btn");
+  const qtyInput = row.querySelector(".js-trade-qty");
+
+  function readTradeQuantity() {
+    const quantity = Number(qtyInput?.value);
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      throw new Error("Trade quantity must be greater than 0.");
+    }
+    return quantity;
+  }
+
+  async function executeTrade(side) {
+    const id = (side === "buy" ? buyBtn : sellBtn)?.dataset.id;
+    if (!id) return;
+
+    let quantity;
+    try {
+      quantity = readTradeQuantity();
+    } catch (err) {
+      setActionMsg(err.message, true);
       return;
     }
 
+    if (buyBtn) buyBtn.disabled = true;
+    if (sellBtn) sellBtn.disabled = true;
+
+    try {
+      const updated = side === "buy"
+        ? await buyPortfolioItem(id, quantity)
+        : await sellPortfolioItem(id, quantity);
+      const verb = side === "buy" ? "Bought" : "Sold";
+      setActionMsg(`${verb} ${fmtNum(quantity, 4).replace(/\.?0+$/, "")} ${updated.symbolOrName} at market price.`);
+      stopLiveTimer();
+      await loadPortfolioStocks();
+      if (typeof window.__markDashboardStale === "function") window.__markDashboardStale();
+    } catch (err) {
+      setActionMsg(`${side === "buy" ? "Buy" : "Sell"} failed: ${err.message}`, true);
+    } finally {
+      if (buyBtn) buyBtn.disabled = false;
+      if (sellBtn) sellBtn.disabled = false;
+    }
+  }
+
+  if (buyBtn) buyBtn.addEventListener("click", async () => executeTrade("buy"));
+  if (sellBtn) sellBtn.addEventListener("click", async () => executeTrade("sell"));
+}
+
+async function loadPortfolioStocks(livePrices) {
+  const body = byId("browse-holdings-body");
+  if (!body) return;
+
+  if (!livePrices) {
+    body.innerHTML = '<tr><td colspan="6" class="holdings-table__empty">Loading…</td></tr>';
+  }
+
+  try {
+    const items = await getPortfolioItems("STOCK");
+    heldItems = Array.isArray(items) ? items : [];
+
+    if (heldItems.length === 0) {
+      body.innerHTML = '<tr><td colspan="6" class="holdings-table__empty">No stocks in portfolio yet — add one using the form.</td></tr>';
+      startLiveTimer();
+      return;
+    }
+
+    if (!livePrices) {
+      const tickers = [...new Set(heldItems.map((i) => i.symbolOrName))];
+      try {
+        livePrices = await getBatchQuotes(tickers);
+      } catch (_) {
+        livePrices = {};
+      }
+    }
+
     body.innerHTML = "";
-    items.forEach((item) => {
-      const tr = document.createElement("tr");
-      tr.style.borderBottom = "1px solid #e2e8f0";
-      tr.innerHTML = `
-        <td style="padding:8px;">${item.symbolOrName}</td>
-        <td style="padding:8px;">${item.quantity ?? "-"}</td>
-        <td style="padding:8px;">${item.purchasePrice ?? "-"}</td>
-        <td style="padding:8px;">${item.currentPrice ?? "-"}</td>
-        <td style="padding:8px;"><button type="button" class="btn-remove" data-remove-id="${item.id}">Remove</button></td>
-      `;
-      body.appendChild(tr);
+    heldItems.forEach((item) => {
+      const row = buildHoldingsRow(item, livePrices);
+      wireRowActions(row);
+      body.appendChild(row);
     });
 
-    body.querySelectorAll("button[data-remove-id]").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const id = btn.getAttribute("data-remove-id");
-        if (!id) return;
-        btn.disabled = true;
-        try {
-          await deletePortfolioItem(id);
-          setText("browse-add-result", "Stock removed from portfolio.", "#166534");
-          await loadPortfolioStocks();
-          if (typeof window.__markDashboardStale === "function") {
-            window.__markDashboardStale();
-          }
-        } catch (err) {
-          btn.disabled = false;
-          setText("browse-add-result", `Remove failed: ${err.message}`, "#b91c1c");
-        }
-      });
-    });
+    updatePricesStatus();
+    startLiveTimer();
   } catch (err) {
-    body.innerHTML = `<tr><td colspan="5" style="padding:10px;color:#b91c1c;">Could not load holdings: ${err.message}</td></tr>`;
+    body.innerHTML = `<tr><td colspan="6" class="holdings-table__empty" style="color:var(--color-error-text);">Could not load holdings: ${err.message}</td></tr>`;
   }
 }
 
+function startLiveTimer() {
+  if (liveTimer) return;
+  liveTimer = setInterval(async () => {
+    if (heldItems.length === 0 && featuredTickers.length === 0) return;
+    const tickers = [...new Set([...heldItems.map((i) => i.symbolOrName), ...featuredTickers])];
+
+    try {
+      const quotes = await getBatchQuotes(tickers);
+
+      const holdingsBody = byId("browse-holdings-body");
+      if (holdingsBody) {
+        Array.from(holdingsBody.querySelectorAll("tr[data-ticker]")).forEach((row) => {
+          const ticker = row.dataset.ticker;
+          const q = quotes[ticker];
+          if (!q) return;
+
+          const priceCell = row.querySelector(".js-current-price");
+          if (priceCell) {
+            priceCell.textContent = fmtNum(q.price);
+            priceCell.title = "Source: live cache (~10 s)";
+          }
+
+          const item = heldItems.find((i) => i.symbolOrName === ticker);
+          if (item) updateRowGainLoss(row, { ...item, currentPrice: q.price });
+        });
+        updatePricesStatus();
+      }
+
+      const featuredBody = byId("browse-featured-body");
+      if (featuredBody) {
+        Array.from(featuredBody.querySelectorAll("tr[data-featured-ticker]")).forEach((row) => {
+          const ticker = row.dataset.featuredTicker;
+          const q = quotes[ticker];
+          if (!q) return;
+
+          const priceCell = row.querySelector(".js-featured-price");
+          const asOfCell = row.querySelector(".js-featured-asof");
+          if (priceCell) priceCell.textContent = fmtNum(q.price);
+          if (asOfCell) asOfCell.textContent = q.asOf ? new Date(q.asOf).toLocaleTimeString() : "—";
+        });
+        updateFeaturedStatus();
+      }
+    } catch (_) {
+      // Backend logs quote refresh errors; UI keeps prior values.
+    }
+  }, LIVE_INTERVAL);
+}
+
+function stopLiveTimer() {
+  if (liveTimer) {
+    clearInterval(liveTimer);
+    liveTimer = null;
+  }
+}
+
+function updatePricesStatus() {
+  const el = byId("browse-prices-status");
+  if (el) el.textContent = `Updated ${new Date().toLocaleTimeString()}`;
+}
+
 async function handleAddStock() {
-  const rawQuery = getNormalizedTicker();
-  const selected = resolveCatalogSelection(rawQuery);
-  const ticker = selected?.symbol ?? rawQuery;
-  const quantity = Number(byId("browse-qty")?.value);
+  const query = getNormalizedTicker();
+  const selected = resolveCatalogItem(query);
+  const ticker = selected?.symbol ?? query;
+  const qty = Number(byId("browse-qty")?.value);
   const purchasePrice = Number(byId("browse-purchase-price")?.value);
   const purchaseDate = byId("browse-date")?.value;
 
   if (!ticker) {
-    setText("browse-add-result", "Enter a ticker first.", "#b91c1c");
+    setActionMsg("Enter a ticker first.", true);
     return;
   }
-  byId("browse-ticker").value = ticker;
+  const tickerInput = byId("browse-ticker");
+  if (tickerInput) tickerInput.value = ticker;
   if (!purchaseDate) {
-    setText("browse-add-result", "Choose purchase date.", "#b91c1c");
+    setActionMsg("Choose a purchase date.", true);
     return;
   }
-  if (!Number.isFinite(quantity) || quantity <= 0) {
-    setText("browse-add-result", "Quantity must be greater than 0.", "#b91c1c");
+  if (!Number.isFinite(qty) || qty <= 0) {
+    setActionMsg("Quantity must be greater than 0.", true);
     return;
   }
   if (!Number.isFinite(purchasePrice) || purchasePrice <= 0) {
-    setText("browse-add-result", "Purchase price must be greater than 0.", "#b91c1c");
+    setActionMsg("Purchase price must be greater than 0.", true);
     return;
   }
 
   const payload = {
     type: "STOCK",
     symbolOrName: ticker,
-    quantity,
+    quantity: qty,
     purchasePrice,
     purchaseDate,
     currentPrice: lastQuote?.price ?? null,
   };
 
-  setText("browse-add-result", "Adding stock...");
+  setActionMsg("Adding stock…");
+  const addBtn = byId("browse-add-btn");
+  if (addBtn) addBtn.disabled = true;
+
   try {
     const created = await createPortfolioItem(payload);
-    setText("browse-add-result", `Added ${created.symbolOrName} (id: ${created.id}).`, "#166534");
+    setActionMsg(`Added ${created.symbolOrName} (id: ${created.id}).`);
+    const qtyEl = byId("browse-qty");
+    if (qtyEl) qtyEl.value = "";
+    const ppEl = byId("browse-purchase-price");
+    if (ppEl) ppEl.value = "";
+    lastQuote = null;
+    stopLiveTimer();
     await loadPortfolioStocks();
-
-    if (typeof window.__markDashboardStale === "function") {
-      window.__markDashboardStale();
-    }
+    if (typeof window.__markDashboardStale === "function") window.__markDashboardStale();
   } catch (err) {
-    setText("browse-add-result", `Add failed: ${err.message}`, "#b91c1c");
+    setActionMsg(`Add failed: ${err.message}`, true);
+  } finally {
+    if (addBtn) addBtn.disabled = false;
   }
 }
 
@@ -308,24 +594,25 @@ export async function loadMarketBrowse() {
     initialized = true;
 
     const dateInput = byId("browse-date");
-    if (dateInput && !dateInput.value) {
-      dateInput.value = getTodayISODate();
-    }
+    if (dateInput && !dateInput.value) dateInput.value = todayISO();
 
     byId("browse-fetch-btn")?.addEventListener("click", handleFetchQuote);
     byId("browse-add-btn")?.addEventListener("click", handleAddStock);
-    byId("browse-refresh-holdings-btn")?.addEventListener("click", loadPortfolioStocks);
-    byId("browse-ticker")?.addEventListener("input", updateTickerSuggestions);
-    byId("browse-ticker")?.addEventListener("focus", updateTickerSuggestions);
-    byId("browse-ticker")?.addEventListener("keydown", handleTickerKeydown);
-    byId("browse-ticker")?.addEventListener("blur", () => {
-      setTimeout(closeTickerDropdown, 120);
+    byId("browse-refresh-holdings-btn")?.addEventListener("click", () => {
+      stopLiveTimer();
+      loadPortfolioStocks();
     });
-    wireOutsideClickClose();
+    byId("browse-refresh-featured-btn")?.addEventListener("click", loadFeaturedStocks);
+    byId("browse-ticker")?.addEventListener("input", updateSuggestions);
+    byId("browse-ticker")?.addEventListener("focus", updateSuggestions);
+    byId("browse-ticker")?.addEventListener("keydown", handleTickerKeydown);
+    byId("browse-ticker")?.addEventListener("blur", () => setTimeout(closeDropdown, 120));
+    wireOutsideClick();
   }
 
   await loadTickers();
-  updateTickerSuggestions();
+  pickFeaturedTickersFromCatalog();
+  updateSuggestions();
+  await loadFeaturedStocks();
   await loadPortfolioStocks();
 }
-

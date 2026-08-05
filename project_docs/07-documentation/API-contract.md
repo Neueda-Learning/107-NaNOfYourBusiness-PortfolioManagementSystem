@@ -150,6 +150,42 @@ Forces a refresh of `currentPrice` from the external market data service for a s
 - **404** → not found
 - **502** → external API unavailable (item's stale `currentPrice` is left unchanged)
 
+### `POST /api/v1/portfolio-items/{id}/buy`
+
+Buys additional quantity for an existing stock holding.
+
+- Body:
+
+```json
+{
+  "quantity": 2.5
+}
+```
+
+- Backend determines execution price and timestamp server-side using current market price.
+- **200** → updated `PortfolioItemResponse`
+- **400** → validation error
+- **404** → not found
+
+### `POST /api/v1/portfolio-items/{id}/sell`
+
+Sells quantity from an existing stock holding.
+
+- Body:
+
+```json
+{
+  "quantity": 1.0
+}
+```
+
+- Backend determines execution price and timestamp server-side using current market price.
+- If resulting quantity is `0`, the holding row is automatically removed.
+- Trade is still persisted in trade-history storage.
+- **200** → updated `PortfolioItemResponse` (or terminal zero-quantity response before deletion)
+- **400** → validation error / oversell
+- **404** → not found
+
 ## 4. Endpoints — Dashboard / Summary
 
 ### `GET /api/v1/portfolio/summary`
@@ -200,6 +236,8 @@ If the backend can't yet compute true historical performance (this needs stored 
 | PUT | `/api/v1/portfolio-items/{id}` | Update item |
 | DELETE | `/api/v1/portfolio-items/{id}` | Remove item |
 | POST | `/api/v1/portfolio-items/{id}/refresh-price` | Refresh a stock's current price |
+| POST | `/api/v1/portfolio-items/{id}/buy` | Buy additional quantity for a stock holding |
+| POST | `/api/v1/portfolio-items/{id}/sell` | Sell quantity from a stock holding |
 | GET | `/api/v1/portfolio/summary` | Dashboard totals + allocation |
 | GET | `/api/v1/portfolio/performance?range=` | Time series for performance chart (stretch) |
 
@@ -261,3 +299,4 @@ Record any change to this contract here so both sides know when to re-sync:
 |---|---|
 | 2026-08-03 | Initial contract drafted |
 | 2026-08-04 | Clarified MVP vs Phase 2 (SIP/Real Estate) and added optional market data/support guidance |
+| 2026-08-05 | Added buy/sell holding action endpoints with server-side execution price and auto-delete on full sell |

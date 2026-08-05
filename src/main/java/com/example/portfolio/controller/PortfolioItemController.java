@@ -1,5 +1,6 @@
 package com.example.portfolio.controller;
 
+import com.example.portfolio.dto.HoldingTradeRequest;
 import com.example.portfolio.dto.PortfolioItemRequest;
 import com.example.portfolio.dto.PortfolioItemResponse;
 import com.example.portfolio.model.AssetType;
@@ -59,5 +60,17 @@ public class PortfolioItemController {
     @PostMapping("/{id}/refresh-price")
     public ResponseEntity<PortfolioItemResponse> refreshPrice(@PathVariable Long id) {
         return ResponseEntity.ok(service.refreshPrice(id));
+    }
+
+    @PostMapping("/{id}/buy")
+    public ResponseEntity<PortfolioItemResponse> buy(@PathVariable Long id,
+                                                     @Valid @RequestBody HoldingTradeRequest request) {
+        return ResponseEntity.ok(service.buy(id, request.getQuantity()));
+    }
+
+    @PostMapping("/{id}/sell")
+    public ResponseEntity<PortfolioItemResponse> sell(@PathVariable Long id,
+                                                      @Valid @RequestBody HoldingTradeRequest request) {
+        return ResponseEntity.ok(service.sell(id, request.getQuantity()));
     }
 }

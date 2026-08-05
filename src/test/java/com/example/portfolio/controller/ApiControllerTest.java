@@ -180,5 +180,35 @@ class ApiControllerTest {
                 .andExpect(jsonPath("$.price").value(4120.25))
                 .andExpect(jsonPath("$.currency").value("INR"));
     }
+
+    @Test
+    void buyPortfolioItem_returnsUpdatedHolding() throws Exception {
+        PortfolioItemResponse response = new PortfolioItemResponse();
+        response.setId(8L);
+        response.setType(AssetType.STOCK);
+        response.setSymbolOrName("AAPL");
+        response.setQuantity(new BigDecimal("12"));
+        response.setPurchasePrice(new BigDecimal("101.10"));
+        response.setCurrentPrice(new BigDecimal("120.00"));
+
+        when(portfolioItemService.buy(org.mockito.ArgumentMatchers.eq(8L), org.mockito.ArgumentMatchers.eq(new BigDecimal("2"))))
+                .thenReturn(response);
+
+        mockMvc.perform(post("/api/v1/portfolio-items/8/buy")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"quantity\":2}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.symbolOrName").value("AAPL"))
+                .andExpect(jsonPath("$.quantity").value(12));
+    }
+
+    @Test
+    void sellPortfolioItem_withInvalidPayload_returnsValidationError() throws Exception {
+        mockMvc.perform(post("/api/v1/portfolio-items/8/sell")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"quantity\":0}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
+    }
 }
 
