@@ -26,14 +26,22 @@ public class StockPortfolioItemTypeHandler extends BasePortfolioItemTypeHandler 
         // If purchasePrice is absent the user submitted a quantity-only add request:
         // the current market price becomes the recorded purchase price.
         if (item.getPurchasePrice() == null || item.getCurrentPrice() == null) {
-            marketDataService().fetchPrice(item.getSymbolOrName()).ifPresent(marketPrice -> {
+            var marketPriceOpt = marketDataService().fetchPrice(item.getSymbolOrName());
+
+            if (marketPriceOpt.isEmpty()) {
                 if (item.getPurchasePrice() == null) {
-                    item.setPurchasePrice(marketPrice);
+                    throw new IllegalArgumentException("Could not resolve market price for stock: " + item.getSymbolOrName());
                 }
-                if (item.getCurrentPrice() == null) {
-                    item.setCurrentPrice(marketPrice);
-                }
-            });
+                return;
+            }
+
+            var marketPrice = marketPriceOpt.get();
+            if (item.getPurchasePrice() == null) {
+                item.setPurchasePrice(marketPrice);
+            }
+            if (item.getCurrentPrice() == null) {
+                item.setCurrentPrice(marketPrice);
+            }
         }
     }
 }
