@@ -14,6 +14,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -61,7 +62,18 @@ public class PortfolioItemRepository {
             return ps;
         }, keyHolder);
 
-        item.setId(keyHolder.getKey().longValue());
+        Number idKey = null;
+        Map<String, Object> keys = keyHolder.getKeys();
+        if (keys != null) {
+            Object rawId = keys.containsKey("id") ? keys.get("id") : keys.get("ID");
+            if (rawId instanceof Number numberId) {
+                idKey = numberId;
+            }
+        }
+        if (idKey == null) {
+            throw new IllegalStateException("Failed to read generated id for portfolio_item insert");
+        }
+        item.setId(idKey.longValue());
         item.setCreatedAt(now);
         item.setUpdatedAt(now);
         return item;

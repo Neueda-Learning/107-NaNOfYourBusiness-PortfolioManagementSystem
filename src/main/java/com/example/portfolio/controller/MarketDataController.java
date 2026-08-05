@@ -1,5 +1,6 @@
 package com.example.portfolio.controller;
 
+import com.example.portfolio.dto.StockCatalogItemResponse;
 import com.example.portfolio.dto.StockQuoteResponse;
 import com.example.portfolio.exception.ExternalApiException;
 import com.example.portfolio.service.MarketDataService;
@@ -28,6 +29,11 @@ public class MarketDataController {
     @GetMapping("/supported-tickers")
     public ResponseEntity<List<String>> getSupportedTickers() {
         return ResponseEntity.ok(marketDataService.getSupportedTickers());
+    }
+
+    @GetMapping("/stock-catalog")
+    public ResponseEntity<List<StockCatalogItemResponse>> getStockCatalog() {
+        return ResponseEntity.ok(marketDataService.getStockCatalog());
     }
 
     /**

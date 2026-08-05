@@ -6,9 +6,9 @@
   <title>Portfolio Manager</title>
 
   <!-- CSS -->
-  <link rel="stylesheet" href="/css/variables.css" />
-  <link rel="stylesheet" href="/css/layout.css" />
-  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/components.css" />
 
   <!-- Chart.js via CDN (must load before our modules) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
@@ -24,7 +24,7 @@
   <!-- ── Tab Navigation ───────────────────────────── -->
   <nav class="tab-nav" role="tablist" aria-label="Main navigation">
     <button class="tab-nav__btn" data-tab="dashboard"     role="tab">Dashboard</button>
-    <button class="tab-nav__btn" data-tab="stocks"        role="tab">Stocks</button>
+    <button class="tab-nav__btn" data-tab="stocks"        role="tab">Browse Stocks</button>
     <button class="tab-nav__btn" data-tab="mutual-funds"  role="tab">Mutual Funds</button>
     <button class="tab-nav__btn" data-tab="bonds"         role="tab">Bonds</button>
     <button class="tab-nav__btn" data-tab="support"       role="tab">Support</button>
@@ -122,12 +122,70 @@
   </section>
 
   <!-- ════════════════════════════════════════════════
-       STOCKS PANEL (US-03 — scaffolded)
+       STOCKS PANEL (Browse + Add)
        ════════════════════════════════════════════════ -->
   <section class="tab-panel" data-panel="stocks" role="tabpanel" aria-label="Stocks">
-    <div class="placeholder-panel">
-      <div style="font-size:2rem;margin-bottom:12px;">📊</div>
-      <p>Stocks tab — coming in US-03</p>
+    <div style="max-width:860px;display:grid;gap:16px;">
+      <h2 class="section-title">Browse Stocks</h2>
+
+      <div class="card" style="display:grid;gap:12px;">
+        <p class="card__title">Get Live Quote</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+          <label for="browse-ticker" style="font-size:0.85rem;color:#475569;">Ticker or Company</label>
+          <div class="stock-autocomplete">
+            <input id="browse-ticker" autocomplete="off" placeholder="e.g. Apple, AAPL, Reliance, RELIANCE.NS" class="stock-autocomplete__input" />
+            <div id="browse-ticker-dropdown" class="stock-autocomplete__dropdown" style="display:none;"></div>
+          </div>
+          <button id="browse-fetch-btn" class="btn-retry" type="button">Get Quote</button>
+        </div>
+        <p id="browse-quote" style="margin:0;color:#0f172a;">Start typing a symbol or company name to view its current price.</p>
+      </div>
+
+      <div class="card" style="display:grid;gap:12px;">
+        <p class="card__title">Add To Portfolio</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:end;">
+          <label style="display:grid;gap:4px;">
+            <span style="font-size:0.85rem;color:#475569;">Quantity</span>
+            <input id="browse-qty" type="number" min="0.0001" step="0.0001" value="1" style="padding:8px;border:1px solid #cbd5e1;border-radius:8px;" />
+          </label>
+          <label style="display:grid;gap:4px;">
+            <span style="font-size:0.85rem;color:#475569;">Purchase Price</span>
+            <input id="browse-purchase-price" type="number" min="0.0001" step="0.0001" value="100" style="padding:8px;border:1px solid #cbd5e1;border-radius:8px;" />
+          </label>
+          <label style="display:grid;gap:4px;">
+            <span style="font-size:0.85rem;color:#475569;">Purchase Date</span>
+            <input id="browse-date" type="date" style="padding:8px;border:1px solid #cbd5e1;border-radius:8px;" />
+          </label>
+          <button id="browse-add-btn" class="btn-retry" type="button">Add Stock</button>
+        </div>
+        <p id="browse-add-result" style="margin:0;color:#0f172a;"></p>
+      </div>
+
+      <div class="card" style="display:grid;gap:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+          <p class="card__title" style="margin:0;">Your Stock Holdings</p>
+          <button id="browse-refresh-holdings-btn" class="btn-retry" type="button">Refresh</button>
+        </div>
+        <p style="margin:0;font-size:0.85rem;color:#64748b;">Use Remove to delete a stock from portfolio.</p>
+        <div style="overflow:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
+            <thead>
+              <tr style="text-align:left;border-bottom:1px solid #e2e8f0;">
+                <th style="padding:8px;">Ticker</th>
+                <th style="padding:8px;">Qty</th>
+                <th style="padding:8px;">Purchase</th>
+                <th style="padding:8px;">Current</th>
+                <th style="padding:8px;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="browse-holdings-body">
+              <tr>
+                <td colspan="5" style="padding:10px;color:#64748b;">Loading holdings...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -175,7 +233,7 @@
         <p class="card__title">API Documentation</p>
         <p style="margin-top:8px;font-size:0.9rem;color:#475569;">
           Interactive API docs are available at
-          <a href="/swagger-ui.html" target="_blank" rel="noopener"
+          <a href="swagger-ui.html" target="_blank" rel="noopener"
              style="color:#2563eb;">/swagger-ui.html</a>.
         </p>
       </div>
@@ -183,7 +241,7 @@
   </section>
 
   <!-- ── Entry-point module ────────────────────────── -->
-  <script type="module" src="/js/app.js"></script>
+  <script type="module" src="js/app.js"></script>
 
 </body>
 </html>

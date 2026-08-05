@@ -149,3 +149,67 @@
   margin-bottom: var(--space-6);
 }
 
+/* ── Stocks autocomplete ─────────────────────────────── */
+.stock-autocomplete {
+  position: relative;
+  min-width: 240px;
+}
+
+.stock-autocomplete__input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: var(--font-size-sm);
+}
+
+.stock-autocomplete__dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 20;
+}
+
+.stock-autocomplete__item {
+  width: 100%;
+  border: 0;
+  background: #fff;
+  text-align: left;
+  padding: 8px 10px;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.stock-autocomplete__item:hover,
+.stock-autocomplete__item.is-active {
+  background: #eff6ff;
+}
+
+.stock-autocomplete__empty {
+  padding: 8px 10px;
+  font-size: var(--font-size-sm);
+  color: #64748b;
+}
+
+.btn-remove {
+  background: #991b1b;
+  color: #fff;
+  border: 0;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.btn-remove:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
