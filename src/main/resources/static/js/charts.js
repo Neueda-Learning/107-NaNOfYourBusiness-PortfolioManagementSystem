@@ -3,12 +3,20 @@
  * Requires Chart.js to be loaded globally via CDN before this module is used.
  */
 
-/** Map asset type strings to CSS custom property colors */
-const ASSET_COLORS = {
-  STOCK:       "#3b82f6",
-  BOND:        "#f59e0b",
-  MUTUAL_FUND: "#10b981",
-};
+/** Read a CSS custom property from the document root */
+function getCssVar(name, fallback = "") {
+  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return value || fallback;
+}
+
+/** Map asset types to theme-aware CSS custom property colors */
+function getAssetColorMap() {
+  return {
+    STOCK:       getCssVar("--color-stock", "#7c3aed"),
+    BOND:        getCssVar("--color-bond", "#d97706"),
+    MUTUAL_FUND: getCssVar("--color-mutual-fund", "#059669"),
+  };
+}
 
 /** Human-readable labels for each type */
 const ASSET_LABELS = {
@@ -36,11 +44,21 @@ export function renderAllocationChart(canvasId, allocationData) {
     delete _chartInstances[canvasId];
   }
 
-  const labels   = allocationData.map(d => ASSET_LABELS[d.type] ?? d.type);
-  const data     = allocationData.map(d => parseFloat(d.value));
-  const percents = allocationData.map(d => parseFloat(d.percent));
-  const counts   = allocationData.map(d => d.count);
-  const colors   = allocationData.map(d => ASSET_COLORS[d.type] ?? "#94a3b8");
+  const assetColors = getAssetColorMap();
+  const labels      = allocationData.map(d => ASSET_LABELS[d.type] ?? d.type);
+  const data        = allocationData.map(d => parseFloat(d.value));
+  const percents    = allocationData.map(d => parseFloat(d.percent));
+  const counts      = allocationData.map(d => d.count);
+  const colors      = allocationData.map(d => assetColors[d.type] ?? getCssVar("--color-text-faint", "#94a3b8"));
+
+  const legendColor     = getCssVar("--color-text", "#111827");
+  const tooltipBg       = getCssVar("--color-surface", "#ffffff");
+  const tooltipText     = getCssVar("--color-text", "#111827");
+  const tooltipBorder   = getCssVar("--color-border", "rgba(0,0,0,0.1)");
+  const segmentBorder   = getCssVar("--color-bg", "#ffffff");
+
+  // Apply theme-aware default text color for all chart plugin text.
+  Chart.defaults.color = legendColor;
 
   _chartInstances[canvasId] = new Chart(canvas, {
     type: "doughnut",
@@ -49,7 +67,7 @@ export function renderAllocationChart(canvasId, allocationData) {
       datasets: [{
         data,
         backgroundColor: colors,
-        borderColor: "#ffffff",
+        borderColor: segmentBorder,
         borderWidth: 3,
         hoverBorderWidth: 3,
       }],
@@ -61,6 +79,7 @@ export function renderAllocationChart(canvasId, allocationData) {
         legend: {
           position: "bottom",
           labels: {
+            color: legendColor,
             padding: 16,
             font: { size: 13 },
             generateLabels(chart) {
@@ -68,6 +87,8 @@ export function renderAllocationChart(canvasId, allocationData) {
                 text: `${label}  ${percents[i]}%  (${counts[i]} holding${counts[i] !== 1 ? "s" : ""})`,
                 fillStyle: colors[i],
                 strokeStyle: colors[i],
+                color: legendColor,
+                fontColor: legendColor,
                 hidden: false,
                 index: i,
               }));
@@ -75,6 +96,11 @@ export function renderAllocationChart(canvasId, allocationData) {
           },
         },
         tooltip: {
+          backgroundColor: tooltipBg,
+          titleColor: tooltipText,
+          bodyColor: tooltipText,
+          borderColor: tooltipBorder,
+          borderWidth: 1,
           callbacks: {
             label(ctx) {
               const value = ctx.parsed;

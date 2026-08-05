@@ -11,6 +11,9 @@
 import { getPortfolioSummary } from "./api.js";
 import { renderAllocationChart } from "./charts.js";
 
+// Keep the latest allocation snapshot so we can re-render chart on theme toggle.
+let _lastAllocationByType = [];
+
 // ── Element references (set once on first load) ──────
 const el = {
   loading:      () => document.getElementById("dashboard-loading"),
@@ -51,7 +54,8 @@ export async function loadDashboard() {
     }
 
     show("dashboard-content");
-    renderAllocationChart("allocationChart", summary.allocationByType);
+    _lastAllocationByType = summary.allocationByType ?? [];
+    renderAllocationChart("allocationChart", _lastAllocationByType);
   } catch (err) {
     hide("dashboard-loading");
     const msgEl = el.errorMsg();
@@ -59,6 +63,14 @@ export async function loadDashboard() {
     show("dashboard-error");
   }
 }
+
+// Repaint chart colours when the user toggles light/dark mode.
+window.addEventListener("themechange", () => {
+  const dashboardPanel = document.querySelector('.tab-panel[data-panel="dashboard"]');
+  if (!dashboardPanel?.classList.contains("active")) return;
+  if (!_lastAllocationByType.length) return;
+  renderAllocationChart("allocationChart", _lastAllocationByType);
+});
 
 /** Populate the three summary metric cards */
 function renderSummaryCards(summary) {
