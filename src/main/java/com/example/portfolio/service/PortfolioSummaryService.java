@@ -45,7 +45,10 @@ public class PortfolioSummaryService {
         // Value per type
         Map<AssetType, BigDecimal> valueByType = Arrays.stream(AssetType.values())
                 .collect(Collectors.toMap(t -> t, t -> BigDecimal.ZERO));
+        Map<AssetType, Integer> countByType = Arrays.stream(AssetType.values())
+                .collect(Collectors.toMap(t -> t, t -> 0));
         for (PortfolioItem item : items) {
+            countByType.merge(item.getType(), 1, Integer::sum);
             if (item.getCurrentPrice() != null) {
                 BigDecimal v = item.getCurrentPrice().multiply(item.getQuantity());
                 valueByType.merge(item.getType(), v, BigDecimal::add);
@@ -60,7 +63,7 @@ public class PortfolioSummaryService {
                                     .multiply(BigDecimal.valueOf(100))
                                     .setScale(2, RoundingMode.HALF_UP)
                             : BigDecimal.ZERO;
-                    return new PortfolioSummaryResponse.AllocationEntry(type.name(), value, percent);
+                    return new PortfolioSummaryResponse.AllocationEntry(type.name(), value, percent, countByType.get(type));
                 })
                 .toList();
 

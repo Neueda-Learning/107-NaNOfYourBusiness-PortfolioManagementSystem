@@ -1,0 +1,118 @@
+/* ──────────────────────────────────────────────────────────────
+   Design Tokens · Portfolio Manager
+   Import this first. Do not use raw values outside this file.
+   ────────────────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+/* ── Light mode (default) ──────────────────────────────────────── */
+:root {
+  /* Accent — Electric Violet */
+  --color-accent:         #7c3aed;
+  --color-accent-hover:   #6d28d9;
+  --color-accent-glow:    rgba(124, 58, 237, 0.18);
+  --color-accent-subtle:  rgba(124, 58, 237, 0.07);
+  --color-accent-r: 124; --color-accent-g: 58; --color-accent-b: 237;
+
+  /* Status */
+  --color-gain:      #059669;
+  --color-gain-bg:   rgba(5, 150, 105, 0.07);
+  --color-loss:      #e11d48;
+  --color-loss-bg:   rgba(225, 29, 72, 0.07);
+
+  /* Chart palette */
+  --color-stock:        #7c3aed;
+  --color-bond:         #d97706;
+  --color-mutual-fund:  #059669;
+
+  /* Neutrals */
+  --color-bg:            #fafafa;
+  --color-bg-secondary:  #f4f4f5;
+  --color-surface:       #ffffff;
+  --color-border:        rgba(0, 0, 0, 0.07);
+  --color-border-strong: rgba(0, 0, 0, 0.13);
+  --color-text:          #09090b;
+  --color-text-muted:    #71717a;
+  --color-text-faint:    #a1a1aa;
+  --color-error-bg:      rgba(225, 29, 72, 0.06);
+  --color-error-text:    #e11d48;
+  --color-error-border:  rgba(225, 29, 72, 0.18);
+
+  /* Header */
+  --header-bg:     rgba(250, 250, 250, 0.82);
+  --header-blur:   blur(18px) saturate(160%);
+  --header-border: rgba(0, 0, 0, 0.07);
+
+  /* Shadows */
+  --shadow-xs:    0 1px 2px rgb(0 0 0 / 0.04);
+  --shadow-sm:    0 1px 3px rgb(0 0 0 / 0.06), 0 1px 2px rgb(0 0 0 / 0.04);
+  --shadow-md:    0 4px 12px rgb(0 0 0 / 0.07), 0 1px 3px rgb(0 0 0 / 0.05);
+  --shadow-hover: 0 8px 28px rgb(0 0 0 / 0.09), 0 2px 6px rgb(0 0 0 / 0.05);
+  --shadow-card:  var(--shadow-sm);
+
+  /* Spacing */
+  --space-1:  4px;  --space-2:  8px;  --space-3:  12px;
+  --space-4:  16px; --space-5:  20px; --space-6:  24px;
+  --space-8:  32px; --space-10: 40px; --space-12: 48px; --space-16: 64px;
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+  --font-size-xs:   0.75rem;
+  --font-size-sm:   0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg:   1.125rem;
+  --font-size-xl:   1.25rem;
+  --font-size-2xl:  1.5rem;
+  --font-size-3xl:  1.875rem;
+  --font-size-4xl:  2.25rem;
+
+  /* Radius */
+  --radius-sm:   5px;
+  --radius-md:   9px;
+  --radius-lg:   13px;
+  --radius-xl:   18px;
+  --radius-full: 9999px;
+
+  /* Motion */
+  --ease-out:       cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-cinematic: cubic-bezier(0.76, 0, 0.24, 1);
+  --duration-fast:  120ms;
+  --duration-base:  220ms;
+  --duration-slow:  400ms;
+  --duration-enter: 650ms;
+}
+
+/* ── Dark mode ─────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --color-accent:        #a78bfa;
+  --color-accent-hover:  #8b5cf6;
+  --color-accent-glow:   rgba(167, 139, 250, 0.22);
+  --color-accent-subtle: rgba(167, 139, 250, 0.09);
+  --color-accent-r: 167; --color-accent-g: 139; --color-accent-b: 250;
+
+  --color-gain:     #34d399;
+  --color-gain-bg:  rgba(52, 211, 153, 0.09);
+  --color-loss:     #fb7185;
+  --color-loss-bg:  rgba(251, 113, 133, 0.09);
+
+  --color-bg:            #09090b;
+  --color-bg-secondary:  #111113;
+  --color-surface:       rgba(255, 255, 255, 0.035);
+  --color-border:        rgba(255, 255, 255, 0.065);
+  --color-border-strong: rgba(255, 255, 255, 0.12);
+  --color-text:          #fafafa;
+  --color-text-muted:    #a1a1aa;
+  --color-text-faint:    #52525b;
+  --color-error-bg:      rgba(225, 29, 72, 0.09);
+  --color-error-text:    #fb7185;
+  --color-error-border:  rgba(251, 113, 133, 0.22);
+
+  --header-bg:     rgba(9, 9, 11, 0.82);
+  --header-border: rgba(255, 255, 255, 0.065);
+
+  --shadow-sm:    0 1px 3px rgb(0 0 0 / 0.45), 0 1px 2px rgb(0 0 0 / 0.35);
+  --shadow-md:    0 4px 12px rgb(0 0 0 / 0.5),  0 1px 3px rgb(0 0 0 / 0.35);
+  --shadow-hover: 0 8px 32px rgb(0 0 0 / 0.65), 0 2px 8px rgb(0 0 0 / 0.35);
+  --shadow-card:  var(--shadow-sm);
+}
