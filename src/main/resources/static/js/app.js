@@ -9,6 +9,7 @@
 
 import { loadDashboard } from "./dashboard.js";
 import { loadMarketBrowse } from "./marketBrowse.js";
+import { loadMutualFunds } from "./mutualFunds.js";
 
 // Track which tabs have been loaded to avoid redundant re-fetches within a session
 const _loaded = new Set();
@@ -41,7 +42,10 @@ function onTabFirstLoad(tabName) {
     case "stocks":
       loadMarketBrowse();
       break;
-    // Future tabs will add cases here (US-03/04/05)
+    case "mutual-funds":
+      loadMutualFunds();
+      break;
+    // Future tabs will add cases here
     default:
       break;
   }

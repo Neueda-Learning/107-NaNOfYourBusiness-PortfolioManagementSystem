@@ -106,6 +106,43 @@ export async function getBatchQuotes(tickers) {
   return apiFetch(`/market/batch-quotes?${qs}`);
 }
 
+// ── Mutual Funds ─────────────────────────────────────
+/** GET /api/mutual-funds — all 30 supported funds with latest NAV */
+export async function getMutualFunds() {
+  const res = await fetch("/api/mutual-funds", { headers: { "Content-Type": "application/json" } });
+  if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error(b.message || `Request failed (${res.status})`); }
+  return res.json();
+}
+
+/** GET /api/mutual-funds/{schemeCode} — raw MFAPI details */
+export async function getMutualFundDetails(schemeCode) {
+  const res = await fetch(`/api/mutual-funds/${schemeCode}`, { headers: { "Content-Type": "application/json" } });
+  if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error(b.message || `Request failed (${res.status})`); }
+  return res.json();
+}
+
+/** POST /api/mutual-funds/buy */
+export async function buyMutualFund(payload) {
+  const res = await fetch("/api/mutual-funds/buy", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error(b.message || `Request failed (${res.status})`); }
+  return res.json();
+}
+
+/** POST /api/mutual-funds/sell */
+export async function sellMutualFund(payload) {
+  const res = await fetch("/api/mutual-funds/sell", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error(b.message || `Request failed (${res.status})`); }
+  return res.json();
+}
+
 // ── Portfolio Item Actions ────────────────────────────
 /**
  * Force-refresh the stored currentPrice for a portfolio item from Yahoo Finance.
