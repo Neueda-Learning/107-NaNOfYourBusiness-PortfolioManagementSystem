@@ -14,7 +14,8 @@ import java.util.Optional;
 import java.util.Objects;
 
 @Repository
-public class PortfolioItemRepository {
+public class
+PortfolioItemRepository {
 
     private final JdbcTemplate jdbc;
     private final SimpleJdbcInsert insert;

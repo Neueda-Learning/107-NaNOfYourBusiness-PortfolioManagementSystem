@@ -7,25 +7,25 @@ import com.example.portfolio.mapper.PortfolioItemMapper;
 import com.example.portfolio.model.AssetType;
 import com.example.portfolio.model.PortfolioItem;
 import com.example.portfolio.repository.PortfolioItemRepository;
+import com.example.portfolio.service.portfolio.PortfolioItemTypeHandlerRegistry;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class PortfolioItemService {
 
     private final PortfolioItemRepository repository;
     private final PortfolioItemMapper mapper;
-    private final MarketDataService marketDataService;
+    private final PortfolioItemTypeHandlerRegistry handlerRegistry;
 
     public PortfolioItemService(PortfolioItemRepository repository,
                                 PortfolioItemMapper mapper,
-                                MarketDataService marketDataService) {
+                                PortfolioItemTypeHandlerRegistry handlerRegistry) {
         this.repository = repository;
         this.mapper = mapper;
-        this.marketDataService = marketDataService;
+        this.handlerRegistry = handlerRegistry;
     }
 
     public List<PortfolioItemResponse> findAll(AssetType type) {
@@ -41,13 +41,7 @@ public class PortfolioItemService {
 
     public PortfolioItemResponse create(PortfolioItemRequest request) {
         PortfolioItem item = mapper.toModel(request);
-
-        // Auto-fetch price for stocks when caller didn't provide one
-        if (item.getType() == AssetType.STOCK && item.getCurrentPrice() == null) {
-            Optional<BigDecimal> price = marketDataService.fetchPrice(item.getSymbolOrName());
-            price.ifPresent(item::setCurrentPrice);
-        }
-
+        handlerRegistry.resolve(item.getType()).applyCreateDefaults(item);
         return mapper.toResponse(repository.save(item));
     }
 
@@ -65,7 +59,7 @@ public class PortfolioItemService {
 
     public PortfolioItemResponse refreshPrice(Long id) {
         PortfolioItem item = requireItem(id);
-        BigDecimal newPrice = marketDataService.fetchPriceOrThrow(item.getSymbolOrName());
+        BigDecimal newPrice = handlerRegistry.resolve(item.getType()).resolveRefreshedPrice(item);
         repository.updateCurrentPrice(id, newPrice);
         item.setCurrentPrice(newPrice);
         return mapper.toResponse(item);

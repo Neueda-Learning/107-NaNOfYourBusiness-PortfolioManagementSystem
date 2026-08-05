@@ -7,6 +7,8 @@ import com.example.portfolio.mapper.PortfolioItemMapper;
 import com.example.portfolio.model.AssetType;
 import com.example.portfolio.model.PortfolioItem;
 import com.example.portfolio.repository.PortfolioItemRepository;
+import com.example.portfolio.service.portfolio.PortfolioItemTypeHandler;
+import com.example.portfolio.service.portfolio.PortfolioItemTypeHandlerRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,13 +34,16 @@ class PortfolioItemServiceTest {
     private PortfolioItemRepository repository;
 
     @Mock
-    private MarketDataService marketDataService;
+    private PortfolioItemTypeHandlerRegistry handlerRegistry;
+
+    @Mock
+    private PortfolioItemTypeHandler stockHandler;
 
     private PortfolioItemService service;
 
     @BeforeEach
     void setUp() {
-        service = new PortfolioItemService(repository, new PortfolioItemMapper(), marketDataService);
+        service = new PortfolioItemService(repository, new PortfolioItemMapper(), handlerRegistry);
     }
 
     @Test
@@ -50,9 +55,10 @@ class PortfolioItemServiceTest {
         request.setPurchasePrice(new BigDecimal("100.00"));
         request.setPurchaseDate(LocalDate.of(2025, 1, 15));
 
-        when(marketDataService.fetchPrice("TCS")).thenReturn(Optional.of(new BigDecimal("123.45")));
+        when(handlerRegistry.resolve(AssetType.STOCK)).thenReturn(stockHandler);
         when(repository.save(any(PortfolioItem.class))).thenAnswer(invocation -> {
             PortfolioItem saved = invocation.getArgument(0);
+            saved.setCurrentPrice(new BigDecimal("123.45"));
             saved.setId(1L);
             saved.setCreatedAt(LocalDateTime.of(2026, 8, 4, 8, 0));
             saved.setUpdatedAt(LocalDateTime.of(2026, 8, 4, 8, 0));
@@ -61,6 +67,7 @@ class PortfolioItemServiceTest {
 
         PortfolioItemResponse response = service.create(request);
 
+        verify(stockHandler).applyCreateDefaults(any(PortfolioItem.class));
         assertThat(response.getId()).isEqualTo(1L);
         assertThat(response.getSymbolOrName()).isEqualTo("TCS");
         assertThat(response.getCurrentPrice()).isEqualByComparingTo("123.45");
@@ -106,7 +113,8 @@ class PortfolioItemServiceTest {
         existing.setPurchaseDate(LocalDate.of(2025, 2, 10));
         existing.setCurrentPrice(new BigDecimal("95.00"));
         when(repository.findById(5L)).thenReturn(Optional.of(existing));
-        when(marketDataService.fetchPriceOrThrow("INFY.NS")).thenReturn(new BigDecimal("110.00"));
+        when(handlerRegistry.resolve(AssetType.STOCK)).thenReturn(stockHandler);
+        when(stockHandler.resolveRefreshedPrice(existing)).thenReturn(new BigDecimal("110.00"));
 
         PortfolioItemResponse response = service.refreshPrice(5L);
 
@@ -116,4 +124,3 @@ class PortfolioItemServiceTest {
         assertThat(response.getGainLoss()).isEqualByComparingTo("40.00");
     }
 }
-
