@@ -128,7 +128,11 @@ async function loadFeaturedStocks() {
     renderFeaturedRows(quotes);
     updateFeaturedStatus();
   } catch (err) {
-    body.innerHTML = `<p style="color:var(--color-error-text);font-size:var(--font-size-sm);padding:var(--space-2) 0;">Could not load prices: ${err.message}</p>`;
+    const p = document.createElement("p");
+    p.style.cssText = "color:var(--color-error-text);font-size:var(--font-size-sm);padding:var(--space-2) 0;";
+    p.textContent = `Could not load prices: ${err.message}`;
+    body.innerHTML = "";
+    body.appendChild(p);
   }
 }
 
