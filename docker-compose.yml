@@ -11,7 +11,7 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-portfolio_pass}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_pass}
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - portfolio_mysql_data:/var/lib/mysql
     healthcheck:
@@ -32,12 +32,13 @@ services:
       mysql:
         condition: service_healthy
     environment:
+      SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-portfolio_db}
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-portfolio_user}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-portfolio_pass}
       MARKET_API_BASE_URL: ${MARKET_API_BASE_URL:-https://c4rm9elh30.execute-api.us-east-1.amazonaws.com/default}
     ports:
-      - "8080:8080"
+      - "8082:8080"
 
 volumes:
   portfolio_mysql_data:
