@@ -328,18 +328,143 @@
        MUTUAL FUNDS PANEL
        ════════════════════════════════════════════════ -->
   <section class="tab-panel" data-panel="mutual-funds" role="tabpanel" aria-label="Mutual Funds">
-    <div class="placeholder-panel">
-      <div class="placeholder-panel__icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect x="2" y="7" width="20" height="14" rx="2"/>
-          <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-          <line x1="12" y1="12" x2="12" y2="16"/>
-          <line x1="10" y1="14" x2="14" y2="14"/>
-        </svg>
-      </div>
-      <p class="placeholder-panel__label">Mutual Funds coming in US-04</p>
-      <span class="placeholder-panel__badge">In Progress</span>
+    <div class="stocks-layout">
+
+      <!-- ── Left sidebar: Buy form ──────────────────── -->
+      <aside class="stocks-sidebar">
+
+        <!-- Buy Mutual Fund card -->
+        <div class="card stagger-child">
+          <p class="card__title">Buy Mutual Fund</p>
+          <p class="support-body" style="margin-top:0;margin-bottom:var(--space-3);font-size:0.8rem;">
+            Select a fund from the catalogue, enter an amount in ₹, and click <em>Buy</em>.
+            Units are calculated automatically at the current NAV.
+          </p>
+
+          <div class="form-group">
+            <label class="form-label" for="mf-buy-scheme">Fund</label>
+            <select id="mf-buy-scheme" class="input-field">
+              <option value="">— Loading funds… —</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="mf-buy-amount">Amount (₹)</label>
+            <input id="mf-buy-amount" type="number" class="input-field"
+                   min="1" step="0.01" placeholder="e.g. 10000" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="mf-buy-date">Purchase Date</label>
+            <input id="mf-buy-date" type="date" class="input-field" />
+          </div>
+
+          <button id="mf-buy-btn" class="btn-primary" style="width:100%;margin-top:var(--space-4);">
+            Buy Fund
+          </button>
+          <div id="mf-buy-result" class="action-msg" aria-live="polite"></div>
+        </div>
+
+        <!-- Sell Mutual Fund card -->
+        <div class="card stagger-child">
+          <p class="card__title">Sell Mutual Fund</p>
+          <p class="support-body" style="margin-top:0;margin-bottom:var(--space-3);font-size:0.8rem;">
+            Select a holding from the table, enter an amount to sell in ₹.
+            Units are calculated at the current NAV.
+          </p>
+
+          <div class="form-group">
+            <label class="form-label" for="mf-sell-holding">Holding</label>
+            <select id="mf-sell-holding" class="input-field">
+              <option value="">— Select a holding —</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="mf-sell-amount">Amount to Sell (₹)</label>
+            <input id="mf-sell-amount" type="number" class="input-field"
+                   min="1" step="0.01" placeholder="e.g. 5000" />
+          </div>
+
+          <button id="mf-sell-btn" class="btn-primary" style="width:100%;margin-top:var(--space-4);background:var(--color-danger,#e53e3e);">
+            Sell Fund
+          </button>
+          <div id="mf-sell-result" class="action-msg" aria-live="polite"></div>
+        </div>
+
+      </aside>
+
+      <!-- ── Main area ──────────────────────────────── -->
+      <main class="stocks-main">
+
+        <!-- Catalogue table -->
+        <div class="card stagger-child" style="margin-bottom:var(--space-4);">
+          <div class="stocks-holdings-header">
+            <p class="card__title" style="margin-bottom:0;">Mutual Fund Catalogue (30 Funds)</p>
+            <button id="mf-refresh-catalogue-btn" class="btn-secondary" title="Reload catalogue">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="23 4 23 10 17 10"/>
+                <polyline points="1 20 1 14 7 14"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+              </svg>
+              Refresh NAV
+            </button>
+          </div>
+          <div id="mf-catalogue-msg" class="holdings-action-msg" aria-live="polite"></div>
+          <div class="holdings-table-wrap">
+            <table class="holdings-table">
+              <thead>
+                <tr>
+                  <th>Scheme Code</th>
+                  <th>Fund Name</th>
+                  <th>Latest NAV (₹)</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="mf-catalogue-body">
+                <tr><td colspan="4" class="holdings-table__empty">Loading catalogue…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- My Holdings table -->
+        <div class="card stagger-child">
+          <div class="stocks-holdings-header">
+            <p class="card__title" style="margin-bottom:0;">My Mutual Fund Holdings</p>
+            <button id="mf-refresh-holdings-btn" class="btn-secondary" title="Reload holdings">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="23 4 23 10 17 10"/>
+                <polyline points="1 20 1 14 7 14"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+              </svg>
+              Refresh
+            </button>
+          </div>
+          <div id="mf-holdings-msg" class="holdings-action-msg" aria-live="polite"></div>
+          <div class="holdings-table-wrap">
+            <table class="holdings-table">
+              <thead>
+                <tr>
+                  <th>Fund Name</th>
+                  <th>Units</th>
+                  <th>Buy NAV (₹)</th>
+                  <th>Current NAV (₹)</th>
+                  <th>Current Value (₹)</th>
+                  <th>Gain / Loss</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="mf-holdings-body">
+                <tr><td colspan="7" class="holdings-table__empty">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
     </div>
   </section>
 
