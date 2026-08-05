@@ -3,6 +3,8 @@ package com.example.portfolio.service;
 import com.example.portfolio.client.MFAPIClient;
 import com.example.portfolio.config.MutualFundCatalogue;
 import com.example.portfolio.dto.BuyMutualFundRequest;
+import com.example.portfolio.dto.MutualFundHistoryPoint;
+import com.example.portfolio.dto.MutualFundHistoryResponse;
 import com.example.portfolio.dto.MutualFundSummaryResponse;
 import com.example.portfolio.dto.SellMutualFundRequest;
 import com.example.portfolio.exception.ResourceNotFoundException;
@@ -17,6 +19,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -67,6 +73,62 @@ public class MutualFundService {
         }
 
         return mfapiClient.getMutualFundDetails(schemeCode);
+    }
+
+    private static final DateTimeFormatter MFAPI_DATE_FORMAT =
+            new DateTimeFormatterBuilder().appendPattern("dd-MM-yyyy").toFormatter();
+
+    /**
+     * Get historical NAV data for a fund, optionally filtered by range.
+     * range: "1M", "3M", "6M", "1Y", "ALL" (default ALL)
+     */
+    public MutualFundHistoryResponse getMutualFundHistory(Integer schemeCode, String range) {
+        if (!mutualFundCatalogue.isSupported(schemeCode)) {
+            throw new ResourceNotFoundException("Mutual fund is not supported");
+        }
+
+        String schemeName = mutualFundCatalogue.getSchemeName(schemeCode);
+        Map<String, Object> mfapiResponse = mfapiClient.getMutualFundDetails(schemeCode);
+
+        List<MutualFundHistoryPoint> points = new ArrayList<>();
+        Object dataObj = mfapiResponse.get("data");
+        if (dataObj instanceof List<?> dataList) {
+            for (Object entry : dataList) {
+                if (entry instanceof Map<?, ?> entryMap) {
+                    Object dateObj = entryMap.get("date");
+                    Object navObj = entryMap.get("nav");
+                    if (dateObj != null && navObj != null) {
+                        try {
+                            LocalDate date = LocalDate.parse(dateObj.toString(), MFAPI_DATE_FORMAT);
+                            BigDecimal nav = new BigDecimal(navObj.toString());
+                            points.add(new MutualFundHistoryPoint(date, nav));
+                        } catch (Exception ignore) {
+                            // skip malformed entries
+                        }
+                    }
+                }
+            }
+        }
+
+        // Sort ascending by date (oldest first) for charting
+        points.sort(Comparator.comparing(MutualFundHistoryPoint::getDate));
+
+        // Apply range filter
+        LocalDate cutoff = switch (range == null ? "ALL" : range.toUpperCase()) {
+            case "1M" -> LocalDate.now().minusMonths(1);
+            case "3M" -> LocalDate.now().minusMonths(3);
+            case "6M" -> LocalDate.now().minusMonths(6);
+            case "1Y" -> LocalDate.now().minusYears(1);
+            default -> LocalDate.MIN;
+        };
+
+        List<MutualFundHistoryPoint> filtered = points.stream()
+                .filter(p -> !p.getDate().isBefore(cutoff))
+                .toList();
+
+        log.info("Fetched {} NAV history points for scheme {} (range={})", filtered.size(), schemeCode, range);
+
+        return new MutualFundHistoryResponse(schemeCode, schemeName, filtered);
     }
 
     /**
