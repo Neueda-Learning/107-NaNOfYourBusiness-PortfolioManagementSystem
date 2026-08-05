@@ -67,3 +67,17 @@ export async function deletePortfolioItem(id) {
   return apiFetch(`/portfolio-items/${id}`, { method: "DELETE" });
 }
 
+// ── Market Data ───────────────────────────────────────
+export async function getSupportedTickers() {
+  return apiFetch("/market/supported-tickers");
+}
+
+export async function getStockCatalog() {
+  return apiFetch("/market/stock-catalog");
+}
+
+export async function getStockQuote(ticker) {
+  const qs = `?ticker=${encodeURIComponent(ticker)}`;
+  return apiFetch(`/market/quote${qs}`);
+}
+

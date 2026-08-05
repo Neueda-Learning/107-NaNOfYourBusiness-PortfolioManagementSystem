@@ -45,12 +45,12 @@ class PortfolioItemServiceTest {
     void create_stockWithoutCurrentPrice_fetchesAndPersistsMarketPrice() {
         PortfolioItemRequest request = new PortfolioItemRequest();
         request.setType(AssetType.STOCK);
-        request.setSymbolOrName("aapl");
+        request.setSymbolOrName("tcs");
         request.setQuantity(BigDecimal.TEN);
         request.setPurchasePrice(new BigDecimal("100.00"));
         request.setPurchaseDate(LocalDate.of(2025, 1, 15));
 
-        when(marketDataService.fetchPrice("AAPL")).thenReturn(Optional.of(new BigDecimal("123.45")));
+        when(marketDataService.fetchPrice("TCS")).thenReturn(Optional.of(new BigDecimal("123.45")));
         when(repository.save(any(PortfolioItem.class))).thenAnswer(invocation -> {
             PortfolioItem saved = invocation.getArgument(0);
             saved.setId(1L);
@@ -62,7 +62,7 @@ class PortfolioItemServiceTest {
         PortfolioItemResponse response = service.create(request);
 
         assertThat(response.getId()).isEqualTo(1L);
-        assertThat(response.getSymbolOrName()).isEqualTo("AAPL");
+        assertThat(response.getSymbolOrName()).isEqualTo("TCS");
         assertThat(response.getCurrentPrice()).isEqualByComparingTo("123.45");
         assertThat(response.getCurrentValue()).isEqualByComparingTo("1234.50");
         assertThat(response.getGainLoss()).isEqualByComparingTo("234.50");
@@ -73,7 +73,7 @@ class PortfolioItemServiceTest {
         PortfolioItem stock = new PortfolioItem();
         stock.setId(7L);
         stock.setType(AssetType.STOCK);
-        stock.setSymbolOrName("TSLA");
+        stock.setSymbolOrName("TCS.NS");
         stock.setQuantity(BigDecimal.ONE);
         stock.setPurchasePrice(new BigDecimal("10.00"));
         stock.setPurchaseDate(LocalDate.of(2025, 1, 1));
@@ -100,13 +100,13 @@ class PortfolioItemServiceTest {
         PortfolioItem existing = new PortfolioItem();
         existing.setId(5L);
         existing.setType(AssetType.STOCK);
-        existing.setSymbolOrName("AMZN");
+        existing.setSymbolOrName("INFY.NS");
         existing.setQuantity(new BigDecimal("2"));
         existing.setPurchasePrice(new BigDecimal("90.00"));
         existing.setPurchaseDate(LocalDate.of(2025, 2, 10));
         existing.setCurrentPrice(new BigDecimal("95.00"));
         when(repository.findById(5L)).thenReturn(Optional.of(existing));
-        when(marketDataService.fetchPriceOrThrow("AMZN")).thenReturn(new BigDecimal("110.00"));
+        when(marketDataService.fetchPriceOrThrow("INFY.NS")).thenReturn(new BigDecimal("110.00"));
 
         PortfolioItemResponse response = service.refreshPrice(5L);
 
