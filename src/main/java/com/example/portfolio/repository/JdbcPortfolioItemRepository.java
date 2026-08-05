@@ -6,14 +6,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class JdbcPortfolioItemRepository implements PortfolioItemRepository {
+public class JdbcPortfolioItemRepository {
 	private final JdbcTemplate jdbcTemplate;
 
 	public JdbcPortfolioItemRepository(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
 	}
 
-	@Override
 	public List<SummaryItemRow> findItemsForSummary() {
 		String sql = """
 			SELECT type, quantity, purchase_price, current_price
@@ -29,6 +28,14 @@ public class JdbcPortfolioItemRepository implements PortfolioItemRepository {
 				resultSet.getBigDecimal("current_price")
 			)
 		);
+	}
+
+	public record SummaryItemRow(
+		AssetType type,
+		java.math.BigDecimal quantity,
+		java.math.BigDecimal purchasePrice,
+		java.math.BigDecimal currentPrice
+	) {
 	}
 }
 
