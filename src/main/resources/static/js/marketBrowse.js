@@ -28,6 +28,7 @@ let filteredTickers = [];
 let activeSuggestion = -1;
 let heldItems = [];
 let liveTimer = null;
+let featuredCollapsed = true;
 const LIVE_INTERVAL = 10_000;
 const FEATURED_COUNT = 24;
 
@@ -53,10 +54,6 @@ async function loadTickers() {
   try {
     const catalog = await getStockCatalog();
     stockCatalog = Array.isArray(catalog) ? catalog : [];
-    const input = byId("browse-ticker");
-    if (input && !input.value && stockCatalog.length > 0) {
-      input.value = stockCatalog[0].symbol;
-    }
   } catch (err) {
     stockCatalog = [];
     console.warn("Could not load stock catalog:", err.message);
@@ -76,46 +73,50 @@ function updateFeaturedStatus() {
   if (el) el.textContent = `Updated ${new Date().toLocaleTimeString()}`;
 }
 
+function toggleFeaturedCollapse() {
+  featuredCollapsed = !featuredCollapsed;
+  const wrap = byId("featured-stocks-collapsible");
+  const btn = byId("browse-toggle-featured-btn");
+  if (wrap) wrap.classList.toggle("is-collapsed", featuredCollapsed);
+  if (btn) btn.setAttribute("aria-expanded", String(!featuredCollapsed));
+}
+
 function renderFeaturedRows(quotes = {}) {
   const body = byId("browse-featured-body");
   if (!body) return;
 
   if (featuredTickers.length === 0) {
-    body.innerHTML = '<tr><td colspan="3" class="holdings-table__empty">No featured stocks configured.</td></tr>';
+    body.innerHTML = '<p style="color:var(--color-text-faint);font-size:var(--font-size-sm);padding:var(--space-2) 0;">No featured stocks configured.</p>';
     return;
   }
 
   body.innerHTML = "";
   featuredTickers.forEach((ticker) => {
     const quote = quotes[ticker];
-    const price = quote?.price != null ? fmtNum(quote.price) : "—";
-    const asOf = quote?.asOf ? new Date(quote.asOf).toLocaleTimeString() : "—";
+    const price = quote?.price != null ? fmtNum(quote.price) : null;
 
-    const tr = document.createElement("tr");
-    tr.dataset.featuredTicker = ticker;
-    tr.innerHTML = `
-      <td class="holdings-table__symbol">
-        <button type="button" class="js-featured-select" data-ticker="${ticker}">${ticker}</button>
-      </td>
-      <td class="holdings-table__price js-featured-price">${price}</td>
-      <td class="holdings-table__price js-featured-asof">${asOf}</td>
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "featured-ticker-chip js-featured-select";
+    chip.dataset.ticker = ticker;
+    chip.dataset.featuredTicker = ticker;
+    chip.innerHTML = `
+      <span class="featured-chip__symbol">${ticker}</span>
+      <span class="featured-chip__price js-featured-price${price ? "" : " featured-chip__price--empty"}">${price ?? "—"}</span>
     `;
-    body.appendChild(tr);
-  });
-
-  body.querySelectorAll(".js-featured-select").forEach((btn) => {
-    btn.addEventListener("click", async () => {
+    chip.addEventListener("click", async () => {
       const tickerInput = byId("browse-ticker");
-      if (tickerInput) tickerInput.value = btn.dataset.ticker;
+      if (tickerInput) tickerInput.value = ticker;
       await handleFetchQuote();
     });
+    body.appendChild(chip);
   });
 }
 
 async function loadFeaturedStocks() {
   const body = byId("browse-featured-body");
   if (!body) return;
-  body.innerHTML = '<tr><td colspan="3" class="holdings-table__empty">Loading…</td></tr>';
+  body.innerHTML = '<p style="color:var(--color-text-faint);font-size:var(--font-size-sm);padding:var(--space-2) 0;">Loading…</p>';
 
   if (featuredTickers.length === 0) {
     renderFeaturedRows({});
@@ -127,7 +128,7 @@ async function loadFeaturedStocks() {
     renderFeaturedRows(quotes);
     updateFeaturedStatus();
   } catch (err) {
-    body.innerHTML = `<tr><td colspan="3" class="holdings-table__empty" style="color:var(--color-error-text);">Could not load featured prices: ${err.message}</td></tr>`;
+    body.innerHTML = `<p style="color:var(--color-error-text);font-size:var(--font-size-sm);padding:var(--space-2) 0;">Could not load prices: ${err.message}</p>`;
   }
 }
 
@@ -179,12 +180,16 @@ function renderDropdown() {
 
 function updateSuggestions() {
   const query = (byId("browse-ticker")?.value || "").trim().toUpperCase();
-  filteredTickers = !query
-    ? stockCatalog.slice(0, 20)
-    : stockCatalog
-      .filter((item) => item.symbol.toUpperCase().startsWith(query)
-        || (item.companyName || "").toUpperCase().startsWith(query))
-      .slice(0, 20);
+  if (!query) {
+    closeDropdown();
+    return;
+  }
+  filteredTickers = stockCatalog
+    .filter((item) =>
+      item.symbol.toUpperCase().startsWith(query) ||
+      (item.companyName || "").toUpperCase().startsWith(query)
+    )
+    .slice(0, 20);
   activeSuggestion = filteredTickers.length > 0 ? 0 : -1;
   renderDropdown();
 }
@@ -282,6 +287,15 @@ function setActionMsg(text, isError = false) {
   el.style.color = isError ? cssVar("--color-error-text") : cssVar("--color-gain");
 }
 
+function setHoldingsMsg(text, isError = false) {
+  const el = byId("browse-holdings-result");
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = text
+    ? (isError ? cssVar("--color-error-text") : cssVar("--color-gain"))
+    : cssVar("--color-text-faint");
+}
+
 function buildHoldingsRow(item, livePrices) {
   const symbol = item.symbolOrName;
   const qty = Number(item.quantity ?? 0);
@@ -365,6 +379,7 @@ function wireRowActions(row) {
         updateRowGainLoss(row, updated);
         const idx = heldItems.findIndex((i) => String(i.id) === String(id));
         if (idx >= 0) heldItems[idx] = { ...heldItems[idx], currentPrice: updated.currentPrice };
+        setHoldingsMsg(`Refreshed ${updated.symbolOrName || row.dataset.ticker} price.`);
         refreshBtn.textContent = "✓";
         setTimeout(() => {
           refreshBtn.disabled = false;
@@ -377,7 +392,7 @@ function wireRowActions(row) {
           refreshBtn.disabled = false;
           refreshBtn.textContent = "↻";
         }, 2000);
-        setActionMsg(`Refresh failed: ${err.message}`, true);
+        setHoldingsMsg(`Refresh failed: ${err.message}`, true);
       }
     });
   }
@@ -402,7 +417,7 @@ function wireRowActions(row) {
     try {
       quantity = readTradeQuantity();
     } catch (err) {
-      setActionMsg(err.message, true);
+      setHoldingsMsg(err.message, true);
       return;
     }
 
@@ -414,12 +429,12 @@ function wireRowActions(row) {
         ? await buyPortfolioItem(id, quantity)
         : await sellPortfolioItem(id, quantity);
       const verb = side === "buy" ? "Bought" : "Sold";
-      setActionMsg(`${verb} ${fmtNum(quantity, 4).replace(/\.?0+$/, "")} ${updated.symbolOrName} at market price.`);
       stopLiveTimer();
       await loadPortfolioStocks();
+      setHoldingsMsg(`${verb} ${fmtNum(quantity, 4).replace(/\.?0+$/, "")} ${updated.symbolOrName} at market price.`);
       if (typeof window.__markDashboardStale === "function") window.__markDashboardStale();
     } catch (err) {
-      setActionMsg(`${side === "buy" ? "Buy" : "Sell"} failed: ${err.message}`, true);
+      setHoldingsMsg(`${side === "buy" ? "Buy" : "Sell"} failed: ${err.message}`, true);
     } finally {
       if (buyBtn) buyBtn.disabled = false;
       if (sellBtn) sellBtn.disabled = false;
@@ -432,7 +447,7 @@ function wireRowActions(row) {
 
 async function loadPortfolioStocks(livePrices) {
   const body = byId("browse-holdings-body");
-  if (!body) return;
+  if (!body) return false;
 
   if (!livePrices) {
     body.innerHTML = '<tr><td colspan="6" class="holdings-table__empty">Loading…</td></tr>';
@@ -444,8 +459,9 @@ async function loadPortfolioStocks(livePrices) {
 
     if (heldItems.length === 0) {
       body.innerHTML = '<tr><td colspan="6" class="holdings-table__empty">No stocks in portfolio yet — add one using the form.</td></tr>';
+      setHoldingsMsg("");
       startLiveTimer();
-      return;
+      return true;
     }
 
     if (!livePrices) {
@@ -464,10 +480,14 @@ async function loadPortfolioStocks(livePrices) {
       body.appendChild(row);
     });
 
+    setHoldingsMsg("");
     updatePricesStatus();
     startLiveTimer();
+    return true;
   } catch (err) {
     body.innerHTML = `<tr><td colspan="6" class="holdings-table__empty" style="color:var(--color-error-text);">Could not load holdings: ${err.message}</td></tr>`;
+    setHoldingsMsg(`Refresh failed: ${err.message}`, true);
+    return false;
   }
 }
 
@@ -501,15 +521,13 @@ function startLiveTimer() {
 
       const featuredBody = byId("browse-featured-body");
       if (featuredBody) {
-        Array.from(featuredBody.querySelectorAll("tr[data-featured-ticker]")).forEach((row) => {
+        Array.from(featuredBody.querySelectorAll("[data-featured-ticker]")).forEach((row) => {
           const ticker = row.dataset.featuredTicker;
           const q = quotes[ticker];
           if (!q) return;
 
           const priceCell = row.querySelector(".js-featured-price");
-          const asOfCell = row.querySelector(".js-featured-asof");
           if (priceCell) priceCell.textContent = fmtNum(q.price);
-          if (asOfCell) asOfCell.textContent = q.asOf ? new Date(q.asOf).toLocaleTimeString() : "—";
         });
         updateFeaturedStatus();
       }
@@ -536,7 +554,6 @@ async function handleAddStock() {
   const selected = resolveCatalogItem(query);
   const ticker = selected?.symbol ?? query;
   const qty = Number(byId("browse-qty")?.value);
-  const purchasePrice = Number(byId("browse-purchase-price")?.value);
   const purchaseDate = byId("browse-date")?.value;
 
   if (!ticker) {
@@ -553,31 +570,27 @@ async function handleAddStock() {
     setActionMsg("Quantity must be greater than 0.", true);
     return;
   }
-  if (!Number.isFinite(purchasePrice) || purchasePrice <= 0) {
-    setActionMsg("Purchase price must be greater than 0.", true);
-    return;
-  }
 
+  // purchasePrice is intentionally omitted for STOCK items.
+  // The backend will auto-fetch the current market price and record it
+  // as the purchase price (see StockPortfolioItemTypeHandler).
   const payload = {
     type: "STOCK",
     symbolOrName: ticker,
     quantity: qty,
-    purchasePrice,
     purchaseDate,
-    currentPrice: lastQuote?.price ?? null,
   };
 
-  setActionMsg("Adding stock…");
+  setActionMsg("Adding stock at current market price…");
   const addBtn = byId("browse-add-btn");
   if (addBtn) addBtn.disabled = true;
 
   try {
     const created = await createPortfolioItem(payload);
-    setActionMsg(`Added ${created.symbolOrName} (id: ${created.id}).`);
+    const price = created.purchasePrice != null ? ` at ${fmtNum(created.purchasePrice)}` : "";
+    setActionMsg(`Added ${created.symbolOrName}${price} (id: ${created.id}).`);
     const qtyEl = byId("browse-qty");
     if (qtyEl) qtyEl.value = "";
-    const ppEl = byId("browse-purchase-price");
-    if (ppEl) ppEl.value = "";
     lastQuote = null;
     stopLiveTimer();
     await loadPortfolioStocks();
@@ -598,13 +611,14 @@ export async function loadMarketBrowse() {
 
     byId("browse-fetch-btn")?.addEventListener("click", handleFetchQuote);
     byId("browse-add-btn")?.addEventListener("click", handleAddStock);
-    byId("browse-refresh-holdings-btn")?.addEventListener("click", () => {
+    byId("browse-refresh-holdings-btn")?.addEventListener("click", async () => {
       stopLiveTimer();
-      loadPortfolioStocks();
+      const ok = await loadPortfolioStocks();
+      if (ok) setHoldingsMsg("Holdings refreshed.");
     });
     byId("browse-refresh-featured-btn")?.addEventListener("click", loadFeaturedStocks);
+    byId("browse-toggle-featured-btn")?.addEventListener("click", toggleFeaturedCollapse);
     byId("browse-ticker")?.addEventListener("input", updateSuggestions);
-    byId("browse-ticker")?.addEventListener("focus", updateSuggestions);
     byId("browse-ticker")?.addEventListener("keydown", handleTickerKeydown);
     byId("browse-ticker")?.addEventListener("blur", () => setTimeout(closeDropdown, 120));
     wireOutsideClick();
@@ -612,7 +626,6 @@ export async function loadMarketBrowse() {
 
   await loadTickers();
   pickFeaturedTickersFromCatalog();
-  updateSuggestions();
   await loadFeaturedStocks();
   await loadPortfolioStocks();
 }

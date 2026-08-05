@@ -416,7 +416,7 @@
   position: absolute;
   top: calc(100% + 4px);
   left: 0; right: 0;
-  background: var(--color-surface);
+  background: var(--dropdown-bg);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
@@ -508,6 +508,16 @@
   min-height: 18px;
   line-height: 1.5;
   color: var(--color-text-faint);
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.holdings-action-msg {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-xs);
+  min-height: 18px;
+  line-height: 1.5;
+  color: var(--color-text-faint);
+  letter-spacing: 0.01em;
   transition: color var(--duration-fast) var(--ease-out);
 }
 
@@ -678,6 +688,86 @@
   color: var(--color-loss);
   border-color: var(--color-loss);
   background: var(--color-loss-bg);
+}
+
+/* ── Collapsible featured stocks ──────────────────────────────── */
+.featured-stocks-collapsible {
+  overflow: hidden;
+  max-height: 400px;
+  opacity: 1;
+  transition: max-height 0.38s var(--ease-out), opacity 0.25s var(--ease-out);
+  padding-top: var(--space-2);
+}
+.featured-stocks-collapsible.is-collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+}
+
+/* ── Toggle chevron button ──────────────────────────────────────── */
+.featured-toggle-btn {
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+}
+.featured-toggle-btn svg {
+  transition: transform 0.32s var(--ease-out);
+  display: block;
+}
+.featured-toggle-btn[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+/* ── Compact ticker chip grid ────────────────────────────────────── */
+.featured-ticker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+  gap: var(--space-2);
+  padding-bottom: var(--space-3);
+}
+
+.featured-ticker-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out);
+}
+.featured-ticker-chip:hover {
+  background: var(--color-accent-subtle);
+  border-color: var(--color-accent);
+  transform: translateY(-1px);
+}
+
+.featured-chip__symbol {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-accent);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: color var(--duration-slow) var(--ease-out);
+}
+.featured-chip__price {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+  transition: color var(--duration-slow) var(--ease-out);
+}
+.featured-chip__price--empty {
+  color: var(--color-text-faint);
 }
 
 /* ── Responsive ─────────────────────────────────────────────────── */

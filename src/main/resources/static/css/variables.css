@@ -81,6 +81,9 @@
   --duration-base:  220ms;
   --duration-slow:  400ms;
   --duration-enter: 650ms;
+
+  /* Dropdown */
+  --dropdown-bg: #ffffff;
 }
 
 /* ── Dark mode ─────────────────────────────────────────────────── */
@@ -115,4 +118,7 @@
   --shadow-md:    0 4px 12px rgb(0 0 0 / 0.5),  0 1px 3px rgb(0 0 0 / 0.35);
   --shadow-hover: 0 8px 32px rgb(0 0 0 / 0.65), 0 2px 8px rgb(0 0 0 / 0.35);
   --shadow-card:  var(--shadow-sm);
+
+  /* Dropdown */
+  --dropdown-bg: #1c1c20;
 }
