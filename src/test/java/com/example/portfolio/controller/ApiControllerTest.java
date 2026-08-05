@@ -2,6 +2,7 @@ package com.example.portfolio.controller;
 
 import com.example.portfolio.dto.PortfolioItemResponse;
 import com.example.portfolio.dto.PortfolioSummaryResponse;
+import com.example.portfolio.dto.StockCatalogItemResponse;
 import com.example.portfolio.dto.StockQuoteResponse;
 import com.example.portfolio.exception.ExternalApiException;
 import com.example.portfolio.exception.GlobalExceptionHandler;
@@ -47,19 +48,33 @@ class ApiControllerTest {
 
     @Test
     void getSupportedTickers_returnsConfiguredList() throws Exception {
-        when(marketDataService.getSupportedTickers()).thenReturn(List.of("AAPL", "TSLA"));
+        when(marketDataService.getSupportedTickers()).thenReturn(List.of("TCS.NS", "INFY.NS"));
 
         mockMvc.perform(get("/api/v1/market/supported-tickers"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0]").value("AAPL"))
-                .andExpect(jsonPath("$[1]").value("TSLA"));
+                .andExpect(jsonPath("$[0]").value("TCS.NS"))
+                .andExpect(jsonPath("$[1]").value("INFY.NS"));
+    }
+
+    @Test
+    void getStockCatalog_returnsSymbolAndCompanyName() throws Exception {
+        when(marketDataService.getStockCatalog()).thenReturn(List.of(
+                new StockCatalogItemResponse("TCS.NS", "Tata Consultancy Services Ltd", "INR"),
+                new StockCatalogItemResponse("RELIANCE.NS", "Reliance Industries Ltd", "INR")
+        ));
+
+        mockMvc.perform(get("/api/v1/market/stock-catalog"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].symbol").value("TCS.NS"))
+                .andExpect(jsonPath("$[0].companyName").value("Tata Consultancy Services Ltd"))
+                .andExpect(jsonPath("$[1].currency").value("INR"));
     }
 
     @Test
     void getQuote_whenUpstreamUnavailable_returnsBadGateway() throws Exception {
-        when(marketDataService.getQuote("TSLA")).thenThrow(new ExternalApiException("upstream down"));
+        when(marketDataService.getQuote("TCS.NS")).thenThrow(new ExternalApiException("upstream down"));
 
-        mockMvc.perform(get("/api/v1/market/quote").param("ticker", "TSLA"))
+        mockMvc.perform(get("/api/v1/market/quote").param("ticker", "TCS.NS"))
                 .andExpect(status().isBadGateway())
                 .andExpect(jsonPath("$.error").value("EXTERNAL_API_ERROR"));
     }
@@ -76,7 +91,7 @@ class ApiControllerTest {
         PortfolioItemResponse response = new PortfolioItemResponse();
         response.setId(10L);
         response.setType(AssetType.STOCK);
-        response.setSymbolOrName("AAPL");
+        response.setSymbolOrName("TCS.NS");
         response.setQuantity(BigDecimal.TEN);
         response.setPurchasePrice(new BigDecimal("100.00"));
         response.setPurchaseDate(LocalDate.of(2025, 1, 1));
@@ -92,7 +107,7 @@ class ApiControllerTest {
         String payload = """
                 {
                   \"type\": \"STOCK\",
-                  \"symbolOrName\": \"AAPL\",
+                  \"symbolOrName\": \"TCS.NS\",
                   \"quantity\": 10,
                   \"purchasePrice\": 100.00,
                   \"purchaseDate\": \"2025-01-01\"
@@ -105,7 +120,7 @@ class ApiControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location", "http://localhost/api/v1/portfolio-items/10"))
                 .andExpect(jsonPath("$.id").value(10))
-                .andExpect(jsonPath("$.symbolOrName").value("AAPL"));
+                .andExpect(jsonPath("$.symbolOrName").value("TCS.NS"));
     }
 
     @Test
@@ -156,14 +171,14 @@ class ApiControllerTest {
 
     @Test
     void getQuote_returnsQuotePayload() throws Exception {
-        when(marketDataService.getQuote("TSLA"))
-                .thenReturn(Optional.of(new StockQuoteResponse("TSLA", new BigDecimal("248.13"), "USD", LocalDateTime.of(2026, 8, 4, 9, 45))));
+        when(marketDataService.getQuote("TCS.NS"))
+                .thenReturn(Optional.of(new StockQuoteResponse("TCS.NS", new BigDecimal("4120.25"), "INR", LocalDateTime.of(2026, 8, 4, 9, 45))));
 
-        mockMvc.perform(get("/api/v1/market/quote").param("ticker", "TSLA"))
+        mockMvc.perform(get("/api/v1/market/quote").param("ticker", "TCS.NS"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.ticker").value("TSLA"))
-                .andExpect(jsonPath("$.price").value(248.13))
-                .andExpect(jsonPath("$.currency").value("USD"));
+                .andExpect(jsonPath("$.ticker").value("TCS.NS"))
+                .andExpect(jsonPath("$.price").value(4120.25))
+                .andExpect(jsonPath("$.currency").value("INR"));
     }
 }
 

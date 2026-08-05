@@ -25,12 +25,22 @@ class MarketDataServiceTest {
     void setUp() {
         RestClient.Builder builder = RestClient.builder().baseUrl("https://example.test");
         server = MockRestServiceServer.bindTo(builder).build();
-        service = new MarketDataService(builder.build(), "AAPL,AMZN,TSLA");
+        service = new MarketDataService(builder.build(), "TCS.NS,INFY.NS,RELIANCE.NS", "", false, false);
     }
 
     @Test
     void getSupportedTickers_returnsConfiguredList() {
-        assertThat(service.getSupportedTickers()).containsExactly("AAPL", "AMZN", "TSLA");
+        assertThat(service.getSupportedTickers()).containsExactly("TCS.NS", "INFY.NS", "RELIANCE.NS");
+    }
+
+    @Test
+    void getStockCatalog_returnsSymbolCompanyNameAndCurrency() {
+        var catalog = service.getStockCatalog();
+
+        assertThat(catalog).hasSize(3);
+        assertThat(catalog.get(0).getSymbol()).isEqualTo("TCS.NS");
+        assertThat(catalog.get(0).getCompanyName()).isEqualTo("Tata Consultancy Services Ltd");
+        assertThat(catalog.get(0).getCurrency()).isEqualTo("INR");
     }
 
     @Test
@@ -40,12 +50,12 @@ class MarketDataServiceTest {
 
     @Test
     void getQuote_readsFlatPriceAndCachesResult() {
-        server.expect(requestTo("https://example.test/cachedPriceData?ticker=TSLA"))
+        server.expect(requestTo("https://example.test/cachedPriceData?ticker=TCS.NS"))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withSuccess("{\"price\":248.13}", MediaType.APPLICATION_JSON));
 
-        var first = service.getQuote("TSLA");
-        var second = service.getQuote("TSLA");
+        var first = service.getQuote("TCS");
+        var second = service.getQuote("TCS");
 
         assertThat(first).isPresent();
         assertThat(first.get().getPrice()).isEqualByComparingTo("248.13");
@@ -56,22 +66,27 @@ class MarketDataServiceTest {
 
     @Test
     void fetchPriceOrThrow_throwsWhenPriceCannotBeExtracted() {
-        server.expect(requestTo("https://example.test/cachedPriceData?ticker=TSLA"))
-                .andRespond(withSuccess("{\"ticker\":\"TSLA\"}", MediaType.APPLICATION_JSON));
+        server.expect(requestTo("https://example.test/cachedPriceData?ticker=TCS.NS"))
+                .andRespond(withSuccess("{\"ticker\":\"TCS.NS\"}", MediaType.APPLICATION_JSON));
 
-        assertThatThrownBy(() -> service.fetchPriceOrThrow("TSLA"))
+        assertThatThrownBy(() -> service.fetchPriceOrThrow("TCS"))
                 .isInstanceOf(ExternalApiException.class)
-                .hasMessageContaining("TSLA");
+                .hasMessageContaining("TCS.NS");
     }
 
     @Test
     void fetchPrice_returnsEmptyWhenUpstreamPayloadIsInvalid() {
-        server.expect(requestTo("https://example.test/cachedPriceData?ticker=AAPL"))
+        server.expect(requestTo("https://example.test/cachedPriceData?ticker=INFY.NS"))
                 .andRespond(withSuccess("{\"unexpected\":true}", MediaType.APPLICATION_JSON));
 
-        Optional<?> result = service.fetchPrice("AAPL");
+        Optional<?> result = service.fetchPrice("INFY");
 
         assertThat(result).isEmpty();
+    }
+
+    @Test
+    void getQuote_unsupportedTicker_returnsEmpty() {
+        assertThat(service.getQuote("TSLA")).isEmpty();
     }
 }
 

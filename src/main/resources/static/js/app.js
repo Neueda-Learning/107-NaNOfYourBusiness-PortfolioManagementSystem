@@ -8,6 +8,7 @@
  */
 
 import { loadDashboard } from "./dashboard.js";
+import { loadMarketBrowse } from "./marketBrowse.js";
 
 // Track which tabs have been loaded to avoid redundant re-fetches within a session
 const _loaded = new Set();
@@ -37,6 +38,9 @@ function onTabFirstLoad(tabName) {
     case "dashboard":
       loadDashboard();
       break;
+    case "stocks":
+      loadMarketBrowse();
+      break;
     // Future tabs will add cases here (US-03/04/05)
     default:
       break;
@@ -47,6 +51,11 @@ function onTabFirstLoad(tabName) {
 window.__reloadDashboard = () => {
   _loaded.delete("dashboard");
   activateTab("dashboard");
+};
+
+// Called by other modules after portfolio mutations so dashboard refreshes next time.
+window.__markDashboardStale = () => {
+  _loaded.delete("dashboard");
 };
 
 // ── Bootstrap ────────────────────────────────────────
