@@ -6,24 +6,32 @@ import com.example.portfolio.exception.ResourceNotFoundException;
 import com.example.portfolio.mapper.PortfolioItemMapper;
 import com.example.portfolio.model.AssetType;
 import com.example.portfolio.model.PortfolioItem;
+import com.example.portfolio.model.TradeSide;
 import com.example.portfolio.repository.PortfolioItemRepository;
+import com.example.portfolio.repository.PortfolioTradeRepository;
 import com.example.portfolio.service.portfolio.PortfolioItemTypeHandlerRegistry;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class PortfolioItemService {
 
     private final PortfolioItemRepository repository;
+    private final PortfolioTradeRepository tradeRepository;
     private final PortfolioItemMapper mapper;
     private final PortfolioItemTypeHandlerRegistry handlerRegistry;
 
     public PortfolioItemService(PortfolioItemRepository repository,
+                                PortfolioTradeRepository tradeRepository,
                                 PortfolioItemMapper mapper,
                                 PortfolioItemTypeHandlerRegistry handlerRegistry) {
         this.repository = repository;
+        this.tradeRepository = tradeRepository;
         this.mapper = mapper;
         this.handlerRegistry = handlerRegistry;
     }
@@ -63,6 +71,69 @@ public class PortfolioItemService {
         repository.updateCurrentPrice(id, newPrice);
         item.setCurrentPrice(newPrice);
         return mapper.toResponse(item);
+    }
+
+    @Transactional
+    public PortfolioItemResponse buy(Long id, BigDecimal quantity) {
+        PortfolioItem item = requireStockHolding(id);
+        BigDecimal executionPrice = resolveExecutionPrice(item);
+        LocalDateTime executedAt = LocalDateTime.now();
+
+        BigDecimal oldQuantity = item.getQuantity();
+        BigDecimal newQuantity = oldQuantity.add(quantity);
+        BigDecimal oldCost = oldQuantity.multiply(item.getPurchasePrice());
+        BigDecimal newCost = quantity.multiply(executionPrice);
+        BigDecimal averagePrice = oldCost.add(newCost)
+                .divide(newQuantity, 4, RoundingMode.HALF_UP);
+
+        repository.updateHoldingAfterTrade(item.getId(), newQuantity, averagePrice, executionPrice, executedAt);
+        tradeRepository.saveTrade(item, TradeSide.BUY, quantity, executionPrice, executedAt);
+
+        item.setQuantity(newQuantity);
+        item.setPurchasePrice(averagePrice);
+        item.setCurrentPrice(executionPrice);
+        item.setUpdatedAt(executedAt);
+        return mapper.toResponse(item);
+    }
+
+    @Transactional
+    public PortfolioItemResponse sell(Long id, BigDecimal quantity) {
+        PortfolioItem item = requireStockHolding(id);
+
+        if (quantity.compareTo(item.getQuantity()) > 0) {
+            throw new IllegalArgumentException("Sell quantity exceeds current holding");
+        }
+
+        BigDecimal executionPrice = resolveExecutionPrice(item);
+        LocalDateTime executedAt = LocalDateTime.now();
+        BigDecimal remainingQuantity = item.getQuantity().subtract(quantity);
+        tradeRepository.saveTrade(item, TradeSide.SELL, quantity, executionPrice, executedAt);
+
+        if (remainingQuantity.compareTo(BigDecimal.ZERO) == 0) {
+            repository.deleteById(item.getId());
+            item.setQuantity(BigDecimal.ZERO);
+            item.setCurrentPrice(executionPrice);
+            item.setUpdatedAt(executedAt);
+            return mapper.toResponse(item);
+        }
+
+        repository.updateHoldingAfterTrade(item.getId(), remainingQuantity, item.getPurchasePrice(), executionPrice, executedAt);
+        item.setQuantity(remainingQuantity);
+        item.setCurrentPrice(executionPrice);
+        item.setUpdatedAt(executedAt);
+        return mapper.toResponse(item);
+    }
+
+    private PortfolioItem requireStockHolding(Long id) {
+        PortfolioItem item = requireItem(id);
+        if (item.getType() != AssetType.STOCK) {
+            throw new IllegalArgumentException("Buy/sell is currently supported for STOCK holdings only");
+        }
+        return item;
+    }
+
+    private BigDecimal resolveExecutionPrice(PortfolioItem item) {
+        return handlerRegistry.resolve(item.getType()).resolveRefreshedPrice(item);
     }
 
     private PortfolioItem requireItem(Long id) {

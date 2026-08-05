@@ -64,6 +64,8 @@ Includes all request fields plus computed/managed fields:
 | PUT | `/portfolio-items/{id}` | update item |
 | DELETE | `/portfolio-items/{id}` | delete item |
 | POST | `/portfolio-items/{id}/refresh-price` | refresh stock price from market data service |
+| POST | `/portfolio-items/{id}/buy` | buy quantity for existing stock holding (market execution price is server-side) |
+| POST | `/portfolio-items/{id}/sell` | sell quantity for existing stock holding (auto-removes holding when quantity reaches zero) |
 
 ### 3.2 Portfolio Summary
 
@@ -105,6 +107,16 @@ Includes all request fields plus computed/managed fields:
   "updatedAt": "2026-08-01T07:30:00"
 }
 ```
+
+### Buy/Sell Request
+
+```json
+{
+  "quantity": 2.5
+}
+```
+
+For buy/sell, backend sets execution price and execution timestamp server-side and records trade history.
 
 ### Summary Response
 

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/market")
@@ -34,6 +35,17 @@ public class MarketDataController {
     @GetMapping("/stock-catalog")
     public ResponseEntity<List<StockCatalogItemResponse>> getStockCatalog() {
         return ResponseEntity.ok(marketDataService.getStockCatalog());
+    }
+
+    /**
+     * GET /api/v1/market/batch-quotes?tickers=RELIANCE.NS&tickers=TCS.NS
+     * Returns cached quotes for multiple tickers in one call — no live network round-trip,
+     * reads from the in-memory cache populated by the scheduled batch poll.
+     */
+    @GetMapping("/batch-quotes")
+    public ResponseEntity<Map<String, StockQuoteResponse>> getBatchQuotes(
+            @RequestParam List<String> tickers) {
+        return ResponseEntity.ok(marketDataService.getBatchQuotes(tickers));
     }
 
     /**

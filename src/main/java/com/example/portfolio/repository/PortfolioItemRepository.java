@@ -84,6 +84,20 @@ PortfolioItemRepository {
                 price, LocalDateTime.now(), id);
     }
 
+    public void updateHoldingAfterTrade(Long id,
+                                        BigDecimal quantity,
+                                        BigDecimal purchasePrice,
+                                        BigDecimal currentPrice,
+                                        LocalDateTime updatedAt) {
+        jdbc.update(
+                "UPDATE portfolio_item SET quantity = ?, purchase_price = ?, current_price = ?, updated_at = ? WHERE id = ?",
+                quantity,
+                purchasePrice,
+                currentPrice,
+                updatedAt,
+                id);
+    }
+
     public void deleteById(Long id) {
         jdbc.update("DELETE FROM portfolio_item WHERE id = ?", id);
     }
