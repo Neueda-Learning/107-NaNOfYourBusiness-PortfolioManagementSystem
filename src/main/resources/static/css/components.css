@@ -775,3 +775,80 @@
   .stocks-layout { grid-template-columns: 1fr; }
 }
 
+/* ── Mutual Fund NAV History Modal ────────────────────────────── */
+.mf-history-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mf-history-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+}
+.mf-history-modal__panel {
+  position: relative;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-hover);
+  width: min(720px, 92vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: var(--space-6);
+}
+.mf-history-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+.mf-history-modal__title {
+  font-size: var(--font-size-lg, 1.1rem);
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+.mf-history-modal__subtitle {
+  font-size: 0.85rem;
+  color: var(--color-text-faint);
+  margin: 4px 0 0;
+}
+.mf-history-modal__close {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: var(--color-text-faint);
+  padding: 4px 8px;
+}
+.mf-history-modal__ranges {
+  display: flex;
+  gap: 8px;
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+.mf-range-btn {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: var(--color-text);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.mf-range-btn.active,
+.mf-range-btn:hover {
+  background: var(--color-accent, #059669);
+  color: #fff;
+  border-color: var(--color-accent, #059669);
+}
+.mf-history-modal__body {
+  position: relative;
+  min-height: 200px;
+}
+

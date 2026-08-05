@@ -14,11 +14,14 @@ import {
   sellMutualFund,
   getPortfolioItems,
   deletePortfolioItem,
+  getMutualFundHistory,
 } from "./api.js";
 
 let initialized = false;
 let catalogue = [];       // { schemeCode, schemeName, latestNav }
 let mfHoldings = [];      // portfolio items of type MUTUAL_FUND
+let historyChart = null;
+let currentHistorySchemeCode = null;
 
 const byId = (id) => document.getElementById(id);
 
@@ -80,9 +83,13 @@ function renderCatalogue() {
         <td>${fund.schemeName}</td>
         <td>${nav}</td>
         <td>
-          <button class="btn-secondary" style="font-size:0.75rem;padding:4px 10px;"
+          <button class="btn-secondary" style="font-size:0.75rem;padding:4px 10px;margin-right:6px;"
                   onclick="window.__mfSelectFund(${fund.schemeCode})">
             Select
+          </button>
+          <button class="btn-secondary" style="font-size:0.75rem;padding:4px 10px;"
+                  onclick="window.__mfShowHistory(${fund.schemeCode}, '${fund.schemeName.replace(/'/g, "\\'")}', ${fund.latestNav ?? "null"})">
+            History
           </button>
         </td>
       </tr>`;
@@ -249,6 +256,141 @@ async function handleSell() {
   }
 }
 
+// ── NAV History Chart ─────────────────────────────────
+
+async function renderHistoryChart(schemeCode, range) {
+  const loadingEl = byId("mf-history-loading");
+  const emptyEl = byId("mf-history-empty");
+  const canvas = byId("mf-history-chart");
+
+  if (loadingEl) loadingEl.style.display = "flex";
+  if (emptyEl) emptyEl.style.display = "none";
+  if (canvas) canvas.style.display = "none";
+
+  try {
+    const data = await getMutualFundHistory(schemeCode, range);
+    const points = data.history || [];
+
+    if (loadingEl) loadingEl.style.display = "none";
+
+    if (!points.length) {
+      if (emptyEl) emptyEl.style.display = "flex";
+      return;
+    }
+
+    if (canvas) canvas.style.display = "block";
+
+    const labels = points.map(p => p.date);
+    const navValues = points.map(p => Number(p.nav));
+
+    if (historyChart) {
+      historyChart.destroy();
+      historyChart = null;
+    }
+
+    const ctx = canvas.getContext("2d");
+    const accentColor = getComputedStyle(document.documentElement)
+      .getPropertyValue("--color-mutual-fund").trim() || "#059669";
+
+    historyChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          label: "NAV (₹)",
+          data: navValues,
+          borderColor: accentColor,
+          backgroundColor: accentColor + "22",
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          fill: true,
+          tension: 0.25,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        scales: {
+          x: {
+            ticks: { maxTicksLimit: 8, color: getComputedStyle(document.documentElement).getPropertyValue("--color-text-faint") },
+            grid: { display: false },
+          },
+          y: {
+            ticks: { color: getComputedStyle(document.documentElement).getPropertyValue("--color-text-faint") },
+            grid: { color: getComputedStyle(document.documentElement).getPropertyValue("--color-border") },
+          },
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => `NAV: ₹${fmtNum(ctx.parsed.y, 4)}`,
+            },
+          },
+        },
+      },
+    });
+
+    // Update subtitle with change over the period
+    const first = navValues[0];
+    const last = navValues[navValues.length - 1];
+    const change = last - first;
+    const changePct = first !== 0 ? (change / first) * 100 : 0;
+    const sign = change >= 0 ? "+" : "";
+    const subtitleEl = byId("mf-history-subtitle");
+    if (subtitleEl) {
+      subtitleEl.innerHTML = `Latest NAV: ₹${fmtNum(last, 4)} &nbsp;•&nbsp; ` +
+        `<span style="color:${change >= 0 ? 'var(--color-success,#38a169)' : 'var(--color-danger,#e53e3e)'}">` +
+        `${sign}₹${fmtNum(Math.abs(change), 4)} (${sign}${fmtNum(changePct, 2)}%)</span> over selected range`;
+    }
+  } catch (err) {
+    if (loadingEl) loadingEl.style.display = "none";
+    if (emptyEl) {
+      emptyEl.style.display = "flex";
+      emptyEl.querySelector(".empty-state__text").textContent = "Failed to load history: " + err.message;
+    }
+  }
+}
+
+window.__mfShowHistory = function (schemeCode, schemeName, latestNav) {
+  currentHistorySchemeCode = schemeCode;
+  const modal = byId("mf-history-modal");
+  const titleEl = byId("mf-history-title");
+  if (titleEl) titleEl.textContent = schemeName;
+  if (modal) modal.style.display = "flex";
+
+  // Reset range buttons to "ALL"
+  document.querySelectorAll(".mf-range-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.range === "ALL");
+  });
+
+  renderHistoryChart(schemeCode, "ALL");
+};
+
+window.__mfCloseHistory = function () {
+  const modal = byId("mf-history-modal");
+  if (modal) modal.style.display = "none";
+  if (historyChart) {
+    historyChart.destroy();
+    historyChart = null;
+  }
+  currentHistorySchemeCode = null;
+};
+
+function wireHistoryRangeButtons() {
+  document.querySelectorAll(".mf-range-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".mf-range-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      if (currentHistorySchemeCode != null) {
+        renderHistoryChart(currentHistorySchemeCode, btn.dataset.range);
+      }
+    });
+  });
+}
+
 // ── Bootstrap ─────────────────────────────────────────
 
 export async function loadMutualFunds() {
@@ -271,6 +413,7 @@ export async function loadMutualFunds() {
     await loadCatalogue();
   });
   byId("mf-refresh-holdings-btn")?.addEventListener("click", loadHoldings);
+  wireHistoryRangeButtons();
 
   // Load data
   await Promise.all([loadCatalogue(), loadHoldings()]);

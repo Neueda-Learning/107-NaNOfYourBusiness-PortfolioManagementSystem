@@ -121,6 +121,15 @@ export async function getMutualFundDetails(schemeCode) {
   return res.json();
 }
 
+/** GET /api/mutual-funds/{schemeCode}/history?range=1M|3M|6M|1Y|ALL */
+export async function getMutualFundHistory(schemeCode, range = "ALL") {
+  const res = await fetch(`/api/mutual-funds/${schemeCode}/history?range=${encodeURIComponent(range)}`, {
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error(b.message || `Request failed (${res.status})`); }
+  return res.json();
+}
+
 /** POST /api/mutual-funds/buy */
 export async function buyMutualFund(payload) {
   const res = await fetch("/api/mutual-funds/buy", {
