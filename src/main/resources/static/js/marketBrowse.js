@@ -582,7 +582,9 @@ async function handleAddStock() {
   const selected = resolveCatalogItem(query);
   const ticker = selected?.symbol ?? query;
   const qty = Number(byId("browse-qty")?.value);
-  const purchaseDate = byId("browse-date")?.value;
+  // Purchase date is no longer a user-facing field — the holding is always
+  // recorded as bought today, at the current market price (see below).
+  const purchaseDate = todayISO();
 
   if (!ticker) {
     setActionMsg("Enter a ticker first.", true);
@@ -590,10 +592,6 @@ async function handleAddStock() {
   }
   const tickerInput = byId("browse-ticker");
   if (tickerInput) tickerInput.value = ticker;
-  if (!purchaseDate) {
-    setActionMsg("Choose a purchase date.", true);
-    return;
-  }
   if (!Number.isFinite(qty) || qty <= 0) {
     setActionMsg("Quantity must be greater than 0.", true);
     return;
@@ -768,8 +766,6 @@ export async function loadMarketBrowse() {
   if (!initialized) {
     initialized = true;
 
-    const dateInput = byId("browse-date");
-    if (dateInput && !dateInput.value) dateInput.value = todayISO();
 
     byId("browse-fetch-btn")?.addEventListener("click", handleFetchQuote);
     byId("browse-add-btn")?.addEventListener("click", handleAddStock);

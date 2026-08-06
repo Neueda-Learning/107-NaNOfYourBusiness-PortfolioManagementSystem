@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.example.portfolio.dto.PortfolioPerformanceResponse;
 import com.example.portfolio.dto.PortfolioSummaryResponse;
+import com.example.portfolio.service.PortfolioPerformanceService;
 import com.example.portfolio.service.PortfolioSummaryService;
 import java.math.BigDecimal;
 import java.util.List;
@@ -20,6 +22,9 @@ class PortfolioSummaryControllerTest {
 
 	@Mock
 	private PortfolioSummaryService portfolioSummaryService;
+
+	@Mock
+	private PortfolioPerformanceService portfolioPerformanceService;
 
 	@InjectMocks
 	private PortfolioSummaryController portfolioSummaryController;
@@ -50,6 +55,18 @@ class PortfolioSummaryControllerTest {
 		assertEquals(14, result.getBody().getItemCount());
 		assertEquals("STOCK", result.getBody().getAllocationByType().get(0).getType());
 		verify(portfolioSummaryService).getSummary();
+	}
+
+	@Test
+	void getPerformance_shouldReturnPerformanceSeries() {
+		PortfolioPerformanceResponse response = new PortfolioPerformanceResponse("1M", List.of());
+		when(portfolioPerformanceService.getPerformance("1M")).thenReturn(response);
+
+		ResponseEntity<PortfolioPerformanceResponse> result = portfolioSummaryController.getPerformance("1M");
+
+		assertEquals(200, result.getStatusCode().value());
+		assertEquals("1M", result.getBody().getRange());
+		verify(portfolioPerformanceService).getPerformance("1M");
 	}
 }
 

@@ -36,6 +36,14 @@ export async function getPortfolioSummary() {
   return apiFetch("/portfolio/summary");
 }
 
+/**
+ * Fetch the portfolio value/cost time series for the dashboard's Performance
+ * Over Time chart. GET /api/v1/portfolio/performance?range=1M|3M|6M|1Y|ALL
+ */
+export async function getPortfolioPerformance(range = "ALL") {
+  return apiFetch(`/portfolio/performance?range=${encodeURIComponent(range)}`);
+}
+
 // ── Portfolio Items ──────────────────────────────────
 /**
  * @param {string|null} type  One of "STOCK" | "BOND" | "MUTUAL_FUND" | null (all)
