@@ -1,114 +1,114 @@
 ﻿<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Portfolio Manager</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portfolio Manager</title>
 
-  <!-- Inline SVG favicon (avoids a 404 for /favicon.ico) -->
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%232563eb'/%3E%3Cpath d='M25 70 L25 45 L40 45 L40 70 Z M45 70 L45 30 L60 30 L60 70 Z M65 70 L65 55 L80 55 L80 70 Z' fill='white'/%3E%3C/svg%3E" />
+    <!-- Inline SVG favicon (avoids a 404 for /favicon.ico) -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%232563eb'/%3E%3Cpath d='M25 70 L25 45 L40 45 L40 70 Z M45 70 L45 30 L60 30 L60 70 Z M65 70 L65 55 L80 55 L80 70 Z' fill='white'/%3E%3C/svg%3E" />
 
-  <!-- Prevent FOUC: apply saved theme before first paint -->
-  <script>
-    (function () {
-      var t = localStorage.getItem('pm-theme') ||
-        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-      document.documentElement.setAttribute('data-theme', t);
-    })();
-  </script>
+    <!-- Prevent FOUC: apply saved theme before first paint -->
+    <script>
+        (function () {
+          var t = localStorage.getItem('pm-theme') ||
+            (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
 
-  <!-- CSS -->
-  <link rel="stylesheet" href="/css/variables.css" />
-  <link rel="stylesheet" href="/css/layout.css" />
-  <link rel="stylesheet" href="/css/components.css" />
-  <link rel="stylesheet" href="/css/animations.css" />
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/variables.css?v=2" />
+    <link rel="stylesheet" href="/css/layout.css?v=2" />
+    <link rel="stylesheet" href="/css/components.css?v=3" />
+    <link rel="stylesheet" href="/css/animations.css?v=2" />
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 
-  <!-- Animations (deferred — runs after DOM is parsed) -->
-  <script defer src="/js/animations.js"></script>
+    <!-- Animations (deferred — runs after DOM is parsed) -->
+    <script defer src="/js/animations.js"></script>
 </head>
 <body>
 
-  <!-- ── Preloader ──────────────────────────────────────────────── -->
-  <div id="preloader" class="preloader" aria-hidden="true">
+<!-- ── Preloader ──────────────────────────────────────────────── -->
+<div id="preloader" class="preloader" aria-hidden="true">
     <div class="preloader__wordmark" aria-label="Portfolio Manager">
-      <span>P</span><span>O</span><span>R</span><span>T</span><span>F</span><span>O</span><span>L</span><span>I</span><span>O</span><span>&nbsp;</span><span>M</span><span>A</span><span>N</span><span>A</span><span>G</span><span>E</span><span>R</span>
+        <span>P</span><span>O</span><span>R</span><span>T</span><span>F</span><span>O</span><span>L</span><span>I</span><span>O</span><span>&nbsp;</span><span>M</span><span>A</span><span>N</span><span>A</span><span>G</span><span>E</span><span>R</span>
     </div>
     <div class="preloader__sub">Investment Dashboard</div>
     <div class="preloader__track">
-      <div class="preloader__bar"></div>
+        <div class="preloader__bar"></div>
     </div>
-  </div>
+</div>
 
-  <!-- ── Custom Cursor (desktop only) ───────────────────────────── -->
-  <div class="cursor-dot"     id="cursor-dot"     aria-hidden="true"></div>
-  <div class="cursor-outline" id="cursor-outline" aria-hidden="true"></div>
+<!-- ── Custom Cursor (desktop only) ───────────────────────────── -->
+<div class="cursor-dot"     id="cursor-dot"     aria-hidden="true"></div>
+<div class="cursor-outline" id="cursor-outline" aria-hidden="true"></div>
 
-  <!-- ── Header ─────────────────────────────────────────────────── -->
-  <header class="app-header">
+<!-- ── Header ─────────────────────────────────────────────────── -->
+<header class="app-header">
     <div class="app-header__brand">
-      <!-- Rising line-chart logo -->
-      <svg class="app-header__logo-icon" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-           aria-hidden="true">
-        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
-        <polyline points="16 7 22 7 22 13"/>
-      </svg>
-      <h1 class="app-header__title">Portfolio <em>Manager</em></h1>
+        <!-- Rising line-chart logo -->
+        <svg class="app-header__logo-icon" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+            <polyline points="16 7 22 7 22 13"/>
+        </svg>
+        <h1 class="app-header__title">Portfolio <em>Manager</em></h1>
     </div>
 
     <!-- Dark / Light toggle -->
     <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
-      <!-- Moon icon — shown in light mode -->
-      <svg class="icon-moon" width="15" height="15" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-      </svg>
-      <!-- Sun icon — shown in dark mode -->
-      <svg class="icon-sun" width="15" height="15" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-           aria-hidden="true">
-        <circle cx="12" cy="12" r="5"/>
-        <line x1="12" y1="1"  x2="12" y2="3"/>
-        <line x1="12" y1="21" x2="12" y2="23"/>
-        <line x1="4.22"  y1="4.22"  x2="5.64"  y2="5.64"/>
-        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-        <line x1="1"  y1="12" x2="3"  y2="12"/>
-        <line x1="21" y1="12" x2="23" y2="12"/>
-        <line x1="4.22"  y1="19.78" x2="5.64"  y2="18.36"/>
-        <line x1="18.36" y1="5.64"  x2="19.78" y2="4.22"/>
-      </svg>
+        <!-- Moon icon — shown in light mode -->
+        <svg class="icon-moon" width="15" height="15" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+        <!-- Sun icon — shown in dark mode -->
+        <svg class="icon-sun" width="15" height="15" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1"  x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22"  y1="4.22"  x2="5.64"  y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1"  y1="12" x2="3"  y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22"  y1="19.78" x2="5.64"  y2="18.36"/>
+            <line x1="18.36" y1="5.64"  x2="19.78" y2="4.22"/>
+        </svg>
     </button>
-  </header>
+</header>
 
-  <!-- ── Tab Navigation ─────────────────────────────────────────── -->
-  <nav class="tab-nav" role="tablist" aria-label="Main navigation">
+<!-- ── Tab Navigation ─────────────────────────────────────────── -->
+<nav class="tab-nav" role="tablist" aria-label="Main navigation">
     <button class="tab-nav__btn" data-tab="dashboard"    role="tab">Dashboard</button>
     <button class="tab-nav__btn" data-tab="stocks"       role="tab">Stocks</button>
     <button class="tab-nav__btn" data-tab="mutual-funds" role="tab">Mutual Funds</button>
     <button class="tab-nav__btn" data-tab="bonds"        role="tab">Bonds</button>
     <button class="tab-nav__btn" data-tab="support"      role="tab">Support</button>
-  </nav>
+</nav>
 
-  <!-- ════════════════════════════════════════════════
-       DASHBOARD PANEL
-       ════════════════════════════════════════════════ -->
-  <section class="tab-panel" data-panel="dashboard" role="tabpanel" aria-label="Dashboard">
+<!-- ════════════════════════════════════════════════
+     DASHBOARD PANEL
+     ════════════════════════════════════════════════ -->
+<section class="tab-panel" data-panel="dashboard" role="tabpanel" aria-label="Dashboard">
 
     <!-- Loading state (skeleton) -->
     <div id="dashboard-loading" class="dashboard-skeleton" style="display:none;" aria-hidden="true">
-      <div class="skeleton-cards">
-        <div class="skeleton-card"></div>
-        <div class="skeleton-card"></div>
-        <div class="skeleton-card"></div>
-        <div class="skeleton-card"></div>
-      </div>
-      <div class="skeleton-charts">
-        <div class="skeleton-chart"></div>
-        <div class="skeleton-chart"></div>
-      </div>
+        <div class="skeleton-cards">
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+        </div>
+        <div class="skeleton-charts">
+            <div class="skeleton-chart"></div>
+            <div class="skeleton-chart"></div>
+        </div>
     </div>
 
     <!-- Error state -->
@@ -121,752 +121,748 @@
           <line x1="12" y1="17" x2="12.01" y2="17"/>
         </svg>
       </span>
-      <div class="error-state__body">
-        <p class="error-state__message" id="dashboard-error-msg">Could not load portfolio data.</p>
-        <button class="btn-retry" onclick="window.__reloadDashboard()">Retry</button>
-      </div>
+        <div class="error-state__body">
+            <p class="error-state__message" id="dashboard-error-msg">Could not load portfolio data.</p>
+            <button class="btn-retry" onclick="window.__reloadDashboard()">Retry</button>
+        </div>
     </div>
 
     <!-- Empty state -->
     <div id="dashboard-empty" class="empty-state" style="display:none;">
-      <div class="empty-state__icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/>
-          <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
-        </svg>
-      </div>
-      <p class="empty-state__text">
-        Your portfolio is empty. Add your first holding using the Stocks, Bonds, or Mutual Funds tab.
-      </p>
-      <button class="btn-primary empty-state__cta" id="dashboard-empty-cta">Add your first holding</button>
+        <div class="empty-state__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/>
+                <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+            </svg>
+        </div>
+        <p class="empty-state__text">
+            Your portfolio is empty. Add your first holding using the Stocks, Bonds, or Mutual Funds tab.
+        </p>
+        <button class="btn-primary empty-state__cta" id="dashboard-empty-cta">Add your first holding</button>
     </div>
 
     <!-- Main content -->
     <div id="dashboard-content" style="display:none;">
 
-      <!-- Header row: last updated + manual refresh -->
-      <div class="dashboard-toolbar stagger-child">
-        <span class="dashboard-toolbar__updated" id="dashboard-last-updated">—</span>
-        <button class="btn-secondary" id="dashboard-refresh-btn" title="Refresh dashboard">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <polyline points="23 4 23 10 17 10"/>
-            <polyline points="1 20 1 14 7 14"/>
-            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-          </svg>
-          Refresh
-        </button>
-      </div>
-
-      <div class="dashboard-grid">
-
-        <!-- Summary cards -->
-        <div class="summary-cards">
-          <div class="card stagger-child">
-            <div class="card__icon card__icon--neutral">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <line x1="12" y1="1" x2="12" y2="23"/>
-                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-              </svg>
-            </div>
-            <p class="card__title">Total Value</p>
-            <p class="card__value card__value--neutral" id="card-total-value">—</p>
-            <svg class="card__sparkline" id="sparkline-value" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true"></svg>
-            <p class="card__sub">Current market value</p>
-          </div>
-          <div class="card stagger-child">
-            <div class="card__icon" id="card-icon-gainloss">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-                <polyline points="17 6 23 6 23 12"/>
-              </svg>
-            </div>
-            <p class="card__title">Total Gain / Loss</p>
-            <p class="card__value" id="card-gain-loss">—</p>
-            <svg class="card__sparkline" id="sparkline-gainloss" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true"></svg>
-            <p class="card__sub" id="card-gain-loss-pct">—</p>
-          </div>
-          <div class="card stagger-child">
-            <div class="card__icon card__icon--neutral">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-                <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-                <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-                <rect x="14" y="14" width="7" height="7" rx="1.5"/>
-              </svg>
-            </div>
-            <p class="card__title">Holdings</p>
-            <p class="card__value card__value--neutral" id="card-item-count">—</p>
-            <p class="card__sub">Total items</p>
-          </div>
-          <div class="card stagger-child">
-            <div class="card__icon card__icon--neutral">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
-                <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
-                <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
-              </svg>
-            </div>
-            <p class="card__title">Total Cost Basis</p>
-            <p class="card__value card__value--neutral" id="card-total-cost">—</p>
-            <p class="card__sub">Total amount invested</p>
-          </div>
-        </div>
-
-        <!-- Allocation chart -->
-        <div class="chart-card stagger-child">
-          <div class="chart-card__header">
-            <h2 class="chart-card__title">Allocation by Asset Type</h2>
-          </div>
-          <div class="chart-card__body">
-            <div class="chart-canvas-wrap chart-canvas-wrap--donut">
-              <canvas id="allocationChart" role="img" aria-label="Portfolio allocation doughnut chart"></canvas>
-            </div>
-            <p class="chart-insight" id="dashboard-insight"></p>
-          </div>
-        </div>
-
-        <!-- Performance over time -->
-        <div class="chart-card stagger-child">
-          <div class="chart-card__header">
-            <h2 class="chart-card__title">Performance Over Time</h2>
-            <div class="perf-range-group" id="perf-range-group">
-              <button class="perf-range-btn" data-range="1M">1M</button>
-              <button class="perf-range-btn" data-range="3M">3M</button>
-              <button class="perf-range-btn" data-range="6M">6M</button>
-              <button class="perf-range-btn" data-range="1Y">1Y</button>
-              <button class="perf-range-btn active" data-range="ALL">All</button>
-            </div>
-          </div>
-          <div class="chart-card__body">
-            <div id="performance-loading" class="loading" style="display:none;">
-              <div class="spinner"></div>
-              <span>Loading performance…</span>
-            </div>
-            <div id="performance-empty" class="empty-state" style="display:none;">
-              <p class="empty-state__text">Not enough history yet to plot performance.</p>
-            </div>
-            <div class="performance-canvas-wrap" id="performance-canvas-wrap" style="display:none;">
-              <canvas id="performanceChart" role="img" aria-label="Portfolio performance over time line chart"></canvas>
-            </div>
-          </div>
-        </div>
-
-
-        <!-- Top movers -->
-        <div class="chart-card stagger-child dashboard-grid--full" id="top-movers-card" style="display:none;">
-          <div class="chart-card__header">
-            <h2 class="chart-card__title">Top Movers</h2>
-          </div>
-          <div class="top-movers" id="top-movers-body"></div>
-        </div>
-
-      </div>
-    </div>
-
-  </section>
-
-  <!-- ════════════════════════════════════════════════
-       STOCKS PANEL  (US-03)
-       ════════════════════════════════════════════════ -->
-  <section class="tab-panel" data-panel="stocks" role="tabpanel" aria-label="Stocks">
-    <div class="stocks-layout">
-
-      <!-- ── Left sidebar: Quote lookup + Add form ──────── -->
-      <aside class="stocks-sidebar">
-
-        <!-- Quote Lookup card -->
-        <div class="card stagger-child">
-          <p class="card__title">Stock Quote Lookup</p>
-
-          <div class="stock-autocomplete">
-            <div class="form-group">
-              <label class="form-label" for="browse-ticker">Ticker / Company</label>
-              <input id="browse-ticker" type="text" class="input-field"
-                     placeholder="e.g. RELIANCE.NS"
-                     autocomplete="off" spellcheck="false" />
-            </div>
-            <div id="browse-ticker-dropdown" class="stock-autocomplete__dropdown" style="display:none;"></div>
-          </div>
-
-          <button id="browse-fetch-btn" class="btn-primary" style="width:100%;margin-top:var(--space-3);">
-            Get Quote
-          </button>
-
-          <div id="browse-quote" class="quote-result" aria-live="polite">
-            Enter a ticker above and click <em>Get Quote</em>.
-          </div>
-        </div>
-
-        <!-- Add to Portfolio card -->
-        <div class="card stagger-child">
-          <p class="card__title">Add to Portfolio</p>
-
-          <p class="support-body" style="margin-top:0;margin-bottom:var(--space-3);font-size:0.8rem;">
-            Enter a quantity and click <em>Add Stock</em>. The current market price is used as
-            the recorded purchase price automatically.
-          </p>
-
-          <div class="form-group">
-            <label class="form-label" for="browse-qty">Quantity (units)</label>
-            <input id="browse-qty" type="number" class="input-field"
-                   min="0.0001" step="0.0001" placeholder="0" />
-          </div>
-
-          <button id="browse-add-btn" class="btn-primary" style="width:100%;margin-top:var(--space-4);">
-            Add Stock
-          </button>
-
-          <div id="browse-add-result" class="action-msg" aria-live="polite"></div>
-        </div>
-
-      </aside>
-
-      <!-- ── Main area: Holdings table ──────────────────── -->
-      <main class="stocks-main">
-        <div class="card card--static featured-stocks-card stagger-child" id="featured-stocks-card">
-          <div class="stocks-holdings-header">
-            <div style="display:flex;align-items:center;gap:var(--space-3);">
-              <button id="browse-toggle-featured-btn"
-                      class="btn-secondary featured-toggle-btn"
-                      title="Expand / collapse market overview"
-                      aria-label="Toggle market overview"
-                      aria-expanded="true">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
-                  <polyline points="6 9 12 15 18 9"/>
-                </svg>
-              </button>
-              <p class="card__title" style="margin-bottom:0;">Market Overview</p>
-            </div>
-            <div style="display:flex;align-items:center;gap:var(--space-3);">
-              <span id="browse-featured-status" class="prices-status"></span>
-              <button id="browse-refresh-featured-btn" class="btn-secondary" title="Refresh featured prices">↻ Refresh</button>
-            </div>
-          </div>
-
-          <div id="featured-stocks-collapsible" class="featured-stocks-collapsible">
-            <div id="browse-featured-body" class="featured-ticker-grid"></div>
-          </div>
-        </div>
-
-        <div class="card card--static stocks-holdings-card">
-
-          <div class="stocks-holdings-header">
-            <p class="card__title" style="margin-bottom:0;">My Stock Holdings</p>
-            <div style="display:flex;align-items:center;gap:var(--space-3);">
-              <span id="browse-prices-status" class="prices-status"></span>
-              <button id="browse-refresh-holdings-btn" class="btn-secondary" title="Reload holdings from database">
-                <!-- Refresh icon -->
+        <!-- Header row: last updated + manual refresh -->
+        <div class="dashboard-toolbar stagger-child">
+            <span class="dashboard-toolbar__updated" id="dashboard-last-updated">—</span>
+            <button class="btn-secondary" id="dashboard-refresh-btn" title="Refresh dashboard">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                      stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <polyline points="23 4 23 10 17 10"/>
-                  <polyline points="1 20 1 14 7 14"/>
-                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                    <polyline points="23 4 23 10 17 10"/>
+                    <polyline points="1 20 1 14 7 14"/>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
                 </svg>
                 Refresh
-              </button>
+            </button>
+        </div>
+
+        <div class="dashboard-grid">
+
+            <!-- Summary cards -->
+            <div class="summary-cards">
+                <div class="card stagger-child">
+                    <div class="card__icon card__icon--neutral">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="12" y1="1" x2="12" y2="23"/>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                        </svg>
+                    </div>
+                    <p class="card__title">Total Value</p>
+                    <p class="card__value card__value--neutral" id="card-total-value">—</p>
+                    <svg class="card__sparkline" id="sparkline-value" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true"></svg>
+                    <p class="card__sub">Current market value</p>
+                </div>
+                <div class="card stagger-child">
+                    <div class="card__icon" id="card-icon-gainloss">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                            <polyline points="17 6 23 6 23 12"/>
+                        </svg>
+                    </div>
+                    <p class="card__title">Total Gain / Loss</p>
+                    <p class="card__value" id="card-gain-loss">—</p>
+                    <svg class="card__sparkline" id="sparkline-gainloss" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true"></svg>
+                    <p class="card__sub" id="card-gain-loss-pct">—</p>
+                </div>
+                <div class="card stagger-child">
+                    <div class="card__icon card__icon--neutral">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+                            <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                            <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+                            <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+                        </svg>
+                    </div>
+                    <p class="card__title">Holdings</p>
+                    <p class="card__value card__value--neutral" id="card-item-count">—</p>
+                    <p class="card__sub">Total items</p>
+                </div>
+                <div class="card stagger-child">
+                    <div class="card__icon card__icon--neutral">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
+                            <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
+                            <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
+                        </svg>
+                    </div>
+                    <p class="card__title">Total Cost Basis</p>
+                    <p class="card__value card__value--neutral" id="card-total-cost">—</p>
+                    <p class="card__sub">Total amount invested</p>
+                </div>
             </div>
-          </div>
 
-          <div id="browse-holdings-result" class="holdings-action-msg" aria-live="polite"></div>
+            <!-- Allocation chart -->
+            <div class="chart-card stagger-child">
+                <div class="chart-card__header">
+                    <h2 class="chart-card__title">Allocation by Asset Type</h2>
+                </div>
+                <div class="chart-card__body">
+                    <div class="chart-canvas-wrap chart-canvas-wrap--donut">
+                        <canvas id="allocationChart" role="img" aria-label="Portfolio allocation doughnut chart"></canvas>
+                    </div>
+                    <p class="chart-insight" id="dashboard-insight"></p>
+                </div>
+            </div>
 
-          <div class="holdings-table-wrap">
-            <table class="holdings-table">
-              <thead>
-                <tr>
-                  <th>Symbol</th>
-                  <th>Qty</th>
-                  <th>Buy Price</th>
-                  <th>Current Price</th>
-                  <th>Gain / Loss</th>
-                  <th>Trade</th>
-                </tr>
-              </thead>
-              <tbody id="browse-holdings-body">
-                <tr>
-                  <td colspan="6" class="holdings-table__empty">Loading…</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+            <!-- Performance over time -->
+            <div class="chart-card stagger-child">
+                <div class="chart-card__header">
+                    <h2 class="chart-card__title">Performance Over Time</h2>
+                    <div class="perf-range-group" id="perf-range-group">
+                        <button class="perf-range-btn" data-range="1M">1M</button>
+                        <button class="perf-range-btn" data-range="3M">3M</button>
+                        <button class="perf-range-btn" data-range="6M">6M</button>
+                        <button class="perf-range-btn" data-range="1Y">1Y</button>
+                        <button class="perf-range-btn active" data-range="ALL">All</button>
+                    </div>
+                </div>
+                <div class="chart-card__body">
+                    <div id="performance-loading" class="loading" style="display:none;">
+                        <div class="spinner"></div>
+                        <span>Loading performance…</span>
+                    </div>
+                    <div id="performance-empty" class="empty-state" style="display:none;">
+                        <p class="empty-state__text">Not enough history yet to plot performance.</p>
+                    </div>
+                    <div class="performance-canvas-wrap" id="performance-canvas-wrap" style="display:none;">
+                        <canvas id="performanceChart" role="img" aria-label="Portfolio performance over time line chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Top movers -->
+            <div class="chart-card stagger-child dashboard-grid--full" id="top-movers-card" style="display:none;">
+                <div class="chart-card__header">
+                    <h2 class="chart-card__title">Top Movers</h2>
+                </div>
+                <div class="top-movers" id="top-movers-body"></div>
+            </div>
 
         </div>
-      </main>
-
     </div>
-  </section>
 
-  <!-- ════════════════════════════════════════════════
-       MUTUAL FUNDS PANEL
-       ════════════════════════════════════════════════ -->
-  <section class="tab-panel" data-panel="mutual-funds" role="tabpanel" aria-label="Mutual Funds">
+</section>
+
+<!-- ════════════════════════════════════════════════
+     STOCKS PANEL  (US-03)
+     ════════════════════════════════════════════════ -->
+<section class="tab-panel" data-panel="stocks" role="tabpanel" aria-label="Stocks">
     <div class="stocks-layout">
 
-      <!-- ── Left sidebar: Buy form ──────────────────── -->
-      <aside class="stocks-sidebar">
+        <!-- ── Left sidebar: Quote lookup + Add form ──────── -->
+        <aside class="stocks-sidebar">
 
-        <!-- Buy Mutual Fund card -->
-        <div class="card stagger-child">
-          <p class="card__title">Buy Mutual Fund</p>
-          <p class="support-body" style="margin-top:0;margin-bottom:var(--space-3);font-size:0.8rem;">
-            Select a fund from the catalogue, enter an amount in $, and click <em>Buy</em>.
-            Units are calculated automatically at the current NAV.
-          </p>
+            <!-- Quote Lookup card -->
+            <div class="card stagger-child">
+                <p class="card__title">Stock Quote Lookup</p>
 
-          <div class="form-group">
-            <label class="form-label" for="mf-buy-scheme">Fund</label>
-            <select id="mf-buy-scheme" class="input-field">
-              <option value="">— Loading funds… —</option>
-            </select>
-          </div>
+                <div class="stock-autocomplete">
+                    <div class="form-group">
+                        <label class="form-label" for="browse-ticker">Ticker / Company</label>
+                        <input id="browse-ticker" type="text" class="input-field"
+                               placeholder="e.g. RELIANCE.NS"
+                               autocomplete="off" spellcheck="false" />
+                    </div>
+                    <div id="browse-ticker-dropdown" class="stock-autocomplete__dropdown" style="display:none;"></div>
+                </div>
 
-          <div class="form-group">
-            <label class="form-label" for="mf-buy-amount">Amount ($)</label>
-            <input id="mf-buy-amount" type="number" class="input-field"
-                   min="1" step="0.01" placeholder="e.g. 10000" />
-          </div>
+                <button id="browse-fetch-btn" class="btn-primary" style="width:100%;margin-top:var(--space-3);">
+                    Get Quote
+                </button>
 
-
-          <button id="mf-buy-btn" class="btn-primary" style="width:100%;margin-top:var(--space-4);">
-            Buy Fund
-          </button>
-          <div id="mf-buy-result" class="action-msg" aria-live="polite"></div>
-        </div>
-
-        <!-- Sell Mutual Fund card -->
-        <div class="card stagger-child">
-          <p class="card__title">Sell Mutual Fund</p>
-          <p class="support-body" style="margin-top:0;margin-bottom:var(--space-3);font-size:0.8rem;">
-            Select a holding from the table, enter an amount to sell in $.
-            Units are calculated at the current NAV.
-          </p>
-
-          <div class="form-group">
-            <label class="form-label" for="mf-sell-holding">Holding</label>
-            <select id="mf-sell-holding" class="input-field">
-              <option value="">— Select a holding —</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="mf-sell-amount">Amount to Sell ($)</label>
-            <input id="mf-sell-amount" type="number" class="input-field"
-                   min="1" step="0.01" placeholder="e.g. 5000" />
-          </div>
-
-          <button id="mf-sell-btn" class="btn-primary" style="width:100%;margin-top:var(--space-4);background:var(--color-danger,#e53e3e);">
-            Sell Fund
-          </button>
-          <div id="mf-sell-result" class="action-msg" aria-live="polite"></div>
-        </div>
-
-      </aside>
-
-      <!-- ── Main area ──────────────────────────────── -->
-      <main class="stocks-main">
-
-        <!-- Available Mutual Funds -->
-        <div class="card stagger-child" style="margin-bottom:var(--space-4);">
-        <!-- Catalogue table -->
-        <div class="card card--static stagger-child" style="margin-bottom:var(--space-4);">
-          <div class="stocks-holdings-header">
-            <p class="card__title" style="margin-bottom:0;">Available Mutual Funds (30 Funds)</p>
-            <button id="mf-refresh-catalogue-btn" class="btn-secondary" title="Reload catalogue">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                   stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <polyline points="23 4 23 10 17 10"/>
-                <polyline points="1 20 1 14 7 14"/>
-                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-              </svg>
-              Refresh NAV
-            </button>
-          </div>
-          <div id="mf-catalogue-msg" class="holdings-action-msg" aria-live="polite"></div>
-
-          <!-- Fund selector — pick any fund to view full details + its buy/sell history -->
-          <div class="form-group" style="max-width:420px;">
-            <label class="form-label" for="mf-view-select">Select a Fund to View Details</label>
-            <select id="mf-view-select" class="input-field">
-              <option value="">— Select a fund —</option>
-            </select>
-          </div>
-
-          <!-- Fund detail + transaction history panel (shown after selection) -->
-          <div id="mf-fund-detail" class="mf-fund-detail" style="display:none;">
-            <div class="mf-fund-detail__summary">
-              <div>
-                <p class="mf-fund-detail__name" id="mf-fund-detail-name">—</p>
-                <p class="mf-fund-detail__meta" id="mf-fund-detail-meta">—</p>
-              </div>
-              <button id="mf-fund-detail-history-btn" class="btn-secondary">View NAV History</button>
+                <div id="browse-quote" class="quote-result" aria-live="polite">
+                    Enter a ticker above and click <em>Get Quote</em>.
+                </div>
             </div>
-            <p class="mf-fund-detail__subtitle">Transaction History</p>
-            <div class="holdings-table-wrap">
-              <table class="holdings-table">
-                <thead>
-                  <tr>
-                    <th>Type</th>
-                    <th>Units</th>
-                    <th>NAV ($)</th>
-                    <th>Amount ($)</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody id="mf-fund-transactions-body">
-                  <tr><td colspan="5" class="holdings-table__empty">Select a fund above to view its transaction history.</td></tr>
-                </tbody>
-              </table>
+
+            <!-- Add to Portfolio card -->
+            <div class="card stagger-child">
+                <p class="card__title">Add to Portfolio</p>
+
+                <p class="support-body" style="margin-top:0;margin-bottom:var(--space-3);font-size:0.8rem;">
+                    Enter a quantity and click <em>Add Stock</em>. The current market price is used as
+                    the recorded purchase price automatically.
+                </p>
+
+                <div class="form-group">
+                    <label class="form-label" for="browse-qty">Quantity (units)</label>
+                    <input id="browse-qty" type="number" class="input-field"
+                           min="0.0001" step="0.0001" placeholder="0" />
+                </div>
+
+                <button id="browse-add-btn" class="btn-primary" style="width:100%;margin-top:var(--space-4);">
+                    Add Stock
+                </button>
+
+                <div id="browse-add-result" class="action-msg" aria-live="polite"></div>
             </div>
-          </div>
 
-          <div class="holdings-table-wrap" id="mf-catalogue-table-wrap" style="margin-top:var(--space-4); display:none;">
-            <div id="mf-catalogue-body" class="mf-fund-chip-grid">
-              <p class="holdings-table__empty">Loading catalogue…</p>
+        </aside>
+
+        <!-- ── Main area: Holdings table ──────────────────── -->
+        <main class="stocks-main">
+            <div class="card card--static featured-stocks-card stagger-child" id="featured-stocks-card">
+                <div class="stocks-holdings-header">
+                    <div style="display:flex;align-items:center;gap:var(--space-3);">
+                        <button id="browse-toggle-featured-btn"
+                                class="btn-secondary featured-toggle-btn"
+                                title="Expand / collapse market overview"
+                                aria-label="Toggle market overview"
+                                aria-expanded="true">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                        </button>
+                        <p class="card__title" style="margin-bottom:0;">Market Overview</p>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:var(--space-3);">
+                        <span id="browse-featured-status" class="prices-status"></span>
+                        <button id="browse-refresh-featured-btn" class="btn-secondary" title="Refresh featured prices">↻ Refresh</button>
+                    </div>
+                </div>
+
+                <div id="featured-stocks-collapsible" class="featured-stocks-collapsible">
+                    <div id="browse-featured-body" class="featured-ticker-grid"></div>
+                </div>
             </div>
-          </div>
-        </div>
 
-        <!-- My Mutual Fund Holdings — displayed as cards, not a dropdown/table -->
-        <div class="card stagger-child">
-        <!-- My Holdings table -->
-        <div class="card card--static stagger-child">
-          <div class="stocks-holdings-header">
-            <p class="card__title" style="margin-bottom:0;">My Mutual Fund Holdings</p>
-            <button id="mf-refresh-holdings-btn" class="btn-secondary" title="Reload holdings">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                   stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <polyline points="23 4 23 10 17 10"/>
-                <polyline points="1 20 1 14 7 14"/>
-                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-              </svg>
-              Refresh
-            </button>
-          </div>
-          <div id="mf-holdings-msg" class="holdings-action-msg" aria-live="polite"></div>
-          <div id="mf-holdings-body" class="mf-holdings-grid">
-            <p class="holdings-table__empty">Loading…</p>
-          </div>
-        </div>
+            <div class="card card--static stocks-holdings-card">
 
-      </main>
+                <div class="stocks-holdings-header">
+                    <p class="card__title" style="margin-bottom:0;">My Stock Holdings</p>
+                    <div style="display:flex;align-items:center;gap:var(--space-3);">
+                        <span id="browse-prices-status" class="prices-status"></span>
+                        <button id="browse-refresh-holdings-btn" class="btn-secondary" title="Reload holdings from database">
+                            <!-- Refresh icon -->
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polyline points="23 4 23 10 17 10"/>
+                                <polyline points="1 20 1 14 7 14"/>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <div id="browse-holdings-result" class="holdings-action-msg" aria-live="polite"></div>
+
+                <div class="holdings-table-wrap">
+                    <table class="holdings-table">
+                        <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Qty</th>
+                            <th>Buy Price</th>
+                            <th>Current Price</th>
+                            <th>Gain / Loss</th>
+                            <th>Trade</th>
+                        </tr>
+                        </thead>
+                        <tbody id="browse-holdings-body">
+                        <tr>
+                            <td colspan="6" class="holdings-table__empty">Loading…</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </main>
+
     </div>
-  </section>
+</section>
 
-  <!-- ════════════════════════════════════════════════
-       BONDS PANEL
-       ════════════════════════════════════════════════ -->
-  <section class="tab-panel" data-panel="bonds" role="tabpanel" aria-label="Bonds">
+<!-- ════════════════════════════════════════════════
+     MUTUAL FUNDS PANEL
+     ════════════════════════════════════════════════ -->
+<section class="tab-panel" data-panel="mutual-funds" role="tabpanel" aria-label="Mutual Funds">
     <div class="stocks-layout">
 
-      <!-- ── Left sidebar: Buy form ──────────────────── -->
-      <aside class="stocks-sidebar">
+        <!-- ── Left sidebar: Buy form ──────────────────── -->
+        <aside class="stocks-sidebar">
 
-        <!-- Buy Bond card -->
-        <div class="card stagger-child">
-          <p class="card__title">Buy Bond</p>
-          <p class="support-body" style="margin-top:0;margin-bottom:var(--space-3);font-size:0.8rem;">
-            Enter the essential details below. Buying more of an existing symbol merges into
-            the same holding at a weighted-average price.
-          </p>
+            <!-- Buy Mutual Fund card -->
+            <div class="card stagger-child">
+                <p class="card__title">Buy Mutual Fund</p>
+                <p class="support-body" style="margin-top:0;margin-bottom:var(--space-3);font-size:0.8rem;">
+                    Select a fund from the catalogue, enter an amount in $, and click <em>Buy</em>.
+                    Units are calculated automatically at the current NAV.
+                </p>
 
-          <div class="form-group">
-            <label class="form-label" for="bond-symbol">Symbol</label>
-            <input id="bond-symbol" type="text" class="input-field"
-                   placeholder="e.g. GSEC-2030" autocomplete="off" spellcheck="false" />
-          </div>
+                <div class="form-group">
+                    <label class="form-label" for="mf-buy-scheme">Fund</label>
+                    <select id="mf-buy-scheme" class="input-field">
+                        <option value="">— Loading funds… —</option>
+                    </select>
+                </div>
 
-          <div class="form-group">
-            <label class="form-label" for="bond-quantity">Quantity</label>
-            <input id="bond-quantity" type="number" class="input-field"
-                   min="0.0001" step="0.0001" placeholder="0" />
-          </div>
+                <div class="form-group">
+                    <label class="form-label" for="mf-buy-amount">Amount ($)</label>
+                    <input id="mf-buy-amount" type="number" class="input-field"
+                           min="1" step="0.01" placeholder="e.g. 10000" />
+                </div>
 
-          <div class="form-group">
-            <label class="form-label" for="bond-purchase-price">Purchase Price (per unit)</label>
-            <input id="bond-purchase-price" type="number" class="input-field"
-                   min="0.0001" step="0.01" placeholder="0.00" />
-          </div>
 
-          <div class="form-group">
-            <label class="form-label" for="bond-purchase-date">Purchase Date</label>
-            <input id="bond-purchase-date" type="date" class="input-field" />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="bond-maturity-date">Maturity Date</label>
-            <input id="bond-maturity-date" type="date" class="input-field" />
-          </div>
-
-          <!-- Advanced (optional) fields -->
-          <button type="button" id="bond-advanced-toggle" class="btn-secondary"
-                  style="width:100%;margin-top:var(--space-2);" aria-expanded="false">
-            + Optional details (issuer, coupon, rating…)
-          </button>
-
-          <div id="bond-advanced-fields" style="display:none;margin-top:var(--space-3);">
-            <div class="form-group">
-              <label class="form-label" for="bond-issuer">Issuer</label>
-              <input id="bond-issuer" type="text" class="input-field" placeholder="e.g. Govt of India" />
+                <button id="mf-buy-btn" class="btn-primary" style="width:100%;margin-top:var(--space-4);">
+                    Buy Fund
+                </button>
+                <div id="mf-buy-result" class="action-msg" aria-live="polite"></div>
             </div>
 
-            <div class="form-group">
-              <label class="form-label" for="bond-current-price">Current Price (per unit)</label>
-              <input id="bond-current-price" type="number" class="input-field"
-                     min="0.0001" step="0.01" placeholder="Defaults to purchase price" />
+            <!-- Sell Mutual Fund card -->
+            <div class="card stagger-child">
+                <p class="card__title">Sell Mutual Fund</p>
+                <p class="support-body" style="margin-top:0;margin-bottom:var(--space-3);font-size:0.8rem;">
+                    Select a holding from the table, enter an amount to sell in $.
+                    Units are calculated at the current NAV.
+                </p>
+
+                <div class="form-group">
+                    <label class="form-label" for="mf-sell-holding">Holding</label>
+                    <select id="mf-sell-holding" class="input-field">
+                        <option value="">— Select a holding —</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="mf-sell-amount">Amount to Sell ($)</label>
+                    <input id="mf-sell-amount" type="number" class="input-field"
+                           min="1" step="0.01" placeholder="e.g. 5000" />
+                </div>
+
+                <button id="mf-sell-btn" class="btn-primary" style="width:100%;margin-top:var(--space-4);background:var(--color-danger,#e53e3e);">
+                    Sell Fund
+                </button>
+                <div id="mf-sell-result" class="action-msg" aria-live="polite"></div>
             </div>
 
-            <div class="form-group">
-              <label class="form-label" for="bond-face-value">Face Value</label>
-              <input id="bond-face-value" type="number" class="input-field"
-                     min="0" step="0.01" placeholder="e.g. 1000" />
+        </aside>
+
+        <!-- ── Main area ──────────────────────────────── -->
+        <main class="stocks-main">
+
+            <!-- Available Mutual Funds / Catalogue table -->
+            <div class="card card--static stagger-child" style="margin-bottom:var(--space-4);">
+                <div class="stocks-holdings-header">
+                    <p class="card__title" style="margin-bottom:0;">Available Mutual Funds (30 Funds)</p>
+                    <button id="mf-refresh-catalogue-btn" class="btn-secondary" title="Reload catalogue">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <polyline points="1 20 1 14 7 14"/>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                        </svg>
+                        Refresh NAV
+                    </button>
+                </div>
+                <div id="mf-catalogue-msg" class="holdings-action-msg" aria-live="polite"></div>
+
+                <!-- Fund selector — pick any fund to view full details + its buy/sell history -->
+                <div class="form-group" style="max-width:420px;">
+                    <label class="form-label" for="mf-view-select">Select a Fund to View Details</label>
+                    <select id="mf-view-select" class="input-field">
+                        <option value="">— Select a fund —</option>
+                    </select>
+                </div>
+
+                <!-- Fund detail + transaction history panel (shown after selection) -->
+                <div id="mf-fund-detail" class="mf-fund-detail" style="display:none;">
+                    <div class="mf-fund-detail__summary">
+                        <div>
+                            <p class="mf-fund-detail__name" id="mf-fund-detail-name">—</p>
+                            <p class="mf-fund-detail__meta" id="mf-fund-detail-meta">—</p>
+                        </div>
+                        <button id="mf-fund-detail-history-btn" class="btn-secondary">View NAV History</button>
+                    </div>
+                    <p class="mf-fund-detail__subtitle">Transaction History</p>
+                    <div class="holdings-table-wrap">
+                        <table class="holdings-table">
+                            <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Units</th>
+                                <th>NAV ($)</th>
+                                <th>Amount ($)</th>
+                                <th>Date</th>
+                            </tr>
+                            </thead>
+                            <tbody id="mf-fund-transactions-body">
+                            <tr><td colspan="5" class="holdings-table__empty">Select a fund above to view its transaction history.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="holdings-table-wrap" id="mf-catalogue-table-wrap" style="margin-top:var(--space-4); display:none;">
+                    <div id="mf-catalogue-body" class="mf-fund-chip-grid">
+                        <p class="holdings-table__empty">Loading catalogue…</p>
+                    </div>
+                </div>
             </div>
 
-            <div class="form-group">
-              <label class="form-label" for="bond-coupon-rate">Coupon Rate (%)</label>
-              <input id="bond-coupon-rate" type="number" class="input-field"
-                     min="0" step="0.01" placeholder="e.g. 7.5" />
+            <!-- My Mutual Fund Holdings -->
+            <div class="card card--static stagger-child">
+                <div class="stocks-holdings-header">
+                    <p class="card__title" style="margin-bottom:0;">My Mutual Fund Holdings</p>
+                    <button id="mf-refresh-holdings-btn" class="btn-secondary" title="Reload holdings">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <polyline points="1 20 1 14 7 14"/>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+                <div id="mf-holdings-msg" class="holdings-action-msg" aria-live="polite"></div>
+                <div id="mf-holdings-body" class="mf-holdings-grid">
+                    <p class="holdings-table__empty">Loading…</p>
+                </div>
             </div>
 
-            <div class="form-group">
-              <label class="form-label" for="bond-coupon-frequency">Coupon Frequency</label>
-              <select id="bond-coupon-frequency" class="input-field">
-                <option value="">— None —</option>
-                <option value="ANNUAL">Annual</option>
-                <option value="SEMI_ANNUAL">Semi-Annual</option>
-                <option value="QUARTERLY">Quarterly</option>
-                <option value="MONTHLY">Monthly</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label" for="bond-credit-rating">Credit Rating</label>
-              <input id="bond-credit-rating" type="text" class="input-field" placeholder="e.g. AAA" />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label" for="bond-yield-rate">Yield Rate (%)</label>
-              <input id="bond-yield-rate" type="number" class="input-field"
-                     min="0" step="0.01" placeholder="e.g. 7.1" />
-            </div>
-          </div>
-
-          <button id="bond-buy-btn" class="btn-primary" style="width:100%;margin-top:var(--space-4);">
-            Buy Bond
-          </button>
-          <div id="bond-buy-result" class="action-msg" aria-live="polite"></div>
-        </div>
-
-      </aside>
-
-      <!-- ── Main area ──────────────────────────────── -->
-      <main class="stocks-main">
-
-        <!-- Available Bonds catalog -->
-        <div class="card featured-stocks-card stagger-child" id="bond-catalog-card">
-          <div class="stocks-holdings-header">
-            <div style="display:flex;align-items:center;gap:var(--space-3);">
-              <button id="bond-catalog-toggle-btn"
-                      class="btn-secondary featured-toggle-btn"
-                      title="Expand / collapse available bonds"
-                      aria-label="Toggle available bonds"
-                      aria-expanded="false">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
-                  <polyline points="6 9 12 15 18 9"/>
-                </svg>
-              </button>
-              <p class="card__title" style="margin-bottom:0;">Available Bonds</p>
-            </div>
-            <button id="bond-catalog-refresh-btn" class="btn-secondary" title="Refresh available bonds">↻ Refresh</button>
-          </div>
-          <p class="support-body" style="margin-top:0;margin-bottom:var(--space-2);font-size:0.8rem;">
-            Click a bond to preset its details into the Buy Bond form.
-          </p>
-
-          <div id="bond-catalog-collapsible" class="featured-stocks-collapsible is-collapsed">
-            <div id="bond-catalog-body" class="featured-ticker-grid"></div>
-          </div>
-        </div>
-
-        <!-- My Holdings table -->
-        <div class="card stagger-child" style="margin-bottom:var(--space-4);">
-          <div class="stocks-holdings-header">
-            <p class="card__title" style="margin-bottom:0;">My Bond Holdings</p>
-            <button id="bond-refresh-holdings-btn" class="btn-secondary" title="Reload holdings">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                   stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <polyline points="23 4 23 10 17 10"/>
-                <polyline points="1 20 1 14 7 14"/>
-                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-              </svg>
-              Refresh
-            </button>
-          </div>
-          <div id="bond-holdings-msg" class="holdings-action-msg" aria-live="polite"></div>
-          <div class="holdings-table-wrap">
-            <table class="holdings-table">
-              <thead>
-                <tr>
-                  <th>Symbol</th>
-                  <th>Issuer</th>
-                  <th>Qty</th>
-                  <th>Buy Price</th>
-                  <th>Current Price</th>
-                  <th>Maturity Date</th>
-                  <th>Rating</th>
-                  <th>Current Value</th>
-                  <th>Gain / Loss</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody id="bond-holdings-body">
-                <tr><td colspan="10" class="holdings-table__empty">Loading…</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Redemption History table -->
-        <div class="card stagger-child">
-          <div class="stocks-holdings-header">
-            <p class="card__title" style="margin-bottom:0;">Redemption History</p>
-            <button id="bond-refresh-history-btn" class="btn-secondary" title="Reload redemption history">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                   stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <polyline points="23 4 23 10 17 10"/>
-                <polyline points="1 20 1 14 7 14"/>
-                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-              </svg>
-              Refresh
-            </button>
-          </div>
-          <div id="bond-history-msg" class="holdings-action-msg" aria-live="polite"></div>
-          <div class="holdings-table-wrap">
-            <table class="holdings-table">
-              <thead>
-                <tr>
-                  <th>Symbol</th>
-                  <th>Issuer</th>
-                  <th>Qty</th>
-                  <th>Face Value</th>
-                  <th>Redemption Date</th>
-                  <th>Redemption Value</th>
-                </tr>
-              </thead>
-              <tbody id="bond-history-body">
-                <tr><td colspan="6" class="holdings-table__empty">Loading…</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-      </main>
+        </main>
     </div>
-  </section>
+</section>
 
-  <!-- ════════════════════════════════════════════════
-       SUPPORT PANEL
-       ════════════════════════════════════════════════ -->
-  <section class="tab-panel" data-panel="support" role="tabpanel" aria-label="Support">
+<!-- ════════════════════════════════════════════════
+     BONDS PANEL
+     ════════════════════════════════════════════════ -->
+<section class="tab-panel" data-panel="bonds" role="tabpanel" aria-label="Bonds">
+    <div class="stocks-layout">
+
+        <!-- ── Left sidebar: Buy form ──────────────────── -->
+        <aside class="stocks-sidebar">
+
+            <!-- Buy Bond card -->
+            <div class="card stagger-child">
+                <p class="card__title">Buy Bond</p>
+                <p class="support-body" style="margin-top:0;margin-bottom:var(--space-3);font-size:0.8rem;">
+                    Enter the essential details below. Buying more of an existing symbol merges into
+                    the same holding at a weighted-average price.
+                </p>
+
+                <div class="form-group">
+                    <label class="form-label" for="bond-symbol">Symbol</label>
+                    <input id="bond-symbol" type="text" class="input-field"
+                           placeholder="e.g. GSEC-2030" autocomplete="off" spellcheck="false" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="bond-quantity">Quantity</label>
+                    <input id="bond-quantity" type="number" class="input-field"
+                           min="0.0001" step="0.0001" placeholder="0" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="bond-purchase-price">Purchase Price (per unit)</label>
+                    <input id="bond-purchase-price" type="number" class="input-field"
+                           min="0.0001" step="0.01" placeholder="0.00" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="bond-purchase-date">Purchase Date</label>
+                    <input id="bond-purchase-date" type="date" class="input-field" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="bond-maturity-date">Maturity Date</label>
+                    <input id="bond-maturity-date" type="date" class="input-field" />
+                </div>
+
+                <!-- Advanced (optional) fields -->
+                <button type="button" id="bond-advanced-toggle" class="btn-secondary"
+                        style="width:100%;margin-top:var(--space-2);" aria-expanded="false">
+                    + Optional details (issuer, coupon, rating…)
+                </button>
+
+                <div id="bond-advanced-fields" style="display:none;margin-top:var(--space-3);">
+                    <div class="form-group">
+                        <label class="form-label" for="bond-issuer">Issuer</label>
+                        <input id="bond-issuer" type="text" class="input-field" placeholder="e.g. Govt of India" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="bond-current-price">Current Price (per unit)</label>
+                        <input id="bond-current-price" type="number" class="input-field"
+                               min="0.0001" step="0.01" placeholder="Defaults to purchase price" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="bond-face-value">Face Value</label>
+                        <input id="bond-face-value" type="number" class="input-field"
+                               min="0" step="0.01" placeholder="e.g. 1000" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="bond-coupon-rate">Coupon Rate (%)</label>
+                        <input id="bond-coupon-rate" type="number" class="input-field"
+                               min="0" step="0.01" placeholder="e.g. 7.5" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="bond-coupon-frequency">Coupon Frequency</label>
+                        <select id="bond-coupon-frequency" class="input-field">
+                            <option value="">— None —</option>
+                            <option value="ANNUAL">Annual</option>
+                            <option value="SEMI_ANNUAL">Semi-Annual</option>
+                            <option value="QUARTERLY">Quarterly</option>
+                            <option value="MONTHLY">Monthly</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="bond-credit-rating">Credit Rating</label>
+                        <input id="bond-credit-rating" type="text" class="input-field" placeholder="e.g. AAA" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="bond-yield-rate">Yield Rate (%)</label>
+                        <input id="bond-yield-rate" type="number" class="input-field"
+                               min="0" step="0.01" placeholder="e.g. 7.1" />
+                    </div>
+                </div>
+
+                <button id="bond-buy-btn" class="btn-primary" style="width:100%;margin-top:var(--space-4);">
+                    Buy Bond
+                </button>
+                <div id="bond-buy-result" class="action-msg" aria-live="polite"></div>
+            </div>
+
+        </aside>
+
+        <!-- ── Main area ──────────────────────────────── -->
+        <main class="stocks-main">
+
+            <!-- Available Bonds catalog -->
+            <div class="card featured-stocks-card stagger-child" id="bond-catalog-card">
+                <div class="stocks-holdings-header">
+                    <div style="display:flex;align-items:center;gap:var(--space-3);">
+                        <button id="bond-catalog-toggle-btn"
+                                class="btn-secondary featured-toggle-btn"
+                                title="Expand / collapse available bonds"
+                                aria-label="Toggle available bonds"
+                                aria-expanded="false">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                        </button>
+                        <p class="card__title" style="margin-bottom:0;">Available Bonds</p>
+                    </div>
+                    <button id="bond-catalog-refresh-btn" class="btn-secondary" title="Refresh available bonds">↻ Refresh</button>
+                </div>
+                <p class="support-body" style="margin-top:0;margin-bottom:var(--space-2);font-size:0.8rem;">
+                    Click a bond to preset its details into the Buy Bond form.
+                </p>
+
+                <div id="bond-catalog-collapsible" class="featured-stocks-collapsible is-collapsed">
+                    <div id="bond-catalog-body" class="featured-ticker-grid"></div>
+                </div>
+            </div>
+
+            <!-- My Holdings table -->
+            <div class="card stagger-child" style="margin-bottom:var(--space-4);">
+                <div class="stocks-holdings-header">
+                    <p class="card__title" style="margin-bottom:0;">My Bond Holdings</p>
+                    <button id="bond-refresh-holdings-btn" class="btn-secondary" title="Reload holdings">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <polyline points="1 20 1 14 7 14"/>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+                <div id="bond-holdings-msg" class="holdings-action-msg" aria-live="polite"></div>
+                <div class="holdings-table-wrap">
+                    <table class="holdings-table">
+                        <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Issuer</th>
+                            <th>Qty</th>
+                            <th>Buy Price</th>
+                            <th>Current Price</th>
+                            <th>Maturity Date</th>
+                            <th>Rating</th>
+                            <th>Current Value</th>
+                            <th>Gain / Loss</th>
+                            <th>Action</th>
+                        </tr>
+                        </thead>
+                        <tbody id="bond-holdings-body">
+                        <tr><td colspan="10" class="holdings-table__empty">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Redemption History table -->
+            <div class="card stagger-child">
+                <div class="stocks-holdings-header">
+                    <p class="card__title" style="margin-bottom:0;">Redemption History</p>
+                    <button id="bond-refresh-history-btn" class="btn-secondary" title="Reload redemption history">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <polyline points="1 20 1 14 7 14"/>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+                <div id="bond-history-msg" class="holdings-action-msg" aria-live="polite"></div>
+                <div class="holdings-table-wrap">
+                    <table class="holdings-table">
+                        <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Issuer</th>
+                            <th>Qty</th>
+                            <th>Face Value</th>
+                            <th>Redemption Date</th>
+                            <th>Redemption Value</th>
+                        </tr>
+                        </thead>
+                        <tbody id="bond-history-body">
+                        <tr><td colspan="6" class="holdings-table__empty">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</section>
+
+<!-- ════════════════════════════════════════════════
+     SUPPORT PANEL
+     ════════════════════════════════════════════════ -->
+<section class="tab-panel" data-panel="support" role="tabpanel" aria-label="Support">
     <div style="max-width: 620px;">
-      <h2 class="section-title">Support &amp; Help</h2>
+        <h2 class="section-title">Support &amp; Help</h2>
 
-      <div class="card stagger-child" style="margin-bottom: var(--space-4);">
-        <p class="card__title">Contact</p>
-        <p class="support-body">
-          For assistance, reach out to your portfolio administrator or instructor.
-        </p>
-      </div>
+        <div class="card stagger-child" style="margin-bottom: var(--space-4);">
+            <p class="card__title">Contact</p>
+            <p class="support-body">
+                For assistance, reach out to your portfolio administrator or instructor.
+            </p>
+        </div>
 
-      <div class="card stagger-child" style="margin-bottom: var(--space-4);">
-        <p class="card__title">Known Limitations</p>
-        <ul class="support-list">
-          <li>Live stock prices are fetched from an external API — data may be delayed.</li>
-          <li>If a price refresh fails, the last known price is retained.</li>
-          <li>Multi-user support and authentication are not available in this version.</li>
-        </ul>
-      </div>
+        <div class="card stagger-child" style="margin-bottom: var(--space-4);">
+            <p class="card__title">Known Limitations</p>
+            <ul class="support-list">
+                <li>Live stock prices are fetched from an external API — data may be delayed.</li>
+                <li>If a price refresh fails, the last known price is retained.</li>
+                <li>Multi-user support and authentication are not available in this version.</li>
+            </ul>
+        </div>
 
-      <div class="card stagger-child">
-        <p class="card__title">API Documentation</p>
-        <p class="support-body">
-          Interactive API docs are available at
-          <a class="support-link" href="/swagger-ui.html" target="_blank" rel="noopener">/swagger-ui.html</a>.
-        </p>
-      </div>
+        <div class="card stagger-child">
+            <p class="card__title">API Documentation</p>
+            <p class="support-body">
+                Interactive API docs are available at
+                <a class="support-link" href="/swagger-ui.html" target="_blank" rel="noopener">/swagger-ui.html</a>.
+            </p>
+        </div>
     </div>
-  </section>
+</section>
 
-  <!-- ── Mutual Fund NAV History Modal ──────────────────────────── -->
-  <div id="mf-history-modal" class="mf-history-modal" style="display:none;">
+<!-- ── Mutual Fund NAV History Modal ──────────────────────────── -->
+<div id="mf-history-modal" class="mf-history-modal" style="display:none;">
     <div class="mf-history-modal__backdrop" onclick="window.__mfCloseHistory()"></div>
     <div class="mf-history-modal__panel">
-      <div class="mf-history-modal__header">
-        <div>
-          <p class="mf-history-modal__title" id="mf-history-title">Fund Name</p>
-          <p class="mf-history-modal__subtitle" id="mf-history-subtitle">Latest NAV: —</p>
+        <div class="mf-history-modal__header">
+            <div>
+                <p class="mf-history-modal__title" id="mf-history-title">Fund Name</p>
+                <p class="mf-history-modal__subtitle" id="mf-history-subtitle">Latest NAV: —</p>
+            </div>
+            <button class="mf-history-modal__close" onclick="window.__mfCloseHistory()" aria-label="Close">✕</button>
         </div>
-        <button class="mf-history-modal__close" onclick="window.__mfCloseHistory()" aria-label="Close">✕</button>
-      </div>
 
-      <div class="mf-history-modal__ranges">
-        <button class="mf-range-btn" data-range="1M">1M</button>
-        <button class="mf-range-btn" data-range="3M">3M</button>
-        <button class="mf-range-btn" data-range="6M">6M</button>
-        <button class="mf-range-btn" data-range="1Y">1Y</button>
-        <button class="mf-range-btn active" data-range="ALL">All</button>
-      </div>
+        <div class="mf-history-modal__ranges">
+            <button class="mf-range-btn" data-range="1M">1M</button>
+            <button class="mf-range-btn" data-range="3M">3M</button>
+            <button class="mf-range-btn" data-range="6M">6M</button>
+            <button class="mf-range-btn" data-range="1Y">1Y</button>
+            <button class="mf-range-btn active" data-range="ALL">All</button>
+        </div>
 
-      <div class="mf-history-modal__body">
-        <div id="mf-history-loading" class="loading" style="display:none;">
-          <div class="spinner"></div>
-          <span>Loading NAV history…</span>
+        <div class="mf-history-modal__body">
+            <div id="mf-history-loading" class="loading" style="display:none;">
+                <div class="spinner"></div>
+                <span>Loading NAV history…</span>
+            </div>
+            <div id="mf-history-empty" class="empty-state" style="display:none;">
+                <p class="empty-state__text">No history data available for this fund.</p>
+            </div>
+            <canvas id="mf-history-chart" style="max-height:360px;"></canvas>
         </div>
-        <div id="mf-history-empty" class="empty-state" style="display:none;">
-          <p class="empty-state__text">No history data available for this fund.</p>
-        </div>
-        <canvas id="mf-history-chart" style="max-height:360px;"></canvas>
-      </div>
     </div>
-  </div>
+</div>
 
-  <!-- ── Stock Price History Modal ──────────────────────────────── -->
-  <div id="stock-history-modal" class="mf-history-modal" style="display:none;">
+<!-- ── Stock Price History Modal ──────────────────────────────── -->
+<div id="stock-history-modal" class="mf-history-modal" style="display:none;">
     <div class="mf-history-modal__backdrop" onclick="window.__stockCloseHistory()"></div>
     <div class="mf-history-modal__panel">
-      <div class="mf-history-modal__header">
-        <div>
-          <p class="mf-history-modal__title" id="stock-history-title">Ticker</p>
-          <p class="mf-history-modal__subtitle" id="stock-history-subtitle">Latest close: —</p>
+        <div class="mf-history-modal__header">
+            <div>
+                <p class="mf-history-modal__title" id="stock-history-title">Ticker</p>
+                <p class="mf-history-modal__subtitle" id="stock-history-subtitle">Latest close: —</p>
+            </div>
+            <button class="mf-history-modal__close" onclick="window.__stockCloseHistory()" aria-label="Close">✕</button>
         </div>
-        <button class="mf-history-modal__close" onclick="window.__stockCloseHistory()" aria-label="Close">✕</button>
-      </div>
 
-      <div class="mf-history-modal__ranges">
-        <button class="stock-range-btn" data-range="1M">1M</button>
-        <button class="stock-range-btn" data-range="3M">3M</button>
-        <button class="stock-range-btn" data-range="6M">6M</button>
-        <button class="stock-range-btn" data-range="1Y">1Y</button>
-        <button class="stock-range-btn active" data-range="ALL">All</button>
-      </div>
+        <div class="mf-history-modal__ranges">
+            <button class="stock-range-btn" data-range="1M">1M</button>
+            <button class="stock-range-btn" data-range="3M">3M</button>
+            <button class="stock-range-btn" data-range="6M">6M</button>
+            <button class="stock-range-btn" data-range="1Y">1Y</button>
+            <button class="stock-range-btn active" data-range="ALL">All</button>
+        </div>
 
-      <div class="mf-history-modal__body">
-        <div id="stock-history-loading" class="loading" style="display:none;">
-          <div class="spinner"></div>
-          <span>Loading price history…</span>
+        <div class="mf-history-modal__body">
+            <div id="stock-history-loading" class="loading" style="display:none;">
+                <div class="spinner"></div>
+                <span>Loading price history…</span>
+            </div>
+            <div id="stock-history-empty" class="empty-state" style="display:none;">
+                <p class="empty-state__text">No history data available for this stock.</p>
+            </div>
+            <canvas id="stock-history-chart" style="max-height:360px;"></canvas>
         </div>
-        <div id="stock-history-empty" class="empty-state" style="display:none;">
-          <p class="empty-state__text">No history data available for this stock.</p>
-        </div>
-        <canvas id="stock-history-chart" style="max-height:360px;"></canvas>
-      </div>
     </div>
-  </div>
+</div>
 
-  <!-- ── App entry point ────────────────────────────────────────── -->
-  <script type="module" src="/js/app.js"></script>
+<!-- ── App entry point ────────────────────────────────────────── -->
+<script type="module" src="/js/app.js"></script>
 
 </body>
 </html>

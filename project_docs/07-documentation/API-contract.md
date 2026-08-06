@@ -129,6 +129,11 @@ GET /api/v1/portfolio-items?type=STOCK
 - Body: `PortfolioItemRequest`
 - **201** → created `PortfolioItemResponse`, with `Location` header set to `/api/v1/portfolio-items/{id}`
 - **400** → validation error
+- **STOCK merge behavior**: if a `STOCK` holding with the same `symbolOrName` already exists, no duplicate
+  row is created. Instead the existing holding is updated in place — quantities are summed and
+  `purchasePrice` becomes the weighted average of the old and new costs (weighted by units bought).
+  The response reflects the **existing item's id**, not a new one, and the purchase is also recorded
+  in the trade history (same as `POST /{id}/buy`).
 
 ### `PUT /api/v1/portfolio-items/{id}`
 
