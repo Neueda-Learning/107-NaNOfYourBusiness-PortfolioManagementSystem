@@ -106,8 +106,11 @@ window.addEventListener('scroll', () => {
 }, { passive: true });
 
 // ── 6. Card 3D tilt micro-interaction (desktop only) ────────────
+// Skipped for `.card--static` (cards containing data tables — a tilting/lifting
+// card while the user tries to click a row action feels broken, not premium).
 if (hasFinePointer) {
   document.querySelectorAll('.card, .chart-card').forEach(card => {
+    if (card.classList.contains('card--static')) return;
     card.addEventListener('mousemove', e => {
       const rect   = card.getBoundingClientRect();
       const cx     = rect.left + rect.width  / 2;
