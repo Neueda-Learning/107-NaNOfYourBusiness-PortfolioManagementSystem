@@ -2,6 +2,7 @@ package com.example.portfolio.service;
 
 import com.example.portfolio.exception.BondRedemptionException;
 import com.example.portfolio.exception.ResourceNotFoundException;
+import com.example.portfolio.model.AssetType;
 import com.example.portfolio.repository.BondRepository;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -19,9 +20,11 @@ import java.util.List;
 public class BondService {
 
     private final BondRepository repository;
+    private final WalletService walletService;
 
-    public BondService(BondRepository repository) {
+    public BondService(BondRepository repository, WalletService walletService) {
         this.repository = repository;
+        this.walletService = walletService;
     }
 
     public List<BondResponse> getAllBonds() {
@@ -63,6 +66,9 @@ public class BondService {
     public BondResponse buyBond(BondTradeRequest request) {
         validateTradeRequest(request);
         String normalizedSymbol = normalizeSymbol(request.symbol());
+        BigDecimal buyAmount = request.quantity().multiply(request.purchasePrice());
+
+        walletService.debitForBuy(buyAmount, AssetType.BOND, null, normalizedSymbol);
 
         BondRepository.BondRecord updated = repository.findBySymbol(normalizedSymbol)
                 .map(existing -> repository.mergeBuy(
@@ -130,6 +136,11 @@ public class BondService {
         }
 
         BondRepository.BondRecord redeemed = repository.applyRedeem(existing);
+        walletService.creditForSell(
+                redeemed.redemptionValue(),
+                AssetType.BOND,
+                redeemed.id(),
+                redeemed.symbol());
         return toResponse(redeemed);
     }
 

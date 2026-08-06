@@ -74,6 +74,14 @@ Includes all request fields plus computed/managed fields:
 | GET | `/portfolio/summary` | total value, cost, gain/loss, allocation |
 | GET | `/portfolio/performance?range=1M\|3M\|6M\|1Y\|ALL` | time-series of `totalValue`/`totalCost` for the dashboard's performance chart (US-15) |
 
+### 3.3 Wallet
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/wallet` | get current wallet balance |
+| POST | `/wallet/deposit` | deposit funds into wallet |
+| GET | `/wallet/transactions` | list wallet transaction history (latest first) |
+
 ## 4. Example Payloads
 
 ### Create Item Request
@@ -158,6 +166,40 @@ does not replay full historical daily closes per holding, to avoid extra third-p
 calls (Twelve Data / MFAPI) on every dashboard load per NFR-03/US-13's controlled refresh
 strategy. The final point for "today" always uses the exact live `currentPrice`. See
 `PortfolioPerformanceService` Javadoc for the full rationale and future upgrade path.
+
+### Wallet Balance Response
+
+```json
+{
+  "balance": 17500.5000,
+  "updatedAt": "2026-08-06T09:05:00"
+}
+```
+
+### Wallet Deposit Request
+
+```json
+{
+  "amount": 5000.00
+}
+```
+
+### Wallet Transaction History Response
+
+```json
+[
+  {
+    "id": 11,
+    "type": "BUY_DEBIT",
+    "amount": 3000.0000,
+    "balanceAfter": 14500.5000,
+    "assetType": "STOCK",
+    "portfolioItemId": 99,
+    "symbolOrName": "AAPL",
+    "timestamp": "2026-08-06T10:00:00"
+  }
+]
+```
 
 ## 5. Error Contract
 

@@ -25,15 +25,18 @@ public class PortfolioItemService {
     private final PortfolioTradeRepository tradeRepository;
     private final PortfolioItemMapper mapper;
     private final PortfolioItemTypeHandlerRegistry handlerRegistry;
+    private final WalletService walletService;
 
     public PortfolioItemService(PortfolioItemRepository repository,
                                 PortfolioTradeRepository tradeRepository,
                                 PortfolioItemMapper mapper,
-                                PortfolioItemTypeHandlerRegistry handlerRegistry) {
+                                 PortfolioItemTypeHandlerRegistry handlerRegistry,
+                                 WalletService walletService) {
         this.repository = repository;
         this.tradeRepository = tradeRepository;
         this.mapper = mapper;
         this.handlerRegistry = handlerRegistry;
+        this.walletService = walletService;
     }
 
     public List<PortfolioItemResponse> findAll(AssetType type) {
@@ -90,6 +93,9 @@ public class PortfolioItemService {
         BigDecimal newCost = quantity.multiply(executionPrice);
         BigDecimal averagePrice = oldCost.add(newCost)
                 .divide(newQuantity, 4, RoundingMode.HALF_UP);
+        BigDecimal purchaseAmount = quantity.multiply(executionPrice).setScale(4, RoundingMode.HALF_UP);
+
+        walletService.debitForBuy(purchaseAmount, item.getType(), item.getId(), item.getSymbolOrName());
 
         repository.updateHoldingAfterTrade(item.getId(), newQuantity, averagePrice, executionPrice, executedAt);
         tradeRepository.saveTrade(item, TradeSide.BUY, quantity, executionPrice, executedAt);
@@ -112,7 +118,9 @@ public class PortfolioItemService {
         BigDecimal executionPrice = resolveExecutionPrice(item);
         LocalDateTime executedAt = LocalDateTime.now();
         BigDecimal remainingQuantity = item.getQuantity().subtract(quantity);
+        BigDecimal saleProceeds = quantity.multiply(executionPrice).setScale(4, RoundingMode.HALF_UP);
         tradeRepository.saveTrade(item, TradeSide.SELL, quantity, executionPrice, executedAt);
+        walletService.creditForSell(saleProceeds, item.getType(), item.getId(), item.getSymbolOrName());
 
         if (remainingQuantity.compareTo(BigDecimal.ZERO) == 0) {
             repository.deleteById(item.getId());

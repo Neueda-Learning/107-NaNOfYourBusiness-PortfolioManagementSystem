@@ -99,6 +99,23 @@ The frontend may provide an edit modal/flow for existing items.
 ### FR-22: AI/Quantum Experimental Features
 The project may include clearly marked experimental endpoints or demos for AI/Quantum exploration after MVP completion.
 
+## Wallet Management
+
+### FR-23: Wallet Balance
+The system shall maintain a single cash wallet balance for the investor, viewable at any time.
+
+### FR-24: Wallet Funding
+The system shall allow the investor to deposit funds into the wallet, increasing the available balance.
+
+### FR-25: Buy Using Wallet Balance
+The system shall debit the wallet balance when buying stocks, mutual funds, or bonds, and shall reject the buy transaction if the wallet balance is insufficient to cover the purchase amount.
+
+### FR-26: Sell Credits Wallet
+The system shall credit the wallet balance with the sale proceeds when selling stocks, mutual funds, or bonds.
+
+### FR-27: Wallet Transaction History
+The system shall record wallet transactions (deposits, buy debits, sell credits) with amount, type, and timestamp.
+
 ## References
 
 - `project_docs/07-documentation/about.md`

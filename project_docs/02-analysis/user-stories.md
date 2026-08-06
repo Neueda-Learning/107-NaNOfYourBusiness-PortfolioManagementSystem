@@ -68,6 +68,28 @@ As a backend developer, I want controlled stock price refresh behavior, so that 
 As an investor, I want loading and error indicators in each panel, so that I always know what the app is doing.
 - **Maps to:** FR-13, NFR-13
 
+## Wallet Stories (Must Have)
+
+### US-18 - Deposit Funds into Wallet (High)
+As an investor, I want to deposit money into a wallet, so that I have funds available to buy assets.
+- **Maps to:** BR-08, FR-24
+
+### US-19 - Buy Assets Using Wallet Balance (High)
+As an investor, I want my wallet balance debited when I buy stocks, mutual funds, or bonds, so that my available cash reflects my trading activity.
+- **Maps to:** BR-08, FR-25
+
+### US-20 - Prevent Overspending Wallet Balance (High)
+As an investor, I want the system to reject a buy if my wallet balance is insufficient, so that I cannot spend more than I have available.
+- **Maps to:** BR-08, FR-25
+
+### US-21 - Sell Credits Wallet Balance (High)
+As an investor, I want sale proceeds credited to my wallet, so that I can reinvest or withdraw funds afterward.
+- **Maps to:** BR-08, FR-26
+
+### US-22 - View Wallet Transaction History (Medium)
+As an investor, I want to see a history of deposits, buys, and sells affecting my wallet, so that I can track how my cash balance changed.
+- **Maps to:** BR-08, FR-27
+
 ## Stretch Stories (Post-MVP Only)
 
 ### US-15 - Performance Over Time Chart (Stretch)

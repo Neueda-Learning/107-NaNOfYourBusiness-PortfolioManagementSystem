@@ -223,4 +223,23 @@ export async function redeemBond(symbol) {
   });
 }
 
+// ── Wallet ────────────────────────────────────────────
+/** GET /api/v1/wallet — current wallet balance */
+export async function getWalletBalance() {
+  return apiFetch("/wallet");
+}
+
+/** POST /api/v1/wallet/deposit */
+export async function depositToWallet(amount) {
+  return apiFetch("/wallet/deposit", {
+    method: "POST",
+    body: JSON.stringify({ amount }),
+  });
+}
+
+/** GET /api/v1/wallet/transactions — full deposit/buy/sell ledger */
+export async function getWalletTransactions() {
+  return apiFetch("/wallet/transactions");
+}
+
 

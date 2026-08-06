@@ -44,6 +44,11 @@ public class GlobalExceptionHandler {
         return badRequest("BAD_REQUEST", ex.getMessage());
     }
 
+    @ExceptionHandler(InsufficientWalletBalanceException.class)
+    public ResponseEntity<Map<String, Object>> handleInsufficientWalletBalance(InsufficientWalletBalanceException ex) {
+        return badRequest("INSUFFICIENT_WALLET_BALANCE", ex.getMessage());
+    }
+
     @ExceptionHandler(BondRedemptionException.class)
     public ResponseEntity<Map<String, Object>> handleBondRedemption(BondRedemptionException ex) {
         return error(HttpStatus.CONFLICT, ex.getErrorCode(), ex.getMessage());

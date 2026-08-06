@@ -8,6 +8,7 @@ import com.example.portfolio.exception.ResourceNotFoundException;
 import com.example.portfolio.model.AssetType;
 import com.example.portfolio.model.PortfolioItem;
 import com.example.portfolio.repository.PortfolioItemRepository;
+import com.example.portfolio.repository.PortfolioTradeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,6 +36,12 @@ class MutualFundServiceTest {
     @Mock
     private MFAPIClient mfapiClient;
 
+    @Mock
+    private PortfolioTradeRepository portfolioTradeRepository;
+
+    @Mock
+    private WalletService walletService;
+
     private MutualFundCatalogue mutualFundCatalogue;
 
     private MutualFundService service;
@@ -42,7 +49,12 @@ class MutualFundServiceTest {
     @BeforeEach
     void setUp() {
         mutualFundCatalogue = new MutualFundCatalogue();
-        service = new MutualFundService(portfolioItemRepository, mfapiClient, mutualFundCatalogue);
+        service = new MutualFundService(
+                portfolioItemRepository,
+                portfolioTradeRepository,
+                mfapiClient,
+                mutualFundCatalogue,
+                walletService);
     }
 
     @Test
@@ -50,12 +62,10 @@ class MutualFundServiceTest {
         Integer schemeCode = 119551; // HDFC Flexi Cap Fund
         BigDecimal amount = new BigDecimal("10000.00");
         BigDecimal nav = new BigDecimal("650.25");
-        LocalDate purchaseDate = LocalDate.of(2026, 8, 5);
 
         BuyMutualFundRequest request = new BuyMutualFundRequest();
         request.setSchemeCode(schemeCode);
         request.setAmount(amount);
-        request.setPurchaseDate(purchaseDate);
 
         Map<String, Object> mfapiResponse = Map.of(
                 "meta", Map.of("scheme_name", "HDFC Flexi Cap Fund"),
@@ -77,6 +87,11 @@ class MutualFundServiceTest {
         // units = 10000 / 650.25 = 15.3787 (with HALF_UP and 4 decimals)
         assertThat(response.get("units")).isEqualTo(new BigDecimal("15.3787"));
         verify(portfolioItemRepository).save(any(PortfolioItem.class));
+        verify(walletService).debitForBuy(
+                new BigDecimal("10000.00"),
+                AssetType.MUTUAL_FUND,
+                1L,
+                "HDFC Flexi Cap Fund");
     }
 
     @Test
@@ -106,6 +121,7 @@ class MutualFundServiceTest {
         service.buyMutualFund(request);
 
         verify(portfolioItemRepository).save(any(PortfolioItem.class));
+        verify(walletService).debitForBuy(any(BigDecimal.class), any(AssetType.class), any(Long.class), any(String.class));
     }
 
     @Test
@@ -155,6 +171,11 @@ class MutualFundServiceTest {
         // unitsToSell = 5000 / 650.25 = 7.6899
         // remainingUnits = 20.0000 - 7.6899 = 12.3101
         verify(portfolioItemRepository).update(any(PortfolioItem.class));
+        verify(walletService).creditForSell(
+                new BigDecimal("5000.00"),
+                AssetType.MUTUAL_FUND,
+                portfolioItemId,
+                "HDFC Flexi Cap Fund");
     }
 
     @Test
@@ -188,6 +209,11 @@ class MutualFundServiceTest {
 
         assertThat(response.get("message")).isEqualTo("Mutual fund holding closed");
         verify(portfolioItemRepository).deleteById(portfolioItemId);
+        verify(walletService).creditForSell(
+                new BigDecimal("13005.00"),
+                AssetType.MUTUAL_FUND,
+                portfolioItemId,
+                "HDFC Flexi Cap Fund");
     }
 
     @Test

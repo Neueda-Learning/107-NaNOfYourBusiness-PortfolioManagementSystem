@@ -17,6 +17,7 @@ import com.example.portfolio.repository.PortfolioTradeRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -38,15 +39,18 @@ public class MutualFundService {
     private final PortfolioTradeRepository portfolioTradeRepository;
     private final MFAPIClient mfapiClient;
     private final MutualFundCatalogue mutualFundCatalogue;
+    private final WalletService walletService;
 
     public MutualFundService(PortfolioItemRepository portfolioItemRepository,
                              PortfolioTradeRepository portfolioTradeRepository,
                              MFAPIClient mfapiClient,
-                             MutualFundCatalogue mutualFundCatalogue) {
+                             MutualFundCatalogue mutualFundCatalogue,
+                             WalletService walletService) {
         this.portfolioItemRepository = portfolioItemRepository;
         this.portfolioTradeRepository = portfolioTradeRepository;
         this.mfapiClient = mfapiClient;
         this.mutualFundCatalogue = mutualFundCatalogue;
+        this.walletService = walletService;
     }
 
     /**
@@ -142,6 +146,7 @@ public class MutualFundService {
      * Calculates units = amount / NAV
      * Creates portfolio item with type MUTUAL_FUND
      */
+    @Transactional
     public Map<String, Object> buyMutualFund(BuyMutualFundRequest request) {
         Integer schemeCode = request.getSchemeCode();
 
@@ -176,6 +181,8 @@ public class MutualFundService {
 
         portfolioItemRepository.save(item);
 
+        walletService.debitForBuy(amount, item.getType(), item.getId(), item.getSymbolOrName());
+
         log.info("Successfully purchased mutual fund. Portfolio item id: {}", item.getId());
 
         // Record this purchase in the shared trade history table (per-fund transaction log)
@@ -200,6 +207,7 @@ public class MutualFundService {
      * Calculates units to sell = amount / current NAV
      * Updates or deletes portfolio item
      */
+    @Transactional
     public Map<String, Object> sellMutualFund(SellMutualFundRequest request) {
         Long portfolioItemId = request.getPortfolioItemId();
 
@@ -239,6 +247,7 @@ public class MutualFundService {
         // Record this sale in the shared trade history table (per-fund transaction log)
         // Recorded before deletion so the trade log survives holding closure.
         portfolioTradeRepository.saveTrade(holding, TradeSide.SELL, unitsToSell, currentNav, executedAt);
+        walletService.creditForSell(amount, holding.getType(), holding.getId(), holding.getSymbolOrName());
 
         if (remainingUnits.compareTo(BigDecimal.ZERO) <= 0) {
             // Delete holding if all units sold (or if remaining is effectively zero/negative)
