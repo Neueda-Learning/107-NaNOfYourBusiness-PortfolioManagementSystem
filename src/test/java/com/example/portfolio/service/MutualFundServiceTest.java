@@ -8,6 +8,7 @@ import com.example.portfolio.exception.ResourceNotFoundException;
 import com.example.portfolio.model.AssetType;
 import com.example.portfolio.model.PortfolioItem;
 import com.example.portfolio.repository.PortfolioItemRepository;
+import com.example.portfolio.repository.PortfolioTradeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,7 +16,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
 
@@ -33,6 +33,9 @@ class MutualFundServiceTest {
     private PortfolioItemRepository portfolioItemRepository;
 
     @Mock
+    private PortfolioTradeRepository portfolioTradeRepository;
+
+    @Mock
     private MFAPIClient mfapiClient;
 
     private MutualFundCatalogue mutualFundCatalogue;
@@ -42,7 +45,7 @@ class MutualFundServiceTest {
     @BeforeEach
     void setUp() {
         mutualFundCatalogue = new MutualFundCatalogue();
-        service = new MutualFundService(portfolioItemRepository, mfapiClient, mutualFundCatalogue);
+        service = new MutualFundService(portfolioItemRepository, portfolioTradeRepository, mfapiClient, mutualFundCatalogue);
     }
 
     @Test
@@ -50,12 +53,10 @@ class MutualFundServiceTest {
         Integer schemeCode = 119551; // HDFC Flexi Cap Fund
         BigDecimal amount = new BigDecimal("10000.00");
         BigDecimal nav = new BigDecimal("650.25");
-        LocalDate purchaseDate = LocalDate.of(2026, 8, 5);
 
         BuyMutualFundRequest request = new BuyMutualFundRequest();
         request.setSchemeCode(schemeCode);
         request.setAmount(amount);
-        request.setPurchaseDate(purchaseDate);
 
         Map<String, Object> mfapiResponse = Map.of(
                 "meta", Map.of("scheme_name", "HDFC Flexi Cap Fund"),
