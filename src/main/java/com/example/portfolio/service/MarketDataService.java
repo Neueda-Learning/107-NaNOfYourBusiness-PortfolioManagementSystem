@@ -1,8 +1,12 @@
 package com.example.portfolio.service;
 
+import com.example.portfolio.client.TwelveDataClient;
 import com.example.portfolio.dto.StockCatalogItemResponse;
+import com.example.portfolio.dto.StockHistoryPoint;
+import com.example.portfolio.dto.StockHistoryResponse;
 import com.example.portfolio.dto.StockQuoteResponse;
 import com.example.portfolio.exception.ExternalApiException;
+import com.example.portfolio.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +34,7 @@ public class MarketDataService {
     private static final Logger log = LoggerFactory.getLogger(MarketDataService.class);
 
     private final RestClient finnhubRestClient;
+    private final TwelveDataClient twelveDataClient;
     private final List<String> supportedTickers;
     private final Set<String> supportedTickerSet;
     private final int batchSize;
@@ -38,6 +43,12 @@ public class MarketDataService {
 
     // Cache is the single source of truth for prices served to the rest of the app.
     private final Map<String, CachedQuote> cache = new ConcurrentHashMap<>();
+
+    // Last-known-good history per symbol, used purely as a resilience fallback if
+    // Twelve Data is temporarily unavailable. This is request-driven (not polled/staggered)
+    // since the free tier's 800 credits/day, 8 calls/min headroom is comfortable for
+    // on-demand chart opens.
+    private final Map<String, List<StockHistoryPoint>> lastGoodHistory = new ConcurrentHashMap<>();
 
     // Poll health
     private volatile LocalDateTime lastSuccessfulPoll;
@@ -58,9 +69,11 @@ public class MarketDataService {
     }
 
     public MarketDataService(@Qualifier("finnhubRestClient") RestClient finnhubRestClient,
+                             TwelveDataClient twelveDataClient,
                              @Value("${market.supported-tickers}") String tickersCsv,
                              @Value("${marketdata.batch-size:8}") int batchSize) {
         this.finnhubRestClient = finnhubRestClient;
+        this.twelveDataClient = twelveDataClient;
         this.batchSize = Math.max(1, batchSize);
 
         this.supportedTickers = Arrays.stream(tickersCsv.split(","))
@@ -219,6 +232,54 @@ public class MarketDataService {
 
     public String getLastPollError() {
         return lastPollError;
+    }
+
+    /**
+     * Get daily price history for a supported ticker via Twelve Data, mapping the
+     * requested chart range (1M/3M/6M/1Y/ALL) to a Twelve Data "outputsize" (number
+     * of most-recent daily bars to return) so no extra client-side date filtering is
+     * needed — Twelve Data already returns just the requested window.
+     * This is request-driven (called when a user opens/switches a chart), not polled,
+     * so no cache+stagger scheduling is used. On upstream failure, falls back to the
+     * last successful response for this symbol (if any), or an empty history —
+     * never propagates a 500 up to the controller.
+     */
+    public StockHistoryResponse getStockHistory(String ticker, String range) {
+        String symbol = normalizeTicker(ticker);
+        if (symbol == null || !supportedTickerSet.contains(symbol)) {
+            throw new ResourceNotFoundException("Stock ticker is not supported: " + ticker);
+        }
+
+        String companyName = companyNamesBySymbol.getOrDefault(symbol, symbol);
+        String interval = "1day";
+        int outputSize = mapRangeToOutputSize(range);
+
+        try {
+            List<StockHistoryPoint> points = twelveDataClient.getDailyHistory(symbol, interval, outputSize);
+            lastGoodHistory.put(symbol, points);
+            log.info("Fetched {} history points for {} (range={}, outputsize={})",
+                    points.size(), symbol, range, outputSize);
+            return new StockHistoryResponse(symbol, companyName, points);
+        } catch (ExternalApiException e) {
+            List<StockHistoryPoint> fallback = lastGoodHistory.getOrDefault(symbol, List.of());
+            log.warn("Failed to fetch history for {}: {} — falling back to {} cached point(s)",
+                    symbol, e.getMessage(), fallback.size());
+            return new StockHistoryResponse(symbol, companyName, fallback);
+        }
+    }
+
+    /**
+     * Map a chart range to a Twelve Data outputsize (trading days, roughly).
+     * Twelve Data's max outputsize on the free tier is 5000.
+     */
+    private int mapRangeToOutputSize(String range) {
+        return switch (range == null ? "ALL" : range.toUpperCase()) {
+            case "1M" -> 22;
+            case "3M" -> 66;
+            case "6M" -> 132;
+            case "1Y" -> 252;
+            default -> 1500; // "ALL" — several years of daily bars
+        };
     }
 
     private String normalizeTicker(String rawTicker) {

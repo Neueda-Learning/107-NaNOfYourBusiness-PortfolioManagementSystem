@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Portfolio Manager</title>
 
+  <!-- Inline SVG favicon (avoids a 404 for /favicon.ico) -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%232563eb'/%3E%3Cpath d='M25 70 L25 45 L40 45 L40 70 Z M45 70 L45 30 L60 30 L60 70 Z M65 70 L65 55 L80 55 L80 70 Z' fill='white'/%3E%3C/svg%3E" />
+
   <!-- Prevent FOUC: apply saved theme before first paint -->
   <script>
     (function () {
@@ -258,7 +261,7 @@
                       class="btn-secondary featured-toggle-btn"
                       title="Expand / collapse market overview"
                       aria-label="Toggle market overview"
-                      aria-expanded="false">
+                      aria-expanded="true">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
                      stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
                   <polyline points="6 9 12 15 18 9"/>
@@ -272,7 +275,7 @@
             </div>
           </div>
 
-          <div id="featured-stocks-collapsible" class="featured-stocks-collapsible is-collapsed">
+          <div id="featured-stocks-collapsible" class="featured-stocks-collapsible">
             <div id="browse-featured-body" class="featured-ticker-grid"></div>
           </div>
         </div>
@@ -559,6 +562,39 @@
           <p class="empty-state__text">No history data available for this fund.</p>
         </div>
         <canvas id="mf-history-chart" style="max-height:360px;"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Stock Price History Modal ──────────────────────────────── -->
+  <div id="stock-history-modal" class="mf-history-modal" style="display:none;">
+    <div class="mf-history-modal__backdrop" onclick="window.__stockCloseHistory()"></div>
+    <div class="mf-history-modal__panel">
+      <div class="mf-history-modal__header">
+        <div>
+          <p class="mf-history-modal__title" id="stock-history-title">Ticker</p>
+          <p class="mf-history-modal__subtitle" id="stock-history-subtitle">Latest close: —</p>
+        </div>
+        <button class="mf-history-modal__close" onclick="window.__stockCloseHistory()" aria-label="Close">✕</button>
+      </div>
+
+      <div class="mf-history-modal__ranges">
+        <button class="stock-range-btn" data-range="1M">1M</button>
+        <button class="stock-range-btn" data-range="3M">3M</button>
+        <button class="stock-range-btn" data-range="6M">6M</button>
+        <button class="stock-range-btn" data-range="1Y">1Y</button>
+        <button class="stock-range-btn active" data-range="ALL">All</button>
+      </div>
+
+      <div class="mf-history-modal__body">
+        <div id="stock-history-loading" class="loading" style="display:none;">
+          <div class="spinner"></div>
+          <span>Loading price history…</span>
+        </div>
+        <div id="stock-history-empty" class="empty-state" style="display:none;">
+          <p class="empty-state__text">No history data available for this stock.</p>
+        </div>
+        <canvas id="stock-history-chart" style="max-height:360px;"></canvas>
       </div>
     </div>
   </div>
