@@ -6,6 +6,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +52,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ExternalApiException.class)
     public ResponseEntity<Map<String, Object>> handleExternalApi(ExternalApiException ex) {
         return error(HttpStatus.BAD_GATEWAY, "EXTERNAL_API_ERROR", ex.getMessage());
+    }
+
+    /**
+     * Missing static resources (e.g. browsers auto-requesting /favicon.ico) are normal,
+     * harmless 404s — not application errors. Handle separately so they don't get logged
+     * as ERROR-level stack traces by the catch-all handler below.
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNoResourceFound(NoResourceFoundException ex) {
+        log.debug("Static resource not found: {}", ex.getResourcePath());
+        return error(HttpStatus.NOT_FOUND, "NOT_FOUND", "Resource not found: " + ex.getResourcePath());
     }
 
     @ExceptionHandler(Exception.class)

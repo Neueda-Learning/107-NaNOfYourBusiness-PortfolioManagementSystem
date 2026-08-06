@@ -1,11 +1,13 @@
 package com.example.portfolio.controller;
 
 import com.example.portfolio.dto.StockCatalogItemResponse;
+import com.example.portfolio.dto.StockHistoryResponse;
 import com.example.portfolio.dto.StockQuoteResponse;
 import com.example.portfolio.exception.ExternalApiException;
 import com.example.portfolio.service.MarketDataService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -61,5 +63,17 @@ public class MarketDataController {
                 .map(ResponseEntity::ok)
                 .orElseThrow(() -> new ExternalApiException(
                         "Unable to fetch live price for ticker: " + ticker.trim().toUpperCase()));
+    }
+
+    /**
+     * GET /api/v1/market/{ticker}/history?range=1M|3M|6M|1Y|ALL
+     * Returns daily closing-price history for charting (mirrors the mutual fund
+     * NAV history endpoint). 404 if the ticker isn't in the supported catalog.
+     */
+    @GetMapping("/{ticker}/history")
+    public ResponseEntity<StockHistoryResponse> getStockHistory(
+            @PathVariable String ticker,
+            @RequestParam(required = false, defaultValue = "ALL") String range) {
+        return ResponseEntity.ok(marketDataService.getStockHistory(ticker, range));
     }
 }
