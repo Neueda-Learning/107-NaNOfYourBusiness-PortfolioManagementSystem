@@ -1,4 +1,4 @@
-/**
+﻿/**
  * mutualFunds.js — Mutual Funds tab
  *
  * Features:
@@ -44,7 +44,7 @@ function fmtDate(val) {
 
 function fmtCurrency(val) {
   if (val == null || isNaN(Number(val))) return "—";
-  return "₹" + fmtNum(val, 2);
+  return "$" + fmtNum(val, 2);
 }
 
 function setMsg(id, text, isError = false) {
@@ -104,7 +104,7 @@ function populateBuyDropdown() {
   if (!sel) return;
   sel.innerHTML = `<option value="">— Select a fund —</option>` +
     catalogue.map(f =>
-      `<option value="${f.schemeCode}">${f.schemeName}${f.latestNav != null ? " (NAV: ₹" + fmtNum(f.latestNav) + ")" : ""}</option>`
+      `<option value="${f.schemeCode}">${f.schemeName}${f.latestNav != null ? " (NAV: $" + fmtNum(f.latestNav) + ")" : ""}</option>`
     ).join("");
 }
 
@@ -131,7 +131,7 @@ function populateViewDropdown() {
   const previous = sel.value;
   sel.innerHTML = `<option value="">— Select a fund —</option>` +
     catalogue.map(f =>
-      `<option value="${f.schemeCode}">${f.schemeName}${f.latestNav != null ? " (NAV: ₹" + fmtNum(f.latestNav) + ")" : ""}</option>`
+      `<option value="${f.schemeCode}">${f.schemeName}${f.latestNav != null ? " (NAV: $" + fmtNum(f.latestNav) + ")" : ""}</option>`
     ).join("");
   if (previous) sel.value = previous;
 }
@@ -306,7 +306,7 @@ async function handleBuy() {
     // Buying date is set automatically to today's date on the server — no user input needed.
     const result = await buyMutualFund({ schemeCode, amount });
     setMsg("mf-buy-result",
-      `✓ Bought ${fmtNum(result.units, 4)} units of ${result.schemeName} at NAV ₹${fmtNum(result.nav)} on ${fmtDate(result.purchaseDate)}`
+      `✓ Bought ${fmtNum(result.units, 4)} units of ${result.schemeName} at NAV $${fmtNum(result.nav)} on ${fmtDate(result.purchaseDate)}`
     );
     // Reset form
     if (byId("mf-buy-scheme")) byId("mf-buy-scheme").value = "";
@@ -344,7 +344,7 @@ async function handleSell() {
       setMsg("mf-sell-result", `✓ Holding fully closed. All units sold.`);
     } else {
       setMsg("mf-sell-result",
-        `✓ Sold ${fmtNum(result.unitsSold, 4)} units at NAV ₹${fmtNum(result.nav)}. Remaining: ${fmtNum(result.remainingUnits, 4)} units`
+        `✓ Sold ${fmtNum(result.unitsSold, 4)} units at NAV $${fmtNum(result.nav)}. Remaining: ${fmtNum(result.remainingUnits, 4)} units`
       );
     }
     // Reset form
@@ -405,7 +405,7 @@ async function renderHistoryChart(schemeCode, range) {
       data: {
         labels,
         datasets: [{
-          label: "NAV (₹)",
+          label: "NAV ($)",
           data: navValues,
           borderColor: accentColor,
           backgroundColor: accentColor + "22",
@@ -434,7 +434,7 @@ async function renderHistoryChart(schemeCode, range) {
           legend: { display: false },
           tooltip: {
             callbacks: {
-              label: (ctx) => `NAV: ₹${fmtNum(ctx.parsed.y, 4)}`,
+              label: (ctx) => `NAV: $${fmtNum(ctx.parsed.y, 4)}`,
             },
           },
         },
@@ -449,9 +449,9 @@ async function renderHistoryChart(schemeCode, range) {
     const sign = change >= 0 ? "+" : "";
     const subtitleEl = byId("mf-history-subtitle");
     if (subtitleEl) {
-      subtitleEl.innerHTML = `Latest NAV: ₹${fmtNum(last, 4)} &nbsp;•&nbsp; ` +
+      subtitleEl.innerHTML = `Latest NAV: $${fmtNum(last, 4)} &nbsp;•&nbsp; ` +
         `<span style="color:${change >= 0 ? 'var(--color-success,#38a169)' : 'var(--color-danger,#e53e3e)'}">` +
-        `${sign}₹${fmtNum(Math.abs(change), 4)} (${sign}${fmtNum(changePct, 2)}%)</span> over selected range`;
+        `${sign}$${fmtNum(Math.abs(change), 4)} (${sign}${fmtNum(changePct, 2)}%)</span> over selected range`;
     }
   } catch (err) {
     if (loadingEl) loadingEl.style.display = "none";
