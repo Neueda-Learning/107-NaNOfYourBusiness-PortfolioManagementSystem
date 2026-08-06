@@ -7,6 +7,8 @@ import com.example.portfolio.dto.MutualFundTransactionResponse;
 import com.example.portfolio.dto.SellMutualFundRequest;
 import com.example.portfolio.service.MutualFundService;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +18,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/mutual-funds")
 public class MutualFundController {
+
+    private static final Logger log = LoggerFactory.getLogger(MutualFundController.class);
 
     private final MutualFundService mutualFundService;
 
@@ -59,6 +63,7 @@ public class MutualFundController {
     @PostMapping("/buy")
     public ResponseEntity<Map<String, Object>> buyMutualFund(
             @Valid @RequestBody BuyMutualFundRequest request) {
+        log.debug("Received mutual fund buy request: schemeCode={}, amount={}", request.getSchemeCode(), request.getAmount());
         return ResponseEntity.ok(mutualFundService.buyMutualFund(request));
     }
 
@@ -69,6 +74,7 @@ public class MutualFundController {
     @PostMapping("/sell")
     public ResponseEntity<Map<String, Object>> sellMutualFund(
             @Valid @RequestBody SellMutualFundRequest request) {
+        log.debug("Received mutual fund sell request: portfolioItemId={}, amount={}", request.getPortfolioItemId(), request.getAmount());
         return ResponseEntity.ok(mutualFundService.sellMutualFund(request));
     }
 

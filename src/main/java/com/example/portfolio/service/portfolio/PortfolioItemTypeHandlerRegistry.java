@@ -1,6 +1,8 @@
 package com.example.portfolio.service.portfolio;
 
 import com.example.portfolio.model.AssetType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -14,6 +16,8 @@ import java.util.Map;
  */
 @Component
 public class PortfolioItemTypeHandlerRegistry {
+
+    private static final Logger log = LoggerFactory.getLogger(PortfolioItemTypeHandlerRegistry.class);
 
     private final Map<AssetType, PortfolioItemTypeHandler> handlersByType;
 
@@ -34,6 +38,7 @@ public class PortfolioItemTypeHandlerRegistry {
         }
 
         this.handlersByType = Map.copyOf(map);
+        log.info("Initialized portfolio item type handler registry for asset types: {}", handlersByType.keySet());
     }
 
     public PortfolioItemTypeHandler resolve(AssetType type) {
@@ -43,6 +48,7 @@ public class PortfolioItemTypeHandlerRegistry {
 
         PortfolioItemTypeHandler handler = handlersByType.get(type);
         if (handler == null) {
+            log.error("No handler found for asset type: {}", type);
             throw new IllegalStateException("No handler found for asset type: " + type);
         }
         return handler;

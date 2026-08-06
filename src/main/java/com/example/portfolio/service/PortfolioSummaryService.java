@@ -4,6 +4,8 @@ import com.example.portfolio.dto.PortfolioSummaryResponse;
 import com.example.portfolio.model.AssetType;
 import com.example.portfolio.model.PortfolioItem;
 import com.example.portfolio.repository.PortfolioItemRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -16,6 +18,8 @@ import java.util.stream.Collectors;
 @Service
 public class PortfolioSummaryService {
 
+    private static final Logger log = LoggerFactory.getLogger(PortfolioSummaryService.class);
+
     private final PortfolioItemRepository repository;
 
     public PortfolioSummaryService(PortfolioItemRepository repository) {
@@ -24,6 +28,7 @@ public class PortfolioSummaryService {
 
     public PortfolioSummaryResponse getSummary() {
         List<PortfolioItem> items = repository.findAll();
+        log.debug("Computing portfolio summary for {} holding(s)", items.size());
 
         BigDecimal totalValue = items.stream()
                 .filter(i -> i.getCurrentPrice() != null)

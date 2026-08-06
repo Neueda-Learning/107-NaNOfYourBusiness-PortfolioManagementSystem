@@ -3,6 +3,8 @@ package com.example.portfolio.service.portfolio;
 import com.example.portfolio.model.AssetType;
 import com.example.portfolio.model.PortfolioItem;
 import com.example.portfolio.service.MarketDataService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
@@ -10,6 +12,8 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class StockPortfolioItemTypeHandler extends BasePortfolioItemTypeHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(StockPortfolioItemTypeHandler.class);
 
     public StockPortfolioItemTypeHandler(MarketDataService marketDataService) {
         super(marketDataService);
@@ -30,6 +34,7 @@ public class StockPortfolioItemTypeHandler extends BasePortfolioItemTypeHandler 
 
             if (marketPriceOpt.isEmpty()) {
                 if (item.getPurchasePrice() == null) {
+                    log.warn("Could not resolve market price for stock: {}", item.getSymbolOrName());
                     throw new IllegalArgumentException("Could not resolve market price for stock: " + item.getSymbolOrName());
                 }
                 return;
@@ -42,6 +47,7 @@ public class StockPortfolioItemTypeHandler extends BasePortfolioItemTypeHandler 
             if (item.getCurrentPrice() == null) {
                 item.setCurrentPrice(marketPrice);
             }
+            log.debug("Auto-filled market price for stock: symbolOrName={}, price={}", item.getSymbolOrName(), marketPrice);
         }
     }
 }

@@ -1,5 +1,7 @@
 package com.example.portfolio.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -9,6 +11,8 @@ import java.util.Set;
 
 @Component
 public class MutualFundCatalogue {
+
+    private static final Logger log = LoggerFactory.getLogger(MutualFundCatalogue.class);
 
     private final Map<Integer, String> supportedFunds;
 
@@ -47,6 +51,7 @@ public class MutualFundCatalogue {
         funds.put(119580, "UTI Equity Fund");
 
         this.supportedFunds = Collections.unmodifiableMap(funds);
+        log.info("Loaded mutual fund catalogue with {} supported funds", supportedFunds.size());
     }
 
     /**

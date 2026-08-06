@@ -5,6 +5,8 @@ import com.example.portfolio.dto.StockHistoryResponse;
 import com.example.portfolio.dto.StockQuoteResponse;
 import com.example.portfolio.exception.ExternalApiException;
 import com.example.portfolio.service.MarketDataService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +20,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/market")
 public class MarketDataController {
+
+    private static final Logger log = LoggerFactory.getLogger(MarketDataController.class);
 
     private final MarketDataService marketDataService;
 
@@ -61,8 +65,11 @@ public class MarketDataController {
         }
         return marketDataService.getQuote(ticker)
                 .map(ResponseEntity::ok)
-                .orElseThrow(() -> new ExternalApiException(
-                        "Unable to fetch live price for ticker: " + ticker.trim().toUpperCase()));
+                .orElseThrow(() -> {
+                    log.warn("Live quote unavailable for ticker: {}", ticker);
+                    return new ExternalApiException(
+                            "Unable to fetch live price for ticker: " + ticker.trim().toUpperCase());
+                });
     }
 
     /**

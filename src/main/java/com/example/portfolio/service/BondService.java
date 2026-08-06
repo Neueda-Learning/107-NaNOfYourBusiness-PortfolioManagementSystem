@@ -8,6 +8,8 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +20,8 @@ import java.util.List;
 
 @Service
 public class BondService {
+
+    private static final Logger log = LoggerFactory.getLogger(BondService.class);
 
     private final BondRepository repository;
     private final WalletService walletService;
@@ -105,6 +109,9 @@ public class BondService {
                         null
                 )));
 
+        log.info("Bond buy executed: symbol={}, quantity={}, purchasePrice={}, portfolioItemId={}",
+                normalizedSymbol, request.quantity(), request.purchasePrice(), updated.id());
+
         return toResponse(updated);
     }
 
@@ -117,6 +124,7 @@ public class BondService {
 
         if ("REDEEMED".equalsIgnoreCase(existing.status())) {
             String dateText = existing.redemptionDate() != null ? existing.redemptionDate().toString() : "an earlier date";
+            log.warn("Bond redemption rejected: symbol={} already redeemed on {}", normalizedSymbol, dateText);
             throw new BondRedemptionException(
                     "BOND_ALREADY_REDEEMED",
                     "Bond is already redeemed (redeemed on " + dateText + ")"
@@ -124,12 +132,15 @@ public class BondService {
         }
 
         if (existing.maturityDate() == null) {
+            log.warn("Bond redemption rejected: symbol={} has no maturity date", normalizedSymbol);
             throw new BondRedemptionException(
                     "BOND_MATURITY_DATE_MISSING",
                     "Bond has no maturity date set; redemption is not applicable"
             );
         }
         if (existing.maturityDate().isAfter(LocalDate.now())) {
+            log.warn("Bond redemption rejected: symbol={} has not matured (maturityDate={})",
+                    normalizedSymbol, existing.maturityDate());
             throw new BondRedemptionException(
                     "BOND_NOT_MATURED",
                     "Bond has not yet matured. Maturity date: " + existing.maturityDate());
@@ -141,6 +152,8 @@ public class BondService {
                 AssetType.BOND,
                 redeemed.id(),
                 redeemed.symbol());
+        log.info("Bond redeemed: symbol={}, portfolioItemId={}, redemptionValue={}",
+                redeemed.symbol(), redeemed.id(), redeemed.redemptionValue());
         return toResponse(redeemed);
     }
 

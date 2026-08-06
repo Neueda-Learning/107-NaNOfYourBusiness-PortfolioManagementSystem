@@ -5,6 +5,8 @@ import com.example.portfolio.model.WalletTransactionType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
@@ -15,6 +17,8 @@ import java.util.Objects;
 
 @Repository
 public class WalletTransactionRepository {
+
+    private static final Logger log = LoggerFactory.getLogger(WalletTransactionRepository.class);
 
     private final SimpleJdbcInsert insert;
     private final JdbcTemplate jdbcTemplate;
@@ -44,6 +48,8 @@ public class WalletTransactionRepository {
                 .addValue("portfolio_item_id", portfolioItemId)
                 .addValue("symbol_or_name", symbolOrName)
                 .addValue("created_at", createdAt));
+        log.debug("Recorded wallet transaction: userId={}, type={}, amount={}, balanceAfter={}",
+                userId, type, amount, balanceAfter);
     }
 
     public List<WalletTransactionRecord> findByUserId(Long userId) {

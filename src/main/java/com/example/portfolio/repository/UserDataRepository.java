@@ -1,6 +1,8 @@
 package com.example.portfolio.repository;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -8,6 +10,8 @@ import java.time.LocalDateTime;
 
 @Repository
 public class UserDataRepository {
+
+    private static final Logger log = LoggerFactory.getLogger(UserDataRepository.class);
 
     private final JdbcTemplate jdbc;
 
@@ -20,6 +24,7 @@ public class UserDataRepository {
                 "SELECT id FROM user_data ORDER BY id LIMIT 1",
                 Long.class);
         if (id == null) {
+            log.error("No user_data row found in database");
             throw new IllegalStateException("No user_data row found");
         }
         return id;
@@ -31,6 +36,7 @@ public class UserDataRepository {
                 BigDecimal.class,
                 userId);
         if (balance == null) {
+            log.error("Wallet balance not found for user id: {}", userId);
             throw new IllegalStateException("Wallet balance not found for user id: " + userId);
         }
         return balance;

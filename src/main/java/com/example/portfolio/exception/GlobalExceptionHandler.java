@@ -25,6 +25,7 @@ public class GlobalExceptionHandler {
         List<Map<String, String>> fieldErrors = ex.getBindingResult().getFieldErrors().stream()
                 .map(e -> Map.of("field", e.getField(), "message", e.getDefaultMessage()))
                 .toList();
+        log.warn("Validation failed for request: {} field error(s)", fieldErrors.size());
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("status", 400);
         body.put("error", "VALIDATION_ERROR");
@@ -36,31 +37,37 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<Map<String, Object>> handleMissingParam(MissingServletRequestParameterException ex) {
+        log.warn("Missing request parameter: {}", ex.getMessage());
         return badRequest("VALIDATION_ERROR", ex.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
+        log.warn("Bad request: {}", ex.getMessage());
         return badRequest("BAD_REQUEST", ex.getMessage());
     }
 
     @ExceptionHandler(InsufficientWalletBalanceException.class)
     public ResponseEntity<Map<String, Object>> handleInsufficientWalletBalance(InsufficientWalletBalanceException ex) {
+        log.warn("Insufficient wallet balance: {}", ex.getMessage());
         return badRequest("INSUFFICIENT_WALLET_BALANCE", ex.getMessage());
     }
 
     @ExceptionHandler(BondRedemptionException.class)
     public ResponseEntity<Map<String, Object>> handleBondRedemption(BondRedemptionException ex) {
+        log.warn("Bond redemption rejected: errorCode={}, message={}", ex.getErrorCode(), ex.getMessage());
         return error(HttpStatus.CONFLICT, ex.getErrorCode(), ex.getMessage());
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleNotFound(ResourceNotFoundException ex) {
+        log.warn("Resource not found: {}", ex.getMessage());
         return error(HttpStatus.NOT_FOUND, "NOT_FOUND", ex.getMessage());
     }
 
     @ExceptionHandler(ExternalApiException.class)
     public ResponseEntity<Map<String, Object>> handleExternalApi(ExternalApiException ex) {
+        log.warn("External API failure: {}", ex.getMessage());
         return error(HttpStatus.BAD_GATEWAY, "EXTERNAL_API_ERROR", ex.getMessage());
     }
 

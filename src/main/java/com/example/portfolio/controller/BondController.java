@@ -2,6 +2,8 @@ package com.example.portfolio.controller;
 
 import com.example.portfolio.service.BondService;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +18,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/bonds")
 public class BondController {
+
+    private static final Logger log = LoggerFactory.getLogger(BondController.class);
 
     private final BondService bondService;
 
@@ -56,12 +60,14 @@ public class BondController {
     @PostMapping("/buy")
     public ResponseEntity<BondService.BondResponse> buyBond(
             @Valid @RequestBody BondService.BondTradeRequest request) {
+        log.debug("Received bond buy request: symbol={}", request.symbol());
         return ResponseEntity.ok(bondService.buyBond(request));
     }
 
     @PostMapping("/redeem")
     public ResponseEntity<BondService.BondResponse> redeemBond(
             @Valid @RequestBody BondService.BondRedeemRequest request) {
+        log.debug("Received bond redeem request: symbol={}", request.symbol());
         return ResponseEntity.ok(bondService.redeemBond(request));
     }
 }

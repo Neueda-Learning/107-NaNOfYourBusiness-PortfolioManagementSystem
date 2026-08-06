@@ -7,6 +7,8 @@ import com.example.portfolio.model.AssetType;
 import com.example.portfolio.model.WalletTransactionType;
 import com.example.portfolio.repository.UserDataRepository;
 import com.example.portfolio.repository.WalletTransactionRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +19,8 @@ import java.util.List;
 
 @Service
 public class WalletService {
+
+    private static final Logger log = LoggerFactory.getLogger(WalletService.class);
 
     private final UserDataRepository userDataRepository;
     private final WalletTransactionRepository walletTransactionRepository;
@@ -49,6 +53,7 @@ public class WalletService {
                 null,
                 now);
 
+        log.info("Wallet deposit: userId={}, amount={}, newBalance={}", userId, normalizedAmount, updatedBalance);
         return new WalletBalanceResponse(updatedBalance, now);
     }
 
@@ -61,6 +66,8 @@ public class WalletService {
         boolean debited = userDataRepository.decreaseWalletBalanceIfSufficient(userId, normalizedAmount, now);
         if (!debited) {
             BigDecimal currentBalance = userDataRepository.getWalletBalance(userId);
+            log.warn("Wallet debit rejected (insufficient balance): userId={}, required={}, available={}, assetType={}, symbolOrName={}",
+                    userId, normalizedAmount, currentBalance, assetType, symbolOrName);
             throw new InsufficientWalletBalanceException(
                     "Insufficient wallet balance. Available: " + currentBalance + ", required: " + normalizedAmount);
         }
@@ -75,6 +82,8 @@ public class WalletService {
                 portfolioItemId,
                 symbolOrName,
                 now);
+        log.info("Wallet debited for buy: userId={}, amount={}, assetType={}, portfolioItemId={}, symbolOrName={}, newBalance={}",
+                userId, normalizedAmount, assetType, portfolioItemId, symbolOrName, updatedBalance);
     }
 
     @Transactional
@@ -93,6 +102,8 @@ public class WalletService {
                 portfolioItemId,
                 symbolOrName,
                 now);
+        log.info("Wallet credited for sell: userId={}, amount={}, assetType={}, portfolioItemId={}, symbolOrName={}, newBalance={}",
+                userId, normalizedAmount, assetType, portfolioItemId, symbolOrName, updatedBalance);
     }
 
     public List<WalletTransactionResponse> getTransactionHistory() {

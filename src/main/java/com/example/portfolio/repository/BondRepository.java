@@ -4,6 +4,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -20,6 +22,8 @@ import java.util.Optional;
 
 @Repository
 public class BondRepository {
+
+    private static final Logger log = LoggerFactory.getLogger(BondRepository.class);
 
     private static final String BOND_TYPE = "BOND";
 
@@ -161,6 +165,7 @@ public class BondRepository {
                 .addValue("created_at", now)
                 .addValue("updated_at", now));
 
+        log.debug("Inserted new bond row: symbol={}, generatedId={}", bond.symbol(), generatedId);
         return bond.withId(generatedId.longValue()).withTimestamps(now, now);
     }
 
@@ -250,6 +255,8 @@ public class BondRepository {
 
         jdbc.update(sql, Date.valueOf(today), redemptionValue, now, existing.id(), BOND_TYPE);
 
+        log.debug("Applied redemption to bond: id={}, symbol={}, redemptionValue={}",
+                existing.id(), existing.symbol(), redemptionValue);
         return existing
                 .withStatus("REDEEMED")
                 .withRedemptionDate(today)
@@ -259,6 +266,7 @@ public class BondRepository {
 
     public void deleteById(Long id) {
         jdbc.update("DELETE FROM portfolio_item WHERE id = ? AND type = ?", id, BOND_TYPE);
+        log.debug("Deleted bond row: id={}", id);
     }
 
     private static <T> T preferIncoming(T incoming, T fallback) {

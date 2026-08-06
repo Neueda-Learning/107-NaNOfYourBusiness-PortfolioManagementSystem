@@ -6,6 +6,8 @@ import com.example.portfolio.model.TradeSide;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
@@ -16,6 +18,8 @@ import java.util.Objects;
 
 @Repository
 public class PortfolioTradeRepository {
+
+    private static final Logger log = LoggerFactory.getLogger(PortfolioTradeRepository.class);
 
     private final SimpleJdbcInsert insert;
     private final JdbcTemplate jdbcTemplate;
@@ -42,6 +46,8 @@ public class PortfolioTradeRepository {
                 .addValue("execution_price", executionPrice)
                 .addValue("executed_at", executedAt)
                 .addValue("created_at", executedAt));
+        log.debug("Recorded trade: portfolioItemId={}, side={}, symbolOrName={}, quantity={}, executionPrice={}",
+                item.getId(), side, item.getSymbolOrName(), quantity, executionPrice);
     }
 
     /**

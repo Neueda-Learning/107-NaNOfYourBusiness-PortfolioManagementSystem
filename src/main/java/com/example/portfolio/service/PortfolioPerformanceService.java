@@ -4,6 +4,8 @@ import com.example.portfolio.dto.PortfolioPerformancePoint;
 import com.example.portfolio.dto.PortfolioPerformanceResponse;
 import com.example.portfolio.model.PortfolioItem;
 import com.example.portfolio.repository.PortfolioItemRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -36,6 +38,8 @@ import java.util.List;
 @Service
 public class PortfolioPerformanceService {
 
+    private static final Logger log = LoggerFactory.getLogger(PortfolioPerformanceService.class);
+
     /** Long ranges are sampled weekly to keep the response payload and chart small. */
     private static final int WEEKLY_SAMPLE_THRESHOLD_DAYS = 180;
 
@@ -50,6 +54,7 @@ public class PortfolioPerformanceService {
         List<PortfolioItem> items = repository.findAll();
 
         if (items.isEmpty()) {
+            log.debug("No portfolio items found; returning empty performance series for range={}", normalizedRange);
             return new PortfolioPerformanceResponse(normalizedRange, List.of());
         }
 
@@ -70,6 +75,8 @@ public class PortfolioPerformanceService {
         // Always include an exact, non-interpolated point for "today".
         points.add(computePoint(items, today, today));
 
+        log.debug("Computed portfolio performance series: range={}, points={}, holdings={}",
+                normalizedRange, points.size(), items.size());
         return new PortfolioPerformanceResponse(normalizedRange, points);
     }
 

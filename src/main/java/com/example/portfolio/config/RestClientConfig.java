@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -11,6 +13,8 @@ import java.net.URI;
 
 @Configuration
 public class RestClientConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(RestClientConfig.class);
 
     @Value("${market.api.base-url}")
     private String marketApiBaseUrl;
@@ -33,6 +37,7 @@ public class RestClientConfig {
         factory.setConnectTimeout(5000);
         factory.setReadTimeout(5000);
 
+        log.info("Configuring market RestClient with baseUrl={}", marketApiBaseUrl);
         return RestClient.builder()
                 .baseUrl(marketApiBaseUrl)
                 .requestFactory(factory)
@@ -53,8 +58,11 @@ public class RestClientConfig {
 
         if (finnhubApiKey != null && !finnhubApiKey.isBlank()) {
             builder.defaultHeader("X-Finnhub-Token", finnhubApiKey.trim());
+        } else {
+            log.warn("Finnhub API key is not configured; Finnhub requests may be rejected");
         }
 
+        log.info("Configuring Finnhub RestClient with baseUrl={}", finnhubBaseUrl);
         return builder.build();
     }
 
@@ -69,6 +77,10 @@ public class RestClientConfig {
         factory.setConnectTimeout(5000);
         factory.setReadTimeout(5000);
 
+        if (twelveDataApiKey == null || twelveDataApiKey.isBlank()) {
+            log.warn("Twelve Data API key is not configured; history requests may be rejected");
+        }
+        log.info("Configuring Twelve Data RestClient with baseUrl={}", twelveDataBaseUrl);
         return RestClient.builder()
                 .baseUrl(twelveDataBaseUrl)
                 .requestFactory(factory)
