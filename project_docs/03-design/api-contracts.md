@@ -72,7 +72,7 @@ Includes all request fields plus computed/managed fields:
 | Method | Path | Description |
 |---|---|---|
 | GET | `/portfolio/summary` | total value, cost, gain/loss, allocation |
-| GET | `/portfolio/performance` | stretch endpoint for time-series performance |
+| GET | `/portfolio/performance?range=1M\|3M\|6M\|1Y\|ALL` | time-series of `totalValue`/`totalCost` for the dashboard's performance chart (US-15) |
 
 ## 4. Example Payloads
 
@@ -134,6 +134,30 @@ For buy/sell, backend sets execution price and execution timestamp server-side a
   ]
 }
 ```
+
+### Performance Response
+
+```json
+{
+  "range": "1M",
+  "points": [
+    { "date": "2026-07-07", "totalValue": 41850.00, "totalCost": 41000.00 },
+    { "date": "2026-07-08", "totalValue": 41920.30, "totalCost": 41000.00 },
+    { "date": "2026-08-06", "totalValue": 45230.75, "totalCost": 41000.00 }
+  ]
+}
+```
+
+`range` is normalized to one of `1M`, `3M`, `6M`, `1Y`, `ALL` (unknown/omitted values fall
+back to `ALL`). If the requested range predates every holding's `purchaseDate`, the series
+is clamped to start at the earliest purchase date rather than showing an empty lead-in.
+
+**Approximation note:** each holding's per-day price between its `purchaseDate` (priced at
+`purchasePrice`) and today (priced at `currentPrice`) is linearly interpolated — the backend
+does not replay full historical daily closes per holding, to avoid extra third-party API
+calls (Twelve Data / MFAPI) on every dashboard load per NFR-03/US-13's controlled refresh
+strategy. The final point for "today" always uses the exact live `currentPrice`. See
+`PortfolioPerformanceService` Javadoc for the full rationale and future upgrade path.
 
 ## 5. Error Contract
 

@@ -41,6 +41,14 @@ export async function getPortfolioSummary() {
   return apiFetch("/portfolio/summary");
 }
 
+/**
+ * Fetch the portfolio value/cost time series for the dashboard's Performance
+ * Over Time chart. GET /api/v1/portfolio/performance?range=1M|3M|6M|1Y|ALL
+ */
+export async function getPortfolioPerformance(range = "ALL") {
+  return apiFetch(`/portfolio/performance?range=${encodeURIComponent(range)}`);
+}
+
 // ── Portfolio Items ──────────────────────────────────
 /**
  * @param {string|null} type  One of "STOCK" | "BOND" | "MUTUAL_FUND" | null (all)
@@ -101,6 +109,14 @@ export async function getStockQuote(ticker) {
 }
 
 /**
+ * Fetch daily price history for a stock ticker, for the History chart.
+ * GET /api/v1/market/{ticker}/history?range=1M|3M|6M|1Y|ALL
+ */
+export async function getStockHistory(ticker, range = "ALL") {
+  return apiFetch(`/market/${encodeURIComponent(ticker)}/history?range=${encodeURIComponent(range)}`);
+}
+
+/**
  * Fetch cached quotes for multiple tickers in one call.
  * Uses the in-memory cache populated by the backend's scheduled poll (every 10 s).
  * Returns a map of { "TICKER": { ticker, price, currency, asOf }, ... }
@@ -122,6 +138,24 @@ export async function getMutualFunds() {
 /** GET /api/mutual-funds/{schemeCode} — raw MFAPI details */
 export async function getMutualFundDetails(schemeCode) {
   const res = await fetch(`/api/mutual-funds/${schemeCode}`, { headers: { "Content-Type": "application/json" } });
+  if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error(b.message || `Request failed (${res.status})`); }
+  return res.json();
+}
+
+/** GET /api/mutual-funds/{schemeCode}/history?range=1M|3M|6M|1Y|ALL */
+export async function getMutualFundHistory(schemeCode, range = "ALL") {
+  const res = await fetch(`/api/mutual-funds/${schemeCode}/history?range=${encodeURIComponent(range)}`, {
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error(b.message || `Request failed (${res.status})`); }
+  return res.json();
+}
+
+/** GET /api/mutual-funds/{schemeCode}/transactions — buy/sell history for one fund */
+export async function getMutualFundTransactions(schemeCode) {
+  const res = await fetch(`/api/mutual-funds/${schemeCode}/transactions`, {
+    headers: { "Content-Type": "application/json" },
+  });
   if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error(b.message || `Request failed (${res.status})`); }
   return res.json();
 }

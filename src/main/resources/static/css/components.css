@@ -67,6 +67,175 @@
   transition: color var(--duration-slow) var(--ease-out);
 }
 
+/* ── Card icon badge ───────────────────────────────────────────── */
+.card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px; height: 30px;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-3);
+  color: var(--color-gain);
+  background: var(--color-gain-bg);
+  transition: background-color var(--duration-slow) var(--ease-out),
+              color var(--duration-slow) var(--ease-out);
+}
+.card__icon svg { width: 15px; height: 15px; }
+.card__icon--neutral {
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+}
+.card__icon--loss {
+  color: var(--color-loss);
+  background: var(--color-loss-bg);
+}
+
+/* ── Sparkline (mini SVG trend line inside a card) ─────────────── */
+.card__sparkline {
+  width: 100%;
+  height: 28px;
+  margin-top: var(--space-2);
+  overflow: visible;
+  display: block;
+}
+.card__sparkline:empty { display: none; }
+.card__sparkline polyline {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* ── Dashboard toolbar (last updated + refresh) ────────────────── */
+.dashboard-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.dashboard-toolbar__updated {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-faint);
+  letter-spacing: 0.01em;
+  transition: color var(--duration-slow) var(--ease-out);
+}
+
+/* ── Chart insight text ─────────────────────────────────────────── */
+.chart-insight {
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  width: 100%;
+  font-size: var(--font-size-xs);
+  line-height: 1.6;
+  color: var(--color-text-muted);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  text-align: center;
+  transition: color var(--duration-slow) var(--ease-out),
+              background-color var(--duration-slow) var(--ease-out);
+}
+.chart-insight:empty { display: none; }
+
+/* ── Empty state CTA ───────────────────────────────────────────── */
+.empty-state__cta {
+  margin-top: var(--space-5);
+}
+
+/* ── Skeleton loading state ─────────────────────────────────────── */
+.dashboard-skeleton { display: flex; flex-direction: column; gap: var(--space-6); max-width: 1200px; }
+.skeleton-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+}
+.skeleton-card {
+  height: 118px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+.skeleton-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+}
+.skeleton-chart {
+  height: 280px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+.skeleton-card, .skeleton-chart {
+  position: relative;
+  overflow: hidden;
+}
+.skeleton-card::after, .skeleton-chart::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(var(--color-accent-r), var(--color-accent-g), var(--color-accent-b), 0.09) 50%,
+    transparent 100%);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+@keyframes shimmer {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(100%); }
+}
+@media (max-width: 1024px) {
+  .skeleton-cards { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+  .skeleton-charts { grid-template-columns: 1fr; }
+}
+
+/* ── Top movers widget ──────────────────────────────────────────── */
+.top-movers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+.top-mover {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out);
+}
+.top-mover:hover { transform: translateY(-1px); }
+.top-mover--gain:hover { background: var(--color-gain-bg); }
+.top-mover--loss:hover { background: var(--color-loss-bg); }
+.top-mover__label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 600;
+}
+.top-mover__name {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-top: 2px;
+}
+.top-mover__pct {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+.top-mover__pct--gain { color: var(--color-gain); }
+.top-mover__pct--loss { color: var(--color-loss); }
+@media (max-width: 640px) {
+  .top-movers { grid-template-columns: 1fr; }
+}
+
 /* ── Chart Card ────────────────────────────────────────────────── */
 .chart-card {
   background: var(--color-surface);
@@ -86,6 +255,41 @@
   margin-bottom: var(--space-5);
 }
 
+/* ── Performance chart range toggle ─────────────────────────────── */
+.perf-range-group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.perf-range-btn {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 4px 11px;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  transition: background var(--duration-fast) var(--ease-out),
+              color var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out);
+}
+.perf-range-btn.active,
+.perf-range-btn:hover {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+}
+.perf-range-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.performance-canvas-wrap {
+  width: 100%;
+  height: 260px;
+  position: relative;
+}
+
+
 .chart-card__title {
   font-size: var(--font-size-sm);
   font-weight: 600;
@@ -104,6 +308,21 @@
   width: 100%;
   max-width: 260px;
   margin: 0 auto;
+}
+.chart-canvas-wrap--donut {
+  max-width: 320px;
+}
+
+/* ── Static cards (no hover lift / 3D tilt) ─────────────────────
+   Used for cards that contain data tables, where a moving/tilting
+   card while the user is trying to click a row action feels broken. */
+.card--static:hover {
+  transform: none !important;
+  box-shadow: var(--shadow-card);
+  border-color: var(--color-border);
+}
+.card--static:hover::before {
+  opacity: 0;
 }
 
 /* ── Loading State ─────────────────────────────────────────────── */
@@ -806,4 +1025,216 @@
 @media (max-width: 900px) {
   .stocks-layout { grid-template-columns: 1fr; }
 }
+
+/* ── Mutual Fund NAV History Modal ────────────────────────────── */
+.mf-history-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mf-history-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+}
+.mf-history-modal__panel {
+  position: relative;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-hover);
+  width: min(720px, 92vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: var(--space-6);
+}
+.mf-history-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+.mf-history-modal__title {
+  font-size: var(--font-size-lg, 1.1rem);
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+.mf-history-modal__subtitle {
+  font-size: 0.85rem;
+  color: var(--color-text-faint);
+  margin: 4px 0 0;
+}
+.mf-history-modal__close {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: var(--color-text-faint);
+  padding: 4px 8px;
+}
+.mf-history-modal__ranges {
+  display: flex;
+  gap: 8px;
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+.mf-range-btn {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: var(--color-text);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.mf-range-btn.active,
+.mf-range-btn:hover {
+  background: var(--color-accent, #059669);
+  color: #fff;
+  border-color: var(--color-accent, #059669);
+}
+.mf-history-modal__body {
+  position: relative;
+  min-height: 200px;
+}
+
+/* ── Mutual Fund: fund detail + transaction history panel ───────── */
+.mf-fund-detail {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+.mf-fund-detail__summary {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+.mf-fund-detail__name {
+  font-size: var(--font-size-lg, 1.1rem);
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+.mf-fund-detail__meta {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-faint);
+  margin-top: 4px;
+}
+.mf-fund-detail__subtitle {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: var(--space-2);
+}
+
+/* ── Mutual Fund: holdings as cards (not a table/dropdown) ──────── */
+.mf-holdings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: var(--space-3);
+}
+
+.mf-holding-card {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  transition: border-color var(--duration-base) var(--ease-out),
+              transform var(--duration-base) var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .mf-holding-card:hover {
+    border-color: var(--color-border-strong);
+    transform: translateY(-2px);
+  }
+}
+
+.mf-holding-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mf-holding-card__name {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.25;
+}
+
+.mf-holding-card__date {
+  font-size: 0.7rem;
+  color: var(--color-text-faint);
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+.mf-holding-card__body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-1) var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.mf-holding-card__stat-label {
+  font-size: 0.65rem;
+  color: var(--color-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.mf-holding-card__stat-value {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+  margin-top: 1px;
+}
+.mf-holding-card__stat-value--gain { color: var(--color-gain); }
+.mf-holding-card__stat-value--loss { color: var(--color-loss); }
+
+.mf-holding-card__footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ── Stock Price History Modal (shares .mf-history-modal* container styles) ── */
+.stock-range-btn {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: var(--color-text);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.stock-range-btn.active,
+.stock-range-btn:hover {
+  background: var(--color-stock, #2563eb);
+  color: #fff;
+  border-color: var(--color-stock, #2563eb);
+}
+.history-btn {
+  font-size: 0.7rem;
+  padding: 3px 8px;
+  margin-left: 6px;
+}
+
 

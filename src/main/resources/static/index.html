@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Portfolio Manager</title>
 
+  <!-- Inline SVG favicon (avoids a 404 for /favicon.ico) -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%232563eb'/%3E%3Cpath d='M25 70 L25 45 L40 45 L40 70 Z M45 70 L45 30 L60 30 L60 70 Z M65 70 L65 55 L80 55 L80 70 Z' fill='white'/%3E%3C/svg%3E" />
+
   <!-- Prevent FOUC: apply saved theme before first paint -->
   <script>
     (function () {
@@ -94,10 +97,18 @@
        ════════════════════════════════════════════════ -->
   <section class="tab-panel" data-panel="dashboard" role="tabpanel" aria-label="Dashboard">
 
-    <!-- Loading state -->
-    <div id="dashboard-loading" class="loading" style="display:none;">
-      <div class="spinner"></div>
-      <span>Loading portfolio</span>
+    <!-- Loading state (skeleton) -->
+    <div id="dashboard-loading" class="dashboard-skeleton" style="display:none;" aria-hidden="true">
+      <div class="skeleton-cards">
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+      </div>
+      <div class="skeleton-charts">
+        <div class="skeleton-chart"></div>
+        <div class="skeleton-chart"></div>
+      </div>
     </div>
 
     <!-- Error state -->
@@ -128,28 +139,78 @@
       <p class="empty-state__text">
         Your portfolio is empty. Add your first holding using the Stocks, Bonds, or Mutual Funds tab.
       </p>
+      <button class="btn-primary empty-state__cta" id="dashboard-empty-cta">Add your first holding</button>
     </div>
 
     <!-- Main content -->
     <div id="dashboard-content" style="display:none;">
+
+      <!-- Header row: last updated + manual refresh -->
+      <div class="dashboard-toolbar stagger-child">
+        <span class="dashboard-toolbar__updated" id="dashboard-last-updated">—</span>
+        <button class="btn-secondary" id="dashboard-refresh-btn" title="Refresh dashboard">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="23 4 23 10 17 10"/>
+            <polyline points="1 20 1 14 7 14"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          Refresh
+        </button>
+      </div>
+
       <div class="dashboard-grid">
 
         <!-- Summary cards -->
         <div class="summary-cards">
           <div class="card stagger-child">
+            <div class="card__icon card__icon--neutral">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="12" y1="1" x2="12" y2="23"/>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+            </div>
             <p class="card__title">Total Value</p>
             <p class="card__value card__value--neutral" id="card-total-value">—</p>
+            <svg class="card__sparkline" id="sparkline-value" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true"></svg>
             <p class="card__sub">Current market value</p>
           </div>
           <div class="card stagger-child">
+            <div class="card__icon" id="card-icon-gainloss">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                <polyline points="17 6 23 6 23 12"/>
+              </svg>
+            </div>
             <p class="card__title">Total Gain / Loss</p>
             <p class="card__value" id="card-gain-loss">—</p>
+            <svg class="card__sparkline" id="sparkline-gainloss" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true"></svg>
             <p class="card__sub" id="card-gain-loss-pct">—</p>
           </div>
           <div class="card stagger-child">
+            <div class="card__icon card__icon--neutral">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+                <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+                <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+              </svg>
+            </div>
             <p class="card__title">Holdings</p>
             <p class="card__value card__value--neutral" id="card-item-count">—</p>
             <p class="card__sub">Total items</p>
+          </div>
+          <div class="card stagger-child">
+            <div class="card__icon card__icon--neutral">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
+                <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
+                <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
+              </svg>
+            </div>
+            <p class="card__title">Total Cost Basis</p>
+            <p class="card__value card__value--neutral" id="card-total-cost">—</p>
+            <p class="card__sub">Total amount invested</p>
           </div>
         </div>
 
@@ -159,28 +220,46 @@
             <h2 class="chart-card__title">Allocation by Asset Type</h2>
           </div>
           <div class="chart-card__body">
-            <div class="chart-canvas-wrap">
+            <div class="chart-canvas-wrap chart-canvas-wrap--donut">
               <canvas id="allocationChart" role="img" aria-label="Portfolio allocation doughnut chart"></canvas>
+            </div>
+            <p class="chart-insight" id="dashboard-insight"></p>
+          </div>
+        </div>
+
+        <!-- Performance over time -->
+        <div class="chart-card stagger-child">
+          <div class="chart-card__header">
+            <h2 class="chart-card__title">Performance Over Time</h2>
+            <div class="perf-range-group" id="perf-range-group">
+              <button class="perf-range-btn" data-range="1M">1M</button>
+              <button class="perf-range-btn" data-range="3M">3M</button>
+              <button class="perf-range-btn" data-range="6M">6M</button>
+              <button class="perf-range-btn" data-range="1Y">1Y</button>
+              <button class="perf-range-btn active" data-range="ALL">All</button>
+            </div>
+          </div>
+          <div class="chart-card__body">
+            <div id="performance-loading" class="loading" style="display:none;">
+              <div class="spinner"></div>
+              <span>Loading performance…</span>
+            </div>
+            <div id="performance-empty" class="empty-state" style="display:none;">
+              <p class="empty-state__text">Not enough history yet to plot performance.</p>
+            </div>
+            <div class="performance-canvas-wrap" id="performance-canvas-wrap" style="display:none;">
+              <canvas id="performanceChart" role="img" aria-label="Portfolio performance over time line chart"></canvas>
             </div>
           </div>
         </div>
 
-        <!-- Performance over time (stretch) -->
-        <div class="chart-card stagger-child">
+
+        <!-- Top movers -->
+        <div class="chart-card stagger-child dashboard-grid--full" id="top-movers-card" style="display:none;">
           <div class="chart-card__header">
-            <h2 class="chart-card__title">Performance Over Time</h2>
+            <h2 class="chart-card__title">Top Movers</h2>
           </div>
-          <div class="chart-card__body">
-            <div class="empty-state">
-              <div class="empty-state__icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-                </svg>
-              </div>
-              <p class="empty-state__text">Coming soon — stretch goal (US-15)</p>
-            </div>
-          </div>
+          <div class="top-movers" id="top-movers-body"></div>
         </div>
 
       </div>
@@ -235,11 +314,6 @@
                    min="0.0001" step="0.0001" placeholder="0" />
           </div>
 
-          <div class="form-group">
-            <label class="form-label" for="browse-date">Purchase Date</label>
-            <input id="browse-date" type="date" class="input-field" />
-          </div>
-
           <button id="browse-add-btn" class="btn-primary" style="width:100%;margin-top:var(--space-4);">
             Add Stock
           </button>
@@ -251,14 +325,14 @@
 
       <!-- ── Main area: Holdings table ──────────────────── -->
       <main class="stocks-main">
-        <div class="card featured-stocks-card stagger-child" id="featured-stocks-card">
+        <div class="card card--static featured-stocks-card stagger-child" id="featured-stocks-card">
           <div class="stocks-holdings-header">
             <div style="display:flex;align-items:center;gap:var(--space-3);">
               <button id="browse-toggle-featured-btn"
                       class="btn-secondary featured-toggle-btn"
                       title="Expand / collapse market overview"
                       aria-label="Toggle market overview"
-                      aria-expanded="false">
+                      aria-expanded="true">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
                      stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
                   <polyline points="6 9 12 15 18 9"/>
@@ -272,12 +346,12 @@
             </div>
           </div>
 
-          <div id="featured-stocks-collapsible" class="featured-stocks-collapsible is-collapsed">
+          <div id="featured-stocks-collapsible" class="featured-stocks-collapsible">
             <div id="browse-featured-body" class="featured-ticker-grid"></div>
           </div>
         </div>
 
-        <div class="card stocks-holdings-card">
+        <div class="card card--static stocks-holdings-card">
 
           <div class="stocks-holdings-header">
             <p class="card__title" style="margin-bottom:0;">My Stock Holdings</p>
@@ -354,10 +428,6 @@
                    min="1" step="0.01" placeholder="e.g. 10000" />
           </div>
 
-          <div class="form-group">
-            <label class="form-label" for="mf-buy-date">Purchase Date</label>
-            <input id="mf-buy-date" type="date" class="input-field" />
-          </div>
 
           <button id="mf-buy-btn" class="btn-primary" style="width:100%;margin-top:var(--space-4);">
             Buy Fund
@@ -397,10 +467,12 @@
       <!-- ── Main area ──────────────────────────────── -->
       <main class="stocks-main">
 
-        <!-- Catalogue table -->
+        <!-- Available Mutual Funds -->
         <div class="card stagger-child" style="margin-bottom:var(--space-4);">
+        <!-- Catalogue table -->
+        <div class="card card--static stagger-child" style="margin-bottom:var(--space-4);">
           <div class="stocks-holdings-header">
-            <p class="card__title" style="margin-bottom:0;">Mutual Fund Catalogue (30 Funds)</p>
+            <p class="card__title" style="margin-bottom:0;">Available Mutual Funds (30 Funds)</p>
             <button id="mf-refresh-catalogue-btn" class="btn-secondary" title="Reload catalogue">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -412,25 +484,54 @@
             </button>
           </div>
           <div id="mf-catalogue-msg" class="holdings-action-msg" aria-live="polite"></div>
-          <div class="holdings-table-wrap">
-            <table class="holdings-table">
-              <thead>
-                <tr>
-                  <th>Scheme Code</th>
-                  <th>Fund Name</th>
-                  <th>Latest NAV (₹)</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody id="mf-catalogue-body">
-                <tr><td colspan="4" class="holdings-table__empty">Loading catalogue…</td></tr>
-              </tbody>
-            </table>
+
+          <!-- Fund selector — pick any fund to view full details + its buy/sell history -->
+          <div class="form-group" style="max-width:420px;">
+            <label class="form-label" for="mf-view-select">Select a Fund to View Details</label>
+            <select id="mf-view-select" class="input-field">
+              <option value="">— Select a fund —</option>
+            </select>
+          </div>
+
+          <!-- Fund detail + transaction history panel (shown after selection) -->
+          <div id="mf-fund-detail" class="mf-fund-detail" style="display:none;">
+            <div class="mf-fund-detail__summary">
+              <div>
+                <p class="mf-fund-detail__name" id="mf-fund-detail-name">—</p>
+                <p class="mf-fund-detail__meta" id="mf-fund-detail-meta">—</p>
+              </div>
+              <button id="mf-fund-detail-history-btn" class="btn-secondary">View NAV History</button>
+            </div>
+            <p class="mf-fund-detail__subtitle">Transaction History</p>
+            <div class="holdings-table-wrap">
+              <table class="holdings-table">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Units</th>
+                    <th>NAV (₹)</th>
+                    <th>Amount (₹)</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody id="mf-fund-transactions-body">
+                  <tr><td colspan="5" class="holdings-table__empty">Select a fund above to view its transaction history.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="holdings-table-wrap" id="mf-catalogue-table-wrap" style="margin-top:var(--space-4); display:none;">
+            <div id="mf-catalogue-body" class="mf-fund-chip-grid">
+              <p class="holdings-table__empty">Loading catalogue…</p>
+            </div>
           </div>
         </div>
 
-        <!-- My Holdings table -->
+        <!-- My Mutual Fund Holdings — displayed as cards, not a dropdown/table -->
         <div class="card stagger-child">
+        <!-- My Holdings table -->
+        <div class="card card--static stagger-child">
           <div class="stocks-holdings-header">
             <p class="card__title" style="margin-bottom:0;">My Mutual Fund Holdings</p>
             <button id="mf-refresh-holdings-btn" class="btn-secondary" title="Reload holdings">
@@ -444,23 +545,8 @@
             </button>
           </div>
           <div id="mf-holdings-msg" class="holdings-action-msg" aria-live="polite"></div>
-          <div class="holdings-table-wrap">
-            <table class="holdings-table">
-              <thead>
-                <tr>
-                  <th>Fund Name</th>
-                  <th>Units</th>
-                  <th>Buy NAV (₹)</th>
-                  <th>Current NAV (₹)</th>
-                  <th>Current Value (₹)</th>
-                  <th>Gain / Loss</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody id="mf-holdings-body">
-                <tr><td colspan="7" class="holdings-table__empty">Loading…</td></tr>
-              </tbody>
-            </table>
+          <div id="mf-holdings-body" class="mf-holdings-grid">
+            <p class="holdings-table__empty">Loading…</p>
           </div>
         </div>
 
@@ -712,6 +798,72 @@
       </div>
     </div>
   </section>
+
+  <!-- ── Mutual Fund NAV History Modal ──────────────────────────── -->
+  <div id="mf-history-modal" class="mf-history-modal" style="display:none;">
+    <div class="mf-history-modal__backdrop" onclick="window.__mfCloseHistory()"></div>
+    <div class="mf-history-modal__panel">
+      <div class="mf-history-modal__header">
+        <div>
+          <p class="mf-history-modal__title" id="mf-history-title">Fund Name</p>
+          <p class="mf-history-modal__subtitle" id="mf-history-subtitle">Latest NAV: —</p>
+        </div>
+        <button class="mf-history-modal__close" onclick="window.__mfCloseHistory()" aria-label="Close">✕</button>
+      </div>
+
+      <div class="mf-history-modal__ranges">
+        <button class="mf-range-btn" data-range="1M">1M</button>
+        <button class="mf-range-btn" data-range="3M">3M</button>
+        <button class="mf-range-btn" data-range="6M">6M</button>
+        <button class="mf-range-btn" data-range="1Y">1Y</button>
+        <button class="mf-range-btn active" data-range="ALL">All</button>
+      </div>
+
+      <div class="mf-history-modal__body">
+        <div id="mf-history-loading" class="loading" style="display:none;">
+          <div class="spinner"></div>
+          <span>Loading NAV history…</span>
+        </div>
+        <div id="mf-history-empty" class="empty-state" style="display:none;">
+          <p class="empty-state__text">No history data available for this fund.</p>
+        </div>
+        <canvas id="mf-history-chart" style="max-height:360px;"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Stock Price History Modal ──────────────────────────────── -->
+  <div id="stock-history-modal" class="mf-history-modal" style="display:none;">
+    <div class="mf-history-modal__backdrop" onclick="window.__stockCloseHistory()"></div>
+    <div class="mf-history-modal__panel">
+      <div class="mf-history-modal__header">
+        <div>
+          <p class="mf-history-modal__title" id="stock-history-title">Ticker</p>
+          <p class="mf-history-modal__subtitle" id="stock-history-subtitle">Latest close: —</p>
+        </div>
+        <button class="mf-history-modal__close" onclick="window.__stockCloseHistory()" aria-label="Close">✕</button>
+      </div>
+
+      <div class="mf-history-modal__ranges">
+        <button class="stock-range-btn" data-range="1M">1M</button>
+        <button class="stock-range-btn" data-range="3M">3M</button>
+        <button class="stock-range-btn" data-range="6M">6M</button>
+        <button class="stock-range-btn" data-range="1Y">1Y</button>
+        <button class="stock-range-btn active" data-range="ALL">All</button>
+      </div>
+
+      <div class="mf-history-modal__body">
+        <div id="stock-history-loading" class="loading" style="display:none;">
+          <div class="spinner"></div>
+          <span>Loading price history…</span>
+        </div>
+        <div id="stock-history-empty" class="empty-state" style="display:none;">
+          <p class="empty-state__text">No history data available for this stock.</p>
+        </div>
+        <canvas id="stock-history-chart" style="max-height:360px;"></canvas>
+      </div>
+    </div>
+  </div>
 
   <!-- ── App entry point ────────────────────────────────────────── -->
   <script type="module" src="/js/app.js"></script>

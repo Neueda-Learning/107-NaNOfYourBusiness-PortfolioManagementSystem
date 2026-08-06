@@ -9,6 +9,7 @@ import com.example.portfolio.exception.GlobalExceptionHandler;
 import com.example.portfolio.model.AssetType;
 import com.example.portfolio.service.MarketDataService;
 import com.example.portfolio.service.PortfolioItemService;
+import com.example.portfolio.service.PortfolioPerformanceService;
 import com.example.portfolio.service.PortfolioSummaryService;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -37,11 +38,12 @@ class ApiControllerTest {
 
     private final PortfolioItemService portfolioItemService = mock(PortfolioItemService.class);
     private final PortfolioSummaryService portfolioSummaryService = mock(PortfolioSummaryService.class);
+    private final PortfolioPerformanceService portfolioPerformanceService = mock(PortfolioPerformanceService.class);
     private final MarketDataService marketDataService = mock(MarketDataService.class);
 
     private final MockMvc mockMvc = MockMvcBuilders.standaloneSetup(
                     new PortfolioItemController(portfolioItemService),
-                    new PortfolioSummaryController(portfolioSummaryService),
+                    new PortfolioSummaryController(portfolioSummaryService, portfolioPerformanceService),
                     new MarketDataController(marketDataService))
             .setControllerAdvice(new GlobalExceptionHandler())
             .build();

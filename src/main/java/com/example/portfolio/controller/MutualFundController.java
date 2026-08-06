@@ -1,7 +1,9 @@
 package com.example.portfolio.controller;
 
 import com.example.portfolio.dto.BuyMutualFundRequest;
+import com.example.portfolio.dto.MutualFundHistoryResponse;
 import com.example.portfolio.dto.MutualFundSummaryResponse;
+import com.example.portfolio.dto.MutualFundTransactionResponse;
 import com.example.portfolio.dto.SellMutualFundRequest;
 import com.example.portfolio.service.MutualFundService;
 import jakarta.validation.Valid;
@@ -40,6 +42,17 @@ public class MutualFundController {
     }
 
     /**
+     * GET /api/mutual-funds/{schemeCode}/history?range=1M|3M|6M|1Y|ALL
+     * Returns NAV history for charting
+     */
+    @GetMapping("/{schemeCode}/history")
+    public ResponseEntity<MutualFundHistoryResponse> getMutualFundHistory(
+            @PathVariable Integer schemeCode,
+            @RequestParam(required = false, defaultValue = "ALL") String range) {
+        return ResponseEntity.ok(mutualFundService.getMutualFundHistory(schemeCode, range));
+    }
+
+    /**
      * POST /api/mutual-funds/buy
      * Buy mutual fund using amount (units calculated internally)
      */
@@ -57,6 +70,16 @@ public class MutualFundController {
     public ResponseEntity<Map<String, Object>> sellMutualFund(
             @Valid @RequestBody SellMutualFundRequest request) {
         return ResponseEntity.ok(mutualFundService.sellMutualFund(request));
+    }
+
+    /**
+     * GET /api/mutual-funds/{schemeCode}/transactions
+     * Returns the buy/sell transaction history for a specific fund, most recent first.
+     */
+    @GetMapping("/{schemeCode}/transactions")
+    public ResponseEntity<List<MutualFundTransactionResponse>> getTransactionHistory(
+            @PathVariable Integer schemeCode) {
+        return ResponseEntity.ok(mutualFundService.getTransactionHistory(schemeCode));
     }
 }
 
