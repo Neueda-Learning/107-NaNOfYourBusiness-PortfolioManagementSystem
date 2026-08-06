@@ -86,7 +86,7 @@ function renderHoldings() {
     const matured = isMatured(h.maturityDate);
     const redeemBtn = matured
       ? `<button class="btn-secondary" style="font-size:0.75rem;padding:4px 10px;"
-                 onclick="window.__bondRedeem('${h.symbol.replace(/'/g, "\\'")}')">
+                 onclick="window.__bondRedeem(${h.id})">
            Redeem
          </button>`
       : `<button class="btn-secondary" style="font-size:0.75rem;padding:4px 10px;" disabled
@@ -189,7 +189,7 @@ function renderCatalog() {
 
 function applyCatalogPreset(b) {
   if (byId("bond-symbol")) byId("bond-symbol").value = b.symbol || "";
-  if (byId("bond-maturity-date")) byId("bond-maturity-date").value = b.maturityDate || "";
+  if (byId("bond-maturity-years")) byId("bond-maturity-years").value = estimateMaturityYears(b);
   if (byId("bond-purchase-price")) byId("bond-purchase-price").value = b.faceValue ?? "";
   if (byId("bond-issuer")) byId("bond-issuer").value = b.issuer || "";
   if (byId("bond-face-value")) byId("bond-face-value").value = b.faceValue ?? "";
@@ -211,11 +211,21 @@ function applyCatalogPreset(b) {
   byId("bond-quantity")?.focus();
 }
 
+// Estimates a whole-year term for the Maturity (years) field when presetting from a
+// catalog bond, based on that bond's own purchaseDate → maturityDate span. Falls back to 1.
+function estimateMaturityYears(b) {
+  if (!b.purchaseDate || !b.maturityDate) return 1;
+  const purchase = new Date(b.purchaseDate);
+  const maturity = new Date(b.maturityDate);
+  const years = Math.round((maturity - purchase) / (365.25 * 24 * 60 * 60 * 1000));
+  return years >= 1 ? years : 1;
+}
+
 // Redeem action triggered from a holdings row button
-window.__bondRedeem = async function (symbol) {
+window.__bondRedeem = async function (id) {
   setMsg("bond-holdings-msg", "");
   try {
-    const result = await redeemBond(symbol);
+    const result = await redeemBond(id);
     setMsg("bond-holdings-msg",
       `✓ Redeemed ${result.symbol} for ${fmtCurrency(result.redemptionValue)}`
     );
@@ -299,24 +309,23 @@ async function handleBuy() {
   const symbol = byId("bond-symbol")?.value?.trim();
   const quantity = parseFloat(byId("bond-quantity")?.value);
   const purchasePrice = parseFloat(byId("bond-purchase-price")?.value);
-  const purchaseDate = byId("bond-purchase-date")?.value || todayISO();
-  const maturityDate = byId("bond-maturity-date")?.value || null;
+  const maturityYears = parseInt(byId("bond-maturity-years")?.value, 10);
 
   if (!symbol) { setMsg("bond-buy-result", "Please enter a symbol.", true); return; }
   if (!quantity || quantity <= 0) { setMsg("bond-buy-result", "Please enter a valid quantity greater than 0.", true); return; }
   if (!purchasePrice || purchasePrice <= 0) { setMsg("bond-buy-result", "Please enter a valid purchase price greater than 0.", true); return; }
+  if (!maturityYears || maturityYears < 1) { setMsg("bond-buy-result", "Please enter a valid maturity term (whole years, at least 1).", true); return; }
 
   const payload = {
     symbol,
     quantity,
     purchasePrice,
-    purchaseDate,
+    maturityYears,
     currentPrice: numOrNull("bond-current-price"),
     issuer: textOrNull("bond-issuer"),
     faceValue: numOrNull("bond-face-value"),
     couponRate: numOrNull("bond-coupon-rate"),
     couponFrequency: textOrNull("bond-coupon-frequency"),
-    maturityDate,
     creditRating: textOrNull("bond-credit-rating"),
     yieldRate: numOrNull("bond-yield-rate"),
   };
@@ -331,7 +340,7 @@ async function handleBuy() {
       `✓ Bought ${fmtNum(result.quantity, 4)} units of ${result.symbol} at ${fmtCurrency(result.purchasePrice)}`
     );
     // Reset essential fields
-    ["bond-symbol", "bond-quantity", "bond-purchase-price", "bond-maturity-date",
+    ["bond-symbol", "bond-quantity", "bond-purchase-price", "bond-maturity-years",
      "bond-issuer", "bond-current-price", "bond-face-value", "bond-coupon-rate",
      "bond-credit-rating", "bond-yield-rate"].forEach(id => { if (byId(id)) byId(id).value = ""; });
     if (byId("bond-coupon-frequency")) byId("bond-coupon-frequency").value = "";

@@ -20,8 +20,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -32,11 +30,14 @@ class BondServiceTest {
     @Mock
     private BondRepository repository;
 
+    @Mock
+    private WalletService walletService;
+
     private BondService service;
 
     @BeforeEach
     void setUp() {
-        service = new BondService(repository);
+        service = new BondService(repository, walletService);
     }
 
     private BondRecord activeBond(Long id, String symbol, BigDecimal quantity, BigDecimal purchasePrice,
@@ -118,13 +119,12 @@ class BondServiceTest {
     }
 
     @Test
-    void buyBond_withNewSymbol_savesNewActiveBond() {
+    void buyBond_withNewSymbol_savesNewActiveBondWithComputedDates() {
         BondService.BondTradeRequest request = new BondService.BondTradeRequest(
-                "us-t-10y", BigDecimal.TEN, BigDecimal.valueOf(1000), LocalDate.of(2026, 1, 1),
+                "us-t-10y", BigDecimal.TEN, BigDecimal.valueOf(1000),
                 null, "US Treasury", BigDecimal.valueOf(1000), BigDecimal.valueOf(7.5), "ANNUAL",
-                LocalDate.of(2036, 1, 1), "AAA", BigDecimal.valueOf(6.8));
+                10, "AAA", BigDecimal.valueOf(6.8));
 
-        when(repository.findBySymbol("US-T-10Y")).thenReturn(Optional.empty());
         ArgumentCaptor<BondRecord> captor = ArgumentCaptor.forClass(BondRecord.class);
         when(repository.saveNew(captor.capture())).thenAnswer(inv -> {
             BondRecord r = inv.getArgument(0);
@@ -136,34 +136,36 @@ class BondServiceTest {
         assertThat(response.symbol()).isEqualTo("US-T-10Y"); // normalized to uppercase
         // currentPrice defaults to purchasePrice when not provided
         assertThat(captor.getValue().currentPrice()).isEqualByComparingTo("1000");
-        verify(repository, never()).mergeBuy(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+        // purchaseDate always today; maturityDate = purchaseDate + maturityYears
+        assertThat(captor.getValue().purchaseDate()).isEqualTo(LocalDate.now());
+        assertThat(captor.getValue().maturityDate()).isEqualTo(LocalDate.now().plusYears(10));
     }
 
     @Test
-    void buyBond_withExistingSymbol_mergesIntoExistingHolding() {
-        BondRecord existing = activeBond(1L, "US-T-10Y", BigDecimal.TEN, BigDecimal.valueOf(1000),
-                BigDecimal.valueOf(1000), LocalDate.of(2036, 1, 1));
+    void buyBond_withExistingSymbol_stillCreatesANewRowInsteadOfMerging() {
         BondService.BondTradeRequest request = new BondService.BondTradeRequest(
-                "US-T-10Y", BigDecimal.TEN, BigDecimal.valueOf(1100), LocalDate.of(2026, 6, 1),
-                BigDecimal.valueOf(1100), null, null, null, null, null, null, null);
+                "US-T-10Y", BigDecimal.TEN, BigDecimal.valueOf(1100),
+                BigDecimal.valueOf(1100), null, null, null, null,
+                5, null, null);
 
-        when(repository.findBySymbol("US-T-10Y")).thenReturn(Optional.of(existing));
-        when(repository.mergeBuy(eq(existing), eq(BigDecimal.TEN), eq(BigDecimal.valueOf(1100)),
-                eq(LocalDate.of(2026, 6, 1)), eq(BigDecimal.valueOf(1100)), eq(null), eq(null),
-                eq(null), eq(null), eq(null), eq(null), eq(null)))
-                .thenReturn(existing.withQuantity(BigDecimal.valueOf(20)));
+        when(repository.saveNew(any())).thenAnswer(inv -> {
+            BondRecord r = inv.getArgument(0);
+            return r.withId(2L).withTimestamps(LocalDateTime.now(), LocalDateTime.now());
+        });
 
         BondService.BondResponse response = service.buyBond(request);
 
-        assertThat(response.quantity()).isEqualByComparingTo("20");
-        verify(repository, never()).saveNew(any());
+        assertThat(response.quantity()).isEqualByComparingTo("10");
+        verify(repository).saveNew(any());
+        verify(repository, never()).findBySymbol(any());
+        verify(repository, never()).mergeBuy(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
     void buyBond_withZeroQuantity_throwsIllegalArgumentException() {
         BondService.BondTradeRequest request = new BondService.BondTradeRequest(
-                "US-T-10Y", BigDecimal.ZERO, BigDecimal.valueOf(1000), LocalDate.of(2026, 1, 1),
-                null, null, null, null, null, null, null, null);
+                "US-T-10Y", BigDecimal.ZERO, BigDecimal.valueOf(1000),
+                null, null, null, null, null, 10, null, null);
 
         assertThatThrownBy(() -> service.buyBond(request))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -173,8 +175,8 @@ class BondServiceTest {
     @Test
     void buyBond_withZeroPurchasePrice_throwsIllegalArgumentException() {
         BondService.BondTradeRequest request = new BondService.BondTradeRequest(
-                "US-T-10Y", BigDecimal.TEN, BigDecimal.ZERO, LocalDate.of(2026, 1, 1),
-                null, null, null, null, null, null, null, null);
+                "US-T-10Y", BigDecimal.TEN, BigDecimal.ZERO,
+                null, null, null, null, null, 10, null, null);
 
         assertThatThrownBy(() -> service.buyBond(request))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -184,8 +186,8 @@ class BondServiceTest {
     @Test
     void buyBond_withBlankSymbol_throwsIllegalArgumentException() {
         BondService.BondTradeRequest request = new BondService.BondTradeRequest(
-                "   ", BigDecimal.TEN, BigDecimal.valueOf(1000), LocalDate.of(2026, 1, 1),
-                null, null, null, null, null, null, null, null);
+                "   ", BigDecimal.TEN, BigDecimal.valueOf(1000),
+                null, null, null, null, null, 10, null, null);
 
         assertThatThrownBy(() -> service.buyBond(request))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -193,25 +195,36 @@ class BondServiceTest {
     }
 
     @Test
+    void buyBond_withZeroMaturityYears_throwsIllegalArgumentException() {
+        BondService.BondTradeRequest request = new BondService.BondTradeRequest(
+                "US-T-10Y", BigDecimal.TEN, BigDecimal.valueOf(1000),
+                null, null, null, null, null, 0, null, null);
+
+        assertThatThrownBy(() -> service.buyBond(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("maturityYears must be at least 1");
+    }
+
+    @Test
     void redeemBond_withMaturedBond_marksRedeemed() {
         BondRecord existing = activeBond(1L, "US-T-10Y", BigDecimal.TEN, BigDecimal.valueOf(1000),
                 BigDecimal.valueOf(1000), LocalDate.of(2020, 1, 1)); // matured in the past
-        when(repository.findAnyBySymbol("US-T-10Y")).thenReturn(Optional.of(existing));
+        when(repository.findAnyById(1L)).thenReturn(Optional.of(existing));
         when(repository.applyRedeem(existing)).thenReturn(existing.withStatus("REDEEMED")
                 .withRedemptionDate(LocalDate.now())
                 .withRedemptionValue(BigDecimal.valueOf(10000)));
 
-        BondService.BondResponse response = service.redeemBond(new BondService.BondRedeemRequest("us-t-10y"));
+        BondService.BondResponse response = service.redeemBond(new BondService.BondRedeemRequest(1L));
 
         assertThat(response.status()).isEqualTo("REDEEMED");
         assertThat(response.redemptionValue()).isEqualByComparingTo("10000");
     }
 
     @Test
-    void redeemBond_withUnknownSymbol_throwsResourceNotFoundException() {
-        when(repository.findAnyBySymbol("UNKNOWN")).thenReturn(Optional.empty());
+    void redeemBond_withUnknownId_throwsResourceNotFoundException() {
+        when(repository.findAnyById(999L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.redeemBond(new BondService.BondRedeemRequest("unknown")))
+        assertThatThrownBy(() -> service.redeemBond(new BondService.BondRedeemRequest(999L)))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -220,9 +233,9 @@ class BondServiceTest {
         BondRecord redeemed = activeBond(1L, "US-T-10Y", BigDecimal.TEN, BigDecimal.valueOf(1000),
                 BigDecimal.valueOf(1000), LocalDate.of(2020, 1, 1))
                 .withStatus("REDEEMED").withRedemptionDate(LocalDate.of(2025, 1, 1));
-        when(repository.findAnyBySymbol("US-T-10Y")).thenReturn(Optional.of(redeemed));
+        when(repository.findAnyById(1L)).thenReturn(Optional.of(redeemed));
 
-        assertThatThrownBy(() -> service.redeemBond(new BondService.BondRedeemRequest("US-T-10Y")))
+        assertThatThrownBy(() -> service.redeemBond(new BondService.BondRedeemRequest(1L)))
                 .isInstanceOf(BondRedemptionException.class)
                 .hasMessageContaining("already redeemed");
     }
@@ -231,9 +244,9 @@ class BondServiceTest {
     void redeemBond_withMissingMaturityDate_throwsBondRedemptionException() {
         BondRecord noMaturity = activeBond(1L, "US-T-10Y", BigDecimal.TEN, BigDecimal.valueOf(1000),
                 BigDecimal.valueOf(1000), null);
-        when(repository.findAnyBySymbol("US-T-10Y")).thenReturn(Optional.of(noMaturity));
+        when(repository.findAnyById(1L)).thenReturn(Optional.of(noMaturity));
 
-        assertThatThrownBy(() -> service.redeemBond(new BondService.BondRedeemRequest("US-T-10Y")))
+        assertThatThrownBy(() -> service.redeemBond(new BondService.BondRedeemRequest(1L)))
                 .isInstanceOf(BondRedemptionException.class)
                 .hasMessageContaining("no maturity date");
     }
@@ -242,9 +255,9 @@ class BondServiceTest {
     void redeemBond_beforeMaturity_throwsBondRedemptionException() {
         BondRecord notMatured = activeBond(1L, "US-T-10Y", BigDecimal.TEN, BigDecimal.valueOf(1000),
                 BigDecimal.valueOf(1000), LocalDate.now().plusYears(5));
-        when(repository.findAnyBySymbol("US-T-10Y")).thenReturn(Optional.of(notMatured));
+        when(repository.findAnyById(1L)).thenReturn(Optional.of(notMatured));
 
-        assertThatThrownBy(() -> service.redeemBond(new BondService.BondRedeemRequest("US-T-10Y")))
+        assertThatThrownBy(() -> service.redeemBond(new BondService.BondRedeemRequest(1L)))
                 .isInstanceOf(BondRedemptionException.class)
                 .hasMessageContaining("not yet matured");
     }

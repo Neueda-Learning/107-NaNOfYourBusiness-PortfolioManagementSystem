@@ -5,9 +5,9 @@ import com.example.portfolio.exception.ResourceNotFoundException;
 import com.example.portfolio.model.AssetType;
 import com.example.portfolio.repository.BondRepository;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PastOrPresent;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -70,50 +70,40 @@ public class BondService {
 
         walletService.debitForBuy(buyAmount, AssetType.BOND, null, normalizedSymbol);
 
-        BondRepository.BondRecord updated = repository.findBySymbol(normalizedSymbol)
-                .map(existing -> repository.mergeBuy(
-                        existing,
-                        request.quantity(),
-                        request.purchasePrice(),
-                        request.purchaseDate(),
-                        request.currentPrice(),
-                        cleanText(request.issuer()),
-                        request.faceValue(),
-                        request.couponRate(),
-                        cleanText(request.couponFrequency()),
-                        request.maturityDate(),
-                        cleanText(request.creditRating()),
-                        request.yieldRate()))
-                .orElseGet(() -> repository.saveNew(new BondRepository.BondRecord(
-                        null,
-                        normalizedSymbol,
-                        request.quantity(),
-                        request.purchasePrice(),
-                        request.purchaseDate(),
-                        request.currentPrice() != null ? request.currentPrice() : request.purchasePrice(),
-                        cleanText(request.issuer()),
-                        request.faceValue(),
-                        request.couponRate(),
-                        cleanText(request.couponFrequency()),
-                        request.maturityDate(),
-                        cleanText(request.creditRating()),
-                        request.yieldRate(),
-                        "ACTIVE",
-                        null,
-                        null,
-                        null,
-                        null
-                )));
+        // Purchase date is always today; maturity date is derived from it + the requested
+        // term length. Every buy creates its own holding row (no merging into an existing
+        // symbol) so each purchase keeps its own purchase/maturity dates.
+        LocalDate purchaseDate = LocalDate.now();
+        LocalDate maturityDate = purchaseDate.plusYears(request.maturityYears());
 
-        return toResponse(updated);
+        BondRepository.BondRecord saved = repository.saveNew(new BondRepository.BondRecord(
+                null,
+                normalizedSymbol,
+                request.quantity(),
+                request.purchasePrice(),
+                purchaseDate,
+                request.currentPrice() != null ? request.currentPrice() : request.purchasePrice(),
+                cleanText(request.issuer()),
+                request.faceValue(),
+                request.couponRate(),
+                cleanText(request.couponFrequency()),
+                maturityDate,
+                cleanText(request.creditRating()),
+                request.yieldRate(),
+                "ACTIVE",
+                null,
+                null,
+                null,
+                null
+        ));
+
+        return toResponse(saved);
     }
 
     @Transactional
     public BondResponse redeemBond(BondRedeemRequest request) {
-        String normalizedSymbol = normalizeSymbol(request.symbol());
-
-        BondRepository.BondRecord existing = repository.findAnyBySymbol(normalizedSymbol)
-                .orElseThrow(() -> new ResourceNotFoundException("Bond not found for symbol: " + normalizedSymbol));
+        BondRepository.BondRecord existing = repository.findAnyById(request.id())
+                .orElseThrow(() -> new ResourceNotFoundException("Bond not found with id: " + request.id()));
 
         if ("REDEEMED".equalsIgnoreCase(existing.status())) {
             String dateText = existing.redemptionDate() != null ? existing.redemptionDate().toString() : "an earlier date";
@@ -185,6 +175,9 @@ public class BondService {
         if (request.purchasePrice() == null || request.purchasePrice().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("purchasePrice must be greater than 0");
         }
+        if (request.maturityYears() == null || request.maturityYears() < 1) {
+            throw new IllegalArgumentException("maturityYears must be at least 1");
+        }
     }
 
     private String normalizeSymbol(String symbol) {
@@ -237,10 +230,6 @@ public class BondService {
             @DecimalMin(value = "0.0001", message = "purchasePrice must be greater than 0")
             BigDecimal purchasePrice,
 
-            @NotNull(message = "purchaseDate is required")
-            @PastOrPresent(message = "purchaseDate must not be in the future")
-            LocalDate purchaseDate,
-
             @DecimalMin(value = "0.0001", message = "currentPrice must be greater than 0 when provided")
             BigDecimal currentPrice,
 
@@ -248,15 +237,19 @@ public class BondService {
             BigDecimal faceValue,
             BigDecimal couponRate,
             String couponFrequency,
-            LocalDate maturityDate,
+
+            @NotNull(message = "maturityYears is required")
+            @Min(value = 1, message = "maturityYears must be at least 1")
+            Integer maturityYears,
+
             String creditRating,
             BigDecimal yieldRate
     ) {
     }
 
     public record BondRedeemRequest(
-            @NotBlank(message = "symbol is required")
-            String symbol
+            @NotNull(message = "id is required")
+            Long id
     ) {
     }
 }

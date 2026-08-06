@@ -63,7 +63,7 @@ class BondControllerTest {
 
         mockMvc.perform(post("/api/v1/bonds/redeem")
                         .contentType("application/json")
-                        .content("{\"symbol\":\"GSEC-2033\"}"))
+                        .content("{\"id\":10}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error").value("BOND_NOT_MATURED"))
                 .andExpect(jsonPath("$.message").value("Bond has not yet matured. Maturity date: 2033-01-01"));
@@ -75,7 +75,7 @@ class BondControllerTest {
 
         mockMvc.perform(post("/api/v1/bonds/redeem")
                         .contentType("application/json")
-                        .content("{\"symbol\":\"NHAI-2025\"}"))
+                        .content("{\"id\":3}"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith("application/json"))
                 .andExpect(jsonPath("$.symbol").value("NHAI-2025"))

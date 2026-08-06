@@ -39,9 +39,6 @@ class MutualFundServiceTest {
     private MFAPIClient mfapiClient;
 
     @Mock
-    private PortfolioTradeRepository portfolioTradeRepository;
-
-    @Mock
     private WalletService walletService;
 
     private MutualFundCatalogue mutualFundCatalogue;
@@ -51,7 +48,7 @@ class MutualFundServiceTest {
     @BeforeEach
     void setUp() {
         mutualFundCatalogue = new MutualFundCatalogue();
-        service = new MutualFundService(portfolioItemRepository, portfolioTradeRepository, mfapiClient, mutualFundCatalogue);
+        service = new MutualFundService(portfolioItemRepository, portfolioTradeRepository, mfapiClient, mutualFundCatalogue, walletService);
     }
 
     @Test

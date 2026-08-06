@@ -5,6 +5,7 @@ import com.example.portfolio.model.PortfolioItem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.jdbc.test.autoconfigure.JdbcTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -22,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * auto-configured, and each test runs in its own rolled-back transaction.
  */
 @JdbcTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class PortfolioItemRepositoryTest {
 
     @Autowired

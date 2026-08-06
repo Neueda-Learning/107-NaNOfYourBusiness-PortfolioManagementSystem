@@ -6,6 +6,7 @@ import com.example.portfolio.model.TradeSide;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.jdbc.test.autoconfigure.JdbcTest;
 
 import javax.sql.DataSource;
@@ -20,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * covering the shared buy/sell trade-history log used by both stocks and mutual funds.
  */
 @JdbcTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class PortfolioTradeRepositoryTest {
 
     @Autowired

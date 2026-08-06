@@ -216,10 +216,10 @@ export async function buyBond(payload) {
 }
 
 /** POST /api/v1/bonds/redeem */
-export async function redeemBond(symbol) {
+export async function redeemBond(id) {
   return apiFetch("/bonds/redeem", {
     method: "POST",
-    body: JSON.stringify({ symbol }),
+    body: JSON.stringify({ id }),
   });
 }
 

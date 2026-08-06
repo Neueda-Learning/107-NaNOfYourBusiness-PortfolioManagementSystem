@@ -589,12 +589,13 @@
 
                 <div class="form-group">
                     <label class="form-label" for="bond-purchase-date">Purchase Date</label>
-                    <input id="bond-purchase-date" type="date" class="input-field" />
+                    <input id="bond-purchase-date" type="date" class="input-field" disabled />
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="bond-maturity-date">Maturity Date</label>
-                    <input id="bond-maturity-date" type="date" class="input-field" />
+                    <label class="form-label" for="bond-maturity-years">Maturity (years)</label>
+                    <input id="bond-maturity-years" type="number" class="input-field"
+                           min="1" step="1" placeholder="e.g. 10" />
                 </div>
 
                 <!-- Advanced (optional) fields -->

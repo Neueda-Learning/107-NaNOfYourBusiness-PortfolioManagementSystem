@@ -67,6 +67,21 @@ public class BondRepository {
         return jdbc.query(sql, rowMapper, id, BOND_TYPE).stream().findFirst();
     }
 
+    /**
+     * Finds a bond holding by id regardless of status (ACTIVE or REDEEMED). Used by
+     * redeem, which needs to distinguish "already redeemed" from "not found" — and by
+     * id rather than symbol, since a symbol can now have multiple holding rows (each
+     * buy creates its own row rather than merging into an existing one).
+     */
+    public Optional<BondRecord> findAnyById(Long id) {
+        String sql = """
+                SELECT *
+                FROM portfolio_item
+                WHERE id = ? AND type = ?
+                """;
+        return jdbc.query(sql, rowMapper, id, BOND_TYPE).stream().findFirst();
+    }
+
     public Optional<BondRecord> findBySymbol(String symbol) {
         String sql = """
                 SELECT *
@@ -161,7 +176,7 @@ public class BondRepository {
                 .addValue("created_at", now)
                 .addValue("updated_at", now));
 
-        return bond.withId(generatedId.longValue()).withTimestamps(now, now);
+        return bond.withId(generatedId.longValue()).withStatus("ACTIVE").withTimestamps(now, now);
     }
 
     public BondRecord mergeBuy(BondRecord existing,
