@@ -89,6 +89,8 @@
     <button class="tab-nav__btn" data-tab="stocks"       role="tab">Stocks</button>
     <button class="tab-nav__btn" data-tab="mutual-funds" role="tab">Mutual Funds</button>
     <button class="tab-nav__btn" data-tab="bonds"        role="tab">Bonds</button>
+    <button class="tab-nav__btn" data-tab="wallet"       role="tab">Wallet</button>
+    <button class="tab-nav__btn" data-tab="wallet-transactions" role="tab">Transactions</button>
     <button class="tab-nav__btn" data-tab="support"      role="tab">Support</button>
 </nav>
 
@@ -761,6 +763,107 @@
         </main>
     </div>
 </section>
+
+  <!-- ════════════════════════════════════════════════
+       WALLET PANEL
+       ════════════════════════════════════════════════ -->
+  <section class="tab-panel" data-panel="wallet" role="tabpanel" aria-label="Wallet">
+    <div class="stocks-layout">
+
+      <!-- ── Left sidebar: Balance + Deposit ─────────── -->
+      <aside class="stocks-sidebar">
+
+        <!-- Balance card -->
+        <div class="card stagger-child">
+          <p class="card__title">Wallet Balance</p>
+          <p class="card__value card__value--neutral" id="wallet-balance-value">—</p>
+          <p class="card__sub" id="wallet-balance-updated">—</p>
+          <button id="wallet-refresh-btn" class="btn-secondary" style="width:100%;margin-top:var(--space-4);">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="23 4 23 10 17 10"/>
+              <polyline points="1 20 1 14 7 14"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+            Refresh
+          </button>
+        </div>
+
+        <!-- Deposit card -->
+        <div class="card stagger-child">
+          <p class="card__title">Deposit Funds</p>
+          <p class="support-body" style="margin-top:0;margin-bottom:var(--space-3);font-size:0.8rem;">
+            Add cash to your wallet. Deposited funds can be used to buy stocks, bonds, and
+            mutual funds; selling or redeeming a holding credits the wallet back.
+          </p>
+
+          <div class="form-group">
+            <label class="form-label" for="wallet-deposit-amount">Amount ($)</label>
+            <input id="wallet-deposit-amount" type="number" class="input-field"
+                   min="0.01" step="0.01" placeholder="e.g. 5000" />
+          </div>
+
+          <button id="wallet-deposit-btn" class="btn-primary" style="width:100%;margin-top:var(--space-4);">
+            Deposit
+          </button>
+          <div id="wallet-deposit-result" class="action-msg" aria-live="polite"></div>
+        </div>
+
+      </aside>
+
+      <!-- ── Main area ──────────────────────────────── -->
+      <main class="stocks-main">
+        <div class="card card--static stagger-child">
+          <p class="card__title">About Your Wallet</p>
+          <p class="support-body">
+            Your wallet funds every buy transaction across Stocks, Bonds, and Mutual Funds, and
+            is credited whenever you sell a holding or redeem a matured bond. Buys are rejected
+            if the wallet balance is insufficient. View the full deposit/buy/sell ledger in the
+            <strong>Transactions</strong> tab.
+          </p>
+        </div>
+      </main>
+
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════
+       WALLET TRANSACTIONS PANEL
+       ════════════════════════════════════════════════ -->
+  <section class="tab-panel" data-panel="wallet-transactions" role="tabpanel" aria-label="Wallet Transactions">
+    <div class="card card--static stagger-child">
+      <div class="stocks-holdings-header">
+        <p class="card__title" style="margin-bottom:0;">Wallet Transaction History</p>
+        <button id="wallet-tx-refresh-btn" class="btn-secondary" title="Reload transactions">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="23 4 23 10 17 10"/>
+            <polyline points="1 20 1 14 7 14"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          Refresh
+        </button>
+      </div>
+      <div id="wallet-tx-msg" class="holdings-action-msg" aria-live="polite"></div>
+      <div class="holdings-table-wrap">
+        <table class="holdings-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Balance After</th>
+              <th>Asset</th>
+              <th>Symbol / Name</th>
+            </tr>
+          </thead>
+          <tbody id="wallet-tx-body">
+            <tr><td colspan="6" class="holdings-table__empty">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 
 <!-- ════════════════════════════════════════════════
      SUPPORT PANEL

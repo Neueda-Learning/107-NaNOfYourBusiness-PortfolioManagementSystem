@@ -88,7 +88,21 @@ This document captures system behavior for MVP user journeys and clearly separat
 - **Alternate Flow:** Timeout/failure; backend keeps prior value and logs failure path
 - **Postcondition:** Portfolio remains usable even during market API issues
 
-## UC-07: AI/Quantum Experimentation (Stretch Only)
+## UC-07: Manage Wallet and Fund Trades (MVP)
+
+- **Goal:** Let the investor deposit funds into a wallet and use that balance to buy assets, with sell proceeds credited back
+- **Trigger:** User deposits funds, or initiates a buy/sell action from a Stocks, Mutual Funds, or Bonds tab
+- **Main Flow:**
+  1. User deposits funds into the wallet
+  2. Backend validates the amount and increases the wallet balance
+  3. User initiates a buy for a stock, mutual fund, or bond
+  4. Backend checks wallet balance covers the purchase amount
+  5. Backend debits the wallet, records the transaction, and persists the holding
+  6. On a sell action, backend credits sale proceeds back to the wallet and records the transaction
+- **Alternate Flow:** If wallet balance is insufficient for a buy, backend rejects the transaction with a clear error and no holding/wallet changes occur
+- **Postcondition:** Wallet balance and holdings stay consistent with executed buy/sell transactions
+
+## UC-08: AI/Quantum Experimentation (Stretch Only)
 
 - **Goal:** Demonstrate learning experiments after MVP completion
 - **Trigger:** Team has completed MVP and stabilization goals

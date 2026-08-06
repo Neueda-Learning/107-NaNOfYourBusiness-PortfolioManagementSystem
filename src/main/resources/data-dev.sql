@@ -7,6 +7,8 @@
 -- widgets have both gainers and losers to display across all three asset types.
 
 DELETE FROM portfolio_item;
+DELETE FROM wallet_transaction;
+UPDATE user_data SET wallet_balance = 500000.0000;
 
 INSERT INTO portfolio_item (type, symbol_or_name, quantity, purchase_price, purchase_date, current_price, created_at, updated_at)
 VALUES

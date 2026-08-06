@@ -990,8 +990,11 @@
 }
 
 /* ── Bond catalog cards (reuses featured-ticker-grid layout) ─────── */
+#bond-catalog-body.featured-ticker-grid {
+  grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
+}
 .bond-catalog-chip {
-  min-width: 148px;
+  min-width: 172px;
 }
 .bond-catalog-chip__issuer {
   font-size: var(--font-size-xs);
@@ -1008,6 +1011,7 @@
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   margin-top: 4px;
+  white-space: nowrap;
 }
 .bond-catalog-chip__rating {
   display: inline-block;

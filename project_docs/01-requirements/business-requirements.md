@@ -40,6 +40,9 @@ The team shall maintain API documentation and project documentation to support d
 ### BR-07 (Low, Stretch): Advanced Innovation
 The team may explore AI and/or Quantum proof-of-concepts after MVP completion, documented as experimental features.
 
+### BR-08 (High): Wallet-Funded Trading
+The system shall provide a cash wallet so the user can fund buy transactions and receive proceeds from sell transactions across stocks, mutual funds, and bonds, preventing purchases that exceed available wallet balance.
+
 ## Business Success Criteria
 
 - MVP features (browse, dashboard, add, remove) are demo-ready end-to-end
@@ -49,7 +52,7 @@ The team may explore AI and/or Quantum proof-of-concepts after MVP completion, d
 
 ## Release Scope
 
-- **Release 1 (MVP):** BR-01 to BR-06
+- **Release 1 (MVP):** BR-01 to BR-06, BR-08
 - **Stretch:** BR-07 only after MVP stabilization
 
 ## References

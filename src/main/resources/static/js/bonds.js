@@ -33,7 +33,7 @@ function fmtNum(val, decimals = 2) {
 
 function fmtCurrency(val) {
   if (val == null || isNaN(Number(val))) return "—";
-  return "₹" + fmtNum(val, 2);
+  return "$" + fmtNum(val, 2);
 }
 
 function setMsg(id, text, isError = false) {

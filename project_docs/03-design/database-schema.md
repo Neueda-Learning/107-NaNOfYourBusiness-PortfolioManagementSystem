@@ -78,7 +78,33 @@ Computed response fields are not stored:
 - `gainLoss`
 - `gainLossPercent`
 
-## 6. Phase 2 Optional Columns
+## 6. Wallet Tables (MVP)
+
+### `user_data`
+
+| Column | Type | Null | Key | Default | Notes |
+|---|---|---|---|---|---|
+| `id` | BIGINT | NO | PK | auto increment | single-user row |
+| `username` | VARCHAR(100) | NO |  | `default_user` | MVP single investor |
+| `wallet_balance` | DECIMAL(19,4) | NO |  | `0.0000` | available cash balance |
+| `created_at` | TIMESTAMP | NO |  | current timestamp | record created time |
+| `updated_at` | TIMESTAMP | NO |  | current timestamp | record updated time |
+
+### `wallet_transaction`
+
+| Column | Type | Null | Key | Default | Notes |
+|---|---|---|---|---|---|
+| `id` | BIGINT | NO | PK | auto increment | wallet transaction id |
+| `user_data_id` | BIGINT | NO | FK |  | references `user_data.id` |
+| `transaction_type` | VARCHAR(20) | NO |  |  | enum: `DEPOSIT`, `BUY_DEBIT`, `SELL_CREDIT` |
+| `amount` | DECIMAL(19,4) | NO |  |  | positive transaction amount |
+| `balance_after` | DECIMAL(19,4) | NO |  |  | wallet balance after transaction |
+| `asset_type` | VARCHAR(20) | YES |  |  | optional asset context |
+| `portfolio_item_id` | BIGINT | YES |  |  | optional holding reference |
+| `symbol_or_name` | VARCHAR(100) | YES |  |  | optional asset symbol/name |
+| `created_at` | TIMESTAMP | NO |  | current timestamp | transaction timestamp |
+
+## 7. Phase 2 Optional Columns
 
 Add only after MVP CRUD and summary are complete.
 
@@ -100,14 +126,14 @@ Add only after MVP CRUD and summary are complete.
 - `sector` VARCHAR(80)
 - `exchange` VARCHAR(40)
 
-## 7. Data Integrity Rules
+## 8. Data Integrity Rules
 
 - `type` must be valid enum.
 - `quantity`, `purchase_price`, and provided `current_price` must be positive.
 - `purchase_date` cannot be future date.
 - `symbol_or_name` must be present and trimmed.
 
-## 8. Initialization and Migration Notes
+## 9. Initialization and Migration Notes
 
 - Keep schema SQL in `src/main/resources/schema.sql`.
 - For non-embedded DB startup initialization, set `spring.sql.init.mode=always`.
@@ -117,7 +143,7 @@ Add only after MVP CRUD and summary are complete.
   3. API contract update (if relevant),
   4. regression tests.
 
-## 9. Example Seed Data (Optional for Local Dev)
+## 10. Example Seed Data (Optional for Local Dev)
 
 ```sql
 INSERT INTO portfolio_item (type, symbol_or_name, quantity, purchase_price, purchase_date, current_price)
@@ -127,7 +153,7 @@ VALUES
 ('MUTUAL_FUND', 'VTSAX', 20.0000, 110.5000, '2023-11-01', 125.7500);
 ```
 
-## 10. Related Documents
+## 11. Related Documents
 
 - `project_docs/03-design/api-contracts.md`
 - `project_docs/03-design/architecture.md`

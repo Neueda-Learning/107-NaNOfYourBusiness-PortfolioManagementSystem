@@ -87,6 +87,28 @@ MVP is accepted when all criteria AC-01 to AC-12 pass and no critical defects re
 - Then implemented endpoints are visible and testable
 - **Traceability:** US-12, FR-19
 
+### AC-13: Wallet Deposit Increases Balance
+- Given a wallet with a known balance
+- When the investor deposits a valid positive amount
+- Then the wallet balance increases by that amount
+- And the transaction is recorded in wallet history
+- **Traceability:** US-18, FR-24, FR-27
+
+### AC-14: Buy Rejected on Insufficient Wallet Balance
+- Given a wallet balance lower than the requested purchase amount
+- When the investor attempts to buy a stock, mutual fund, or bond
+- Then the buy request is rejected with a clear error
+- And neither the wallet balance nor holdings are changed
+- **Traceability:** US-20, FR-25
+
+### AC-15: Buy Debits and Sell Credits Wallet
+- Given a wallet balance sufficient for a purchase
+- When the investor buys a stock, mutual fund, or bond
+- Then the wallet balance is debited by the purchase amount and the transaction is recorded
+- And when the investor subsequently sells that holding
+- Then the wallet balance is credited by the sale proceeds and the transaction is recorded
+- **Traceability:** US-19, US-21, FR-25, FR-26, FR-27
+
 ## Out of MVP Acceptance Scope
 
 - Performance-over-time chart

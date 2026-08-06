@@ -43,11 +43,14 @@ class PortfolioItemServiceTest {
     @Mock
     private PortfolioItemTypeHandler stockHandler;
 
+    @Mock
+    private WalletService walletService;
+
     private PortfolioItemService service;
 
     @BeforeEach
     void setUp() {
-        service = new PortfolioItemService(repository, tradeRepository, new PortfolioItemMapper(), handlerRegistry);
+        service = new PortfolioItemService(repository, tradeRepository, new PortfolioItemMapper(), handlerRegistry, walletService);
     }
 
     @Test
@@ -195,6 +198,11 @@ class PortfolioItemServiceTest {
                 org.mockito.ArgumentMatchers.eq(new BigDecimal("110.0000")),
                 org.mockito.ArgumentMatchers.eq(new BigDecimal("130.00")),
                 org.mockito.ArgumentMatchers.any());
+        verify(walletService).debitForBuy(
+                org.mockito.ArgumentMatchers.eq(new BigDecimal("650.0000")),
+                org.mockito.ArgumentMatchers.eq(AssetType.STOCK),
+                org.mockito.ArgumentMatchers.eq(11L),
+                org.mockito.ArgumentMatchers.eq("AAPL"));
         verify(tradeRepository).saveTrade(
                 org.mockito.ArgumentMatchers.eq(existing),
                 org.mockito.ArgumentMatchers.eq(com.example.portfolio.model.TradeSide.BUY),
@@ -228,6 +236,11 @@ class PortfolioItemServiceTest {
                 org.mockito.ArgumentMatchers.eq(new BigDecimal("3")),
                 org.mockito.ArgumentMatchers.eq(new BigDecimal("120.00")),
                 org.mockito.ArgumentMatchers.any());
+        verify(walletService).creditForSell(
+                org.mockito.ArgumentMatchers.eq(new BigDecimal("360.0000")),
+                org.mockito.ArgumentMatchers.eq(AssetType.STOCK),
+                org.mockito.ArgumentMatchers.eq(12L),
+                org.mockito.ArgumentMatchers.eq("MSFT"));
         verify(repository).deleteById(12L);
         assertThat(response.getQuantity()).isEqualByComparingTo("0");
     }

@@ -38,6 +38,12 @@ class MutualFundServiceTest {
     @Mock
     private MFAPIClient mfapiClient;
 
+    @Mock
+    private PortfolioTradeRepository portfolioTradeRepository;
+
+    @Mock
+    private WalletService walletService;
+
     private MutualFundCatalogue mutualFundCatalogue;
 
     private MutualFundService service;
@@ -78,6 +84,11 @@ class MutualFundServiceTest {
         // units = 10000 / 650.25 = 15.3787 (with HALF_UP and 4 decimals)
         assertThat(response.get("units")).isEqualTo(new BigDecimal("15.3787"));
         verify(portfolioItemRepository).save(any(PortfolioItem.class));
+        verify(walletService).debitForBuy(
+                new BigDecimal("10000.00"),
+                AssetType.MUTUAL_FUND,
+                1L,
+                "HDFC Flexi Cap Fund");
     }
 
     @Test
@@ -107,6 +118,7 @@ class MutualFundServiceTest {
         service.buyMutualFund(request);
 
         verify(portfolioItemRepository).save(any(PortfolioItem.class));
+        verify(walletService).debitForBuy(any(BigDecimal.class), any(AssetType.class), any(Long.class), any(String.class));
     }
 
     @Test
@@ -156,6 +168,11 @@ class MutualFundServiceTest {
         // unitsToSell = 5000 / 650.25 = 7.6899
         // remainingUnits = 20.0000 - 7.6899 = 12.3101
         verify(portfolioItemRepository).update(any(PortfolioItem.class));
+        verify(walletService).creditForSell(
+                new BigDecimal("5000.00"),
+                AssetType.MUTUAL_FUND,
+                portfolioItemId,
+                "HDFC Flexi Cap Fund");
     }
 
     @Test
@@ -189,6 +206,11 @@ class MutualFundServiceTest {
 
         assertThat(response.get("message")).isEqualTo("Mutual fund holding closed");
         verify(portfolioItemRepository).deleteById(portfolioItemId);
+        verify(walletService).creditForSell(
+                new BigDecimal("13005.00"),
+                AssetType.MUTUAL_FUND,
+                portfolioItemId,
+                "HDFC Flexi Cap Fund");
     }
 
     @Test

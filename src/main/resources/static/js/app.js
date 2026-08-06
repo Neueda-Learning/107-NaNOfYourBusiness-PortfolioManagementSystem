@@ -11,9 +11,16 @@ import { loadDashboard } from "./dashboard.js";
 import { loadMarketBrowse } from "./marketBrowse.js";
 import { loadMutualFunds } from "./mutualFunds.js";
 import { loadBonds } from "./bonds.js";
+import { loadWallet } from "./wallet.js";
+import { loadWalletTransactions } from "./walletTransactions.js";
 
 // Track which tabs have been loaded to avoid redundant re-fetches within a session
 const _loaded = new Set();
+
+// Tabs whose data can change from *other* tabs (wallet balance/history change
+// whenever a buy/sell/redeem happens elsewhere), so always refetch on activation
+// instead of relying on the one-time _loaded cache.
+const _alwaysRefresh = new Set(["wallet", "wallet-transactions"]);
 
 /** Activate a tab by its data-tab attribute value */
 function activateTab(tabName) {
@@ -27,8 +34,8 @@ function activateTab(tabName) {
     panel.classList.toggle("active", panel.dataset.panel === tabName);
   });
 
-  // Trigger data load for the tab (lazy — only once per session)
-  if (!_loaded.has(tabName)) {
+  // Trigger data load for the tab (lazy — only once per session, except tabs in _alwaysRefresh)
+  if (_alwaysRefresh.has(tabName) || !_loaded.has(tabName)) {
     _loaded.add(tabName);
     onTabFirstLoad(tabName);
   }
@@ -48,6 +55,12 @@ function onTabFirstLoad(tabName) {
       break;
     case "bonds":
       loadBonds();
+      break;
+    case "wallet":
+      loadWallet();
+      break;
+    case "wallet-transactions":
+      loadWalletTransactions();
       break;
     // Future tabs will add cases here
     default:
