@@ -10,6 +10,7 @@
 import { loadDashboard } from "./dashboard.js";
 import { loadMarketBrowse } from "./marketBrowse.js";
 import { loadMutualFunds } from "./mutualFunds.js";
+import { loadBonds } from "./bonds.js";
 
 // Track which tabs have been loaded to avoid redundant re-fetches within a session
 const _loaded = new Set();
@@ -44,6 +45,9 @@ function onTabFirstLoad(tabName) {
       break;
     case "mutual-funds":
       loadMutualFunds();
+      break;
+    case "bonds":
+      loadBonds();
       break;
     // Future tabs will add cases here
     default:

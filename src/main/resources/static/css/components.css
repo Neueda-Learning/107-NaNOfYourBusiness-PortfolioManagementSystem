@@ -989,6 +989,38 @@
   color: var(--color-text-faint);
 }
 
+/* ── Bond catalog cards (reuses featured-ticker-grid layout) ─────── */
+.bond-catalog-chip {
+  min-width: 148px;
+}
+.bond-catalog-chip__issuer {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-faint);
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.bond-catalog-chip__meta {
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  margin-top: 4px;
+}
+.bond-catalog-chip__rating {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+}
+
 /* ── Responsive ─────────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .stocks-layout { grid-template-columns: 1fr; }

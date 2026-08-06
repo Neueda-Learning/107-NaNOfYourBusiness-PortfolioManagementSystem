@@ -6,7 +6,6 @@
 -- every preset (1M/3M/6M/1Y/ALL), and so Top Movers / diversification insight
 -- widgets have both gainers and losers to display across all three asset types.
 
-DELETE FROM portfolio_trade;
 DELETE FROM portfolio_item;
 
 INSERT INTO portfolio_item (type, symbol_or_name, quantity, purchase_price, purchase_date, current_price, created_at, updated_at)

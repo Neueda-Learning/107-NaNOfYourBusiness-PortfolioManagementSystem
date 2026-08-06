@@ -558,20 +558,211 @@
        BONDS PANEL
        ════════════════════════════════════════════════ -->
   <section class="tab-panel" data-panel="bonds" role="tabpanel" aria-label="Bonds">
-    <div class="placeholder-panel">
-      <div class="placeholder-panel__icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <line x1="3"  y1="22" x2="21" y2="22"/>
-          <line x1="6"  y1="18" x2="6"  y2="11"/>
-          <line x1="10" y1="18" x2="10" y2="11"/>
-          <line x1="14" y1="18" x2="14" y2="11"/>
-          <line x1="18" y1="18" x2="18" y2="11"/>
-          <polygon points="12 2 20 7 4 7"/>
-        </svg>
-      </div>
-      <p class="placeholder-panel__label">Bonds coming in US-05</p>
-      <span class="placeholder-panel__badge">In Progress</span>
+    <div class="stocks-layout">
+
+      <!-- ── Left sidebar: Buy form ──────────────────── -->
+      <aside class="stocks-sidebar">
+
+        <!-- Buy Bond card -->
+        <div class="card stagger-child">
+          <p class="card__title">Buy Bond</p>
+          <p class="support-body" style="margin-top:0;margin-bottom:var(--space-3);font-size:0.8rem;">
+            Enter the essential details below. Buying more of an existing symbol merges into
+            the same holding at a weighted-average price.
+          </p>
+
+          <div class="form-group">
+            <label class="form-label" for="bond-symbol">Symbol</label>
+            <input id="bond-symbol" type="text" class="input-field"
+                   placeholder="e.g. GSEC-2030" autocomplete="off" spellcheck="false" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="bond-quantity">Quantity</label>
+            <input id="bond-quantity" type="number" class="input-field"
+                   min="0.0001" step="0.0001" placeholder="0" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="bond-purchase-price">Purchase Price (per unit)</label>
+            <input id="bond-purchase-price" type="number" class="input-field"
+                   min="0.0001" step="0.01" placeholder="0.00" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="bond-purchase-date">Purchase Date</label>
+            <input id="bond-purchase-date" type="date" class="input-field" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="bond-maturity-date">Maturity Date</label>
+            <input id="bond-maturity-date" type="date" class="input-field" />
+          </div>
+
+          <!-- Advanced (optional) fields -->
+          <button type="button" id="bond-advanced-toggle" class="btn-secondary"
+                  style="width:100%;margin-top:var(--space-2);" aria-expanded="false">
+            + Optional details (issuer, coupon, rating…)
+          </button>
+
+          <div id="bond-advanced-fields" style="display:none;margin-top:var(--space-3);">
+            <div class="form-group">
+              <label class="form-label" for="bond-issuer">Issuer</label>
+              <input id="bond-issuer" type="text" class="input-field" placeholder="e.g. Govt of India" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="bond-current-price">Current Price (per unit)</label>
+              <input id="bond-current-price" type="number" class="input-field"
+                     min="0.0001" step="0.01" placeholder="Defaults to purchase price" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="bond-face-value">Face Value</label>
+              <input id="bond-face-value" type="number" class="input-field"
+                     min="0" step="0.01" placeholder="e.g. 1000" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="bond-coupon-rate">Coupon Rate (%)</label>
+              <input id="bond-coupon-rate" type="number" class="input-field"
+                     min="0" step="0.01" placeholder="e.g. 7.5" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="bond-coupon-frequency">Coupon Frequency</label>
+              <select id="bond-coupon-frequency" class="input-field">
+                <option value="">— None —</option>
+                <option value="ANNUAL">Annual</option>
+                <option value="SEMI_ANNUAL">Semi-Annual</option>
+                <option value="QUARTERLY">Quarterly</option>
+                <option value="MONTHLY">Monthly</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="bond-credit-rating">Credit Rating</label>
+              <input id="bond-credit-rating" type="text" class="input-field" placeholder="e.g. AAA" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="bond-yield-rate">Yield Rate (%)</label>
+              <input id="bond-yield-rate" type="number" class="input-field"
+                     min="0" step="0.01" placeholder="e.g. 7.1" />
+            </div>
+          </div>
+
+          <button id="bond-buy-btn" class="btn-primary" style="width:100%;margin-top:var(--space-4);">
+            Buy Bond
+          </button>
+          <div id="bond-buy-result" class="action-msg" aria-live="polite"></div>
+        </div>
+
+      </aside>
+
+      <!-- ── Main area ──────────────────────────────── -->
+      <main class="stocks-main">
+
+        <!-- Available Bonds catalog -->
+        <div class="card featured-stocks-card stagger-child" id="bond-catalog-card">
+          <div class="stocks-holdings-header">
+            <div style="display:flex;align-items:center;gap:var(--space-3);">
+              <button id="bond-catalog-toggle-btn"
+                      class="btn-secondary featured-toggle-btn"
+                      title="Expand / collapse available bonds"
+                      aria-label="Toggle available bonds"
+                      aria-expanded="false">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </button>
+              <p class="card__title" style="margin-bottom:0;">Available Bonds</p>
+            </div>
+            <button id="bond-catalog-refresh-btn" class="btn-secondary" title="Refresh available bonds">↻ Refresh</button>
+          </div>
+          <p class="support-body" style="margin-top:0;margin-bottom:var(--space-2);font-size:0.8rem;">
+            Click a bond to preset its details into the Buy Bond form.
+          </p>
+
+          <div id="bond-catalog-collapsible" class="featured-stocks-collapsible is-collapsed">
+            <div id="bond-catalog-body" class="featured-ticker-grid"></div>
+          </div>
+        </div>
+
+        <!-- My Holdings table -->
+        <div class="card stagger-child" style="margin-bottom:var(--space-4);">
+          <div class="stocks-holdings-header">
+            <p class="card__title" style="margin-bottom:0;">My Bond Holdings</p>
+            <button id="bond-refresh-holdings-btn" class="btn-secondary" title="Reload holdings">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="23 4 23 10 17 10"/>
+                <polyline points="1 20 1 14 7 14"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+              </svg>
+              Refresh
+            </button>
+          </div>
+          <div id="bond-holdings-msg" class="holdings-action-msg" aria-live="polite"></div>
+          <div class="holdings-table-wrap">
+            <table class="holdings-table">
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Issuer</th>
+                  <th>Qty</th>
+                  <th>Buy Price</th>
+                  <th>Current Price</th>
+                  <th>Maturity Date</th>
+                  <th>Rating</th>
+                  <th>Current Value</th>
+                  <th>Gain / Loss</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="bond-holdings-body">
+                <tr><td colspan="10" class="holdings-table__empty">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Redemption History table -->
+        <div class="card stagger-child">
+          <div class="stocks-holdings-header">
+            <p class="card__title" style="margin-bottom:0;">Redemption History</p>
+            <button id="bond-refresh-history-btn" class="btn-secondary" title="Reload redemption history">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="23 4 23 10 17 10"/>
+                <polyline points="1 20 1 14 7 14"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+              </svg>
+              Refresh
+            </button>
+          </div>
+          <div id="bond-history-msg" class="holdings-action-msg" aria-live="polite"></div>
+          <div class="holdings-table-wrap">
+            <table class="holdings-table">
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Issuer</th>
+                  <th>Qty</th>
+                  <th>Face Value</th>
+                  <th>Redemption Date</th>
+                  <th>Redemption Value</th>
+                </tr>
+              </thead>
+              <tbody id="bond-history-body">
+                <tr><td colspan="6" class="holdings-table__empty">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
     </div>
   </section>
 
