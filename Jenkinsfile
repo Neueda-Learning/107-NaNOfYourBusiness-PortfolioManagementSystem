@@ -37,7 +37,12 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                sh 'docker-compose up -d'
+                withCredentials([
+                    string(credentialsId: 'finnhub-api-key', variable: 'FINNHUB_API_KEY'),
+                    string(credentialsId: 'twelvedata-api-key', variable: 'TWELVE_DATA_API_KEY')
+                ]) {
+                    sh 'docker-compose up -d'
+                }
             }
         }
 

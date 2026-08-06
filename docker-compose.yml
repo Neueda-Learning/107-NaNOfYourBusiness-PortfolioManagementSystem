@@ -37,6 +37,8 @@ services:
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-portfolio_user}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-portfolio_pass}
       MARKET_API_BASE_URL: ${MARKET_API_BASE_URL:-https://c4rm9elh30.execute-api.us-east-1.amazonaws.com/default}
+      FINNHUB_API_KEY: ${FINNHUB_API_KEY:-}
+      TWELVE_DATA_API_KEY: ${TWELVE_DATA_API_KEY:-}
     ports:
       - "8082:8080"
 
