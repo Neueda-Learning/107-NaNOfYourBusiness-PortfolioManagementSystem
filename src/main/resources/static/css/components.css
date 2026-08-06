@@ -321,6 +321,7 @@
 
 .featured-stocks-card { margin-bottom: var(--space-4); }
 
+
 /* ── Form helpers ───────────────────────────────────────────────── */
 .form-group {
   display: flex;
@@ -770,6 +771,77 @@
   color: var(--color-text-faint);
 }
 
+/* ── Mutual Fund: catalogue as clickable boxes ───────────────────── */
+.mf-fund-chip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: var(--space-2);
+}
+
+.mf-fund-chip {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
+  padding-right: var(--space-2);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition: background var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out);
+}
+.mf-fund-chip:hover {
+  background: var(--color-accent-subtle);
+  border-color: var(--color-accent);
+  transform: translateY(-1px);
+}
+
+.mf-fund-chip__code {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--color-accent);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.mf-fund-chip__name {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.25;
+}
+.mf-fund-chip__nav {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+.mf-fund-chip__nav--empty {
+  color: var(--color-text-faint);
+  font-weight: 400;
+}
+.mf-fund-chip__history {
+  align-self: flex-end;
+  margin-top: var(--space-1);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.mf-fund-chip__history:hover {
+  color: var(--color-accent-hover, var(--color-accent));
+}
+
 /* ── Responsive ─────────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .stocks-layout { grid-template-columns: 1fr; }
@@ -850,5 +922,116 @@
 .mf-history-modal__body {
   position: relative;
   min-height: 200px;
+}
+
+/* ── Mutual Fund: fund detail + transaction history panel ───────── */
+.mf-fund-detail {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+.mf-fund-detail__summary {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+.mf-fund-detail__name {
+  font-size: var(--font-size-lg, 1.1rem);
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+.mf-fund-detail__meta {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-faint);
+  margin-top: 4px;
+}
+.mf-fund-detail__subtitle {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: var(--space-2);
+}
+
+/* ── Mutual Fund: holdings as cards (not a table/dropdown) ──────── */
+.mf-holdings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: var(--space-3);
+}
+
+.mf-holding-card {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  transition: border-color var(--duration-base) var(--ease-out),
+              transform var(--duration-base) var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .mf-holding-card:hover {
+    border-color: var(--color-border-strong);
+    transform: translateY(-2px);
+  }
+}
+
+.mf-holding-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mf-holding-card__name {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.25;
+}
+
+.mf-holding-card__date {
+  font-size: 0.7rem;
+  color: var(--color-text-faint);
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+.mf-holding-card__body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-1) var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.mf-holding-card__stat-label {
+  font-size: 0.65rem;
+  color: var(--color-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.mf-holding-card__stat-value {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+  margin-top: 1px;
+}
+.mf-holding-card__stat-value--gain { color: var(--color-gain); }
+.mf-holding-card__stat-value--loss { color: var(--color-loss); }
+
+.mf-holding-card__footer {
+  display: flex;
+  justify-content: flex-end;
 }
 

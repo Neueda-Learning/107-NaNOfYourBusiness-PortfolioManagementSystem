@@ -8,7 +8,7 @@
  *  - Show loading, error, and empty states
  */
 
-import { getPortfolioSummary } from "./api.js";
+import { getPortfolioSummary } from "./api.js?v=2";
 import { renderAllocationChart } from "./charts.js";
 
 // Keep the latest allocation snapshot so we can re-render chart on theme toggle.

@@ -18,7 +18,7 @@ import {
   getStockQuote,
   refreshPortfolioItemPrice,
   sellPortfolioItem,
-} from "./api.js";
+} from "./api.js?v=2";
 
 let initialized = false;
 let lastQuote = null;

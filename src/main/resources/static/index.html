@@ -354,10 +354,6 @@
                    min="1" step="0.01" placeholder="e.g. 10000" />
           </div>
 
-          <div class="form-group">
-            <label class="form-label" for="mf-buy-date">Purchase Date</label>
-            <input id="mf-buy-date" type="date" class="input-field" />
-          </div>
 
           <button id="mf-buy-btn" class="btn-primary" style="width:100%;margin-top:var(--space-4);">
             Buy Fund
@@ -397,10 +393,10 @@
       <!-- ── Main area ──────────────────────────────── -->
       <main class="stocks-main">
 
-        <!-- Catalogue table -->
+        <!-- Available Mutual Funds -->
         <div class="card stagger-child" style="margin-bottom:var(--space-4);">
           <div class="stocks-holdings-header">
-            <p class="card__title" style="margin-bottom:0;">Mutual Fund Catalogue (30 Funds)</p>
+            <p class="card__title" style="margin-bottom:0;">Available Mutual Funds (30 Funds)</p>
             <button id="mf-refresh-catalogue-btn" class="btn-secondary" title="Reload catalogue">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -412,24 +408,51 @@
             </button>
           </div>
           <div id="mf-catalogue-msg" class="holdings-action-msg" aria-live="polite"></div>
-          <div class="holdings-table-wrap">
-            <table class="holdings-table">
-              <thead>
-                <tr>
-                  <th>Scheme Code</th>
-                  <th>Fund Name</th>
-                  <th>Latest NAV (₹)</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody id="mf-catalogue-body">
-                <tr><td colspan="4" class="holdings-table__empty">Loading catalogue…</td></tr>
-              </tbody>
-            </table>
+
+          <!-- Fund selector — pick any fund to view full details + its buy/sell history -->
+          <div class="form-group" style="max-width:420px;">
+            <label class="form-label" for="mf-view-select">Select a Fund to View Details</label>
+            <select id="mf-view-select" class="input-field">
+              <option value="">— Select a fund —</option>
+            </select>
+          </div>
+
+          <!-- Fund detail + transaction history panel (shown after selection) -->
+          <div id="mf-fund-detail" class="mf-fund-detail" style="display:none;">
+            <div class="mf-fund-detail__summary">
+              <div>
+                <p class="mf-fund-detail__name" id="mf-fund-detail-name">—</p>
+                <p class="mf-fund-detail__meta" id="mf-fund-detail-meta">—</p>
+              </div>
+              <button id="mf-fund-detail-history-btn" class="btn-secondary">View NAV History</button>
+            </div>
+            <p class="mf-fund-detail__subtitle">Transaction History</p>
+            <div class="holdings-table-wrap">
+              <table class="holdings-table">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Units</th>
+                    <th>NAV (₹)</th>
+                    <th>Amount (₹)</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody id="mf-fund-transactions-body">
+                  <tr><td colspan="5" class="holdings-table__empty">Select a fund above to view its transaction history.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="holdings-table-wrap" id="mf-catalogue-table-wrap" style="margin-top:var(--space-4); display:none;">
+            <div id="mf-catalogue-body" class="mf-fund-chip-grid">
+              <p class="holdings-table__empty">Loading catalogue…</p>
+            </div>
           </div>
         </div>
 
-        <!-- My Holdings table -->
+        <!-- My Mutual Fund Holdings — displayed as cards, not a dropdown/table -->
         <div class="card stagger-child">
           <div class="stocks-holdings-header">
             <p class="card__title" style="margin-bottom:0;">My Mutual Fund Holdings</p>
@@ -444,23 +467,8 @@
             </button>
           </div>
           <div id="mf-holdings-msg" class="holdings-action-msg" aria-live="polite"></div>
-          <div class="holdings-table-wrap">
-            <table class="holdings-table">
-              <thead>
-                <tr>
-                  <th>Fund Name</th>
-                  <th>Units</th>
-                  <th>Buy NAV (₹)</th>
-                  <th>Current NAV (₹)</th>
-                  <th>Current Value (₹)</th>
-                  <th>Gain / Loss</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody id="mf-holdings-body">
-                <tr><td colspan="7" class="holdings-table__empty">Loading…</td></tr>
-              </tbody>
-            </table>
+          <div id="mf-holdings-body" class="mf-holdings-grid">
+            <p class="holdings-table__empty">Loading…</p>
           </div>
         </div>
 

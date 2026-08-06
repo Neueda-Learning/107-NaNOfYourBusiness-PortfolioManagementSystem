@@ -130,6 +130,15 @@ export async function getMutualFundHistory(schemeCode, range = "ALL") {
   return res.json();
 }
 
+/** GET /api/mutual-funds/{schemeCode}/transactions — buy/sell history for one fund */
+export async function getMutualFundTransactions(schemeCode) {
+  const res = await fetch(`/api/mutual-funds/${schemeCode}/transactions`, {
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error(b.message || `Request failed (${res.status})`); }
+  return res.json();
+}
+
 /** POST /api/mutual-funds/buy */
 export async function buyMutualFund(payload) {
   const res = await fetch("/api/mutual-funds/buy", {
