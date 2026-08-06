@@ -1,10 +1,14 @@
 package com.example.portfolio.service;
 
+import com.example.portfolio.client.TwelveDataClient;
+import com.example.portfolio.dto.StockHistoryPoint;
 import com.example.portfolio.exception.ExternalApiException;
+import com.example.portfolio.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestClient;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,11 +18,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class MarketDataServiceTest {
 
+    private final TwelveDataClient twelveDataClient = mock(TwelveDataClient.class);
+
     private final MarketDataService service = new MarketDataService(
             RestClient.builder().baseUrl("https://example.test").build(),
+            twelveDataClient,
             "AAPL,MSFT,TSLA",
             2
     );
@@ -122,6 +133,60 @@ class MarketDataServiceTest {
         assertThat(quotes.keySet()).containsExactly("AAPL", "MSFT");
     }
 
+    // ── Price History ────────────────────────────────────────────
+
+    @Test
+    void getStockHistory_unsupportedTicker_throwsResourceNotFoundException() {
+        assertThatThrownBy(() -> service.getStockHistory("NVDA", "ALL"))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("not supported");
+    }
+
+    @Test
+    void getStockHistory_mapsRangeToOutputSizeAndReturnsChronologicalOrder() {
+        List<StockHistoryPoint> points = List.of(
+                new StockHistoryPoint(LocalDate.now().minusDays(2), new BigDecimal("100.00")),
+                new StockHistoryPoint(LocalDate.now().minusDays(1), new BigDecimal("150.00")),
+                new StockHistoryPoint(LocalDate.now(), new BigDecimal("200.00"))
+        );
+        when(twelveDataClient.getDailyHistory(anyString(), anyString(), anyInt())).thenReturn(points);
+
+        var response = service.getStockHistory("AAPL", "1M");
+
+        assertThat(response.getHistory()).hasSize(3);
+        assertThat(response.getHistory().get(2).getClose()).isEqualByComparingTo("200.00");
+        assertThat(response.getTicker()).isEqualTo("AAPL");
+    }
+
+    @Test
+    void getStockHistory_upstreamFailure_fallsBackToLastGoodOrEmptyHistory() {
+        when(twelveDataClient.getDailyHistory(anyString(), anyString(), anyInt()))
+                .thenThrow(new ExternalApiException("Twelve Data unavailable"));
+
+        var response = service.getStockHistory("AAPL", "ALL");
+
+        assertThat(response.getHistory()).isEmpty();
+        assertThat(response.getTicker()).isEqualTo("AAPL");
+    }
+
+    @Test
+    void getStockHistory_upstreamFailureAfterSuccess_fallsBackToLastGoodData() {
+        List<StockHistoryPoint> goodPoints = List.of(
+                new StockHistoryPoint(LocalDate.now().minusDays(1), new BigDecimal("175.00")),
+                new StockHistoryPoint(LocalDate.now(), new BigDecimal("180.00"))
+        );
+        when(twelveDataClient.getDailyHistory(anyString(), anyString(), anyInt()))
+                .thenReturn(goodPoints)
+                .thenThrow(new ExternalApiException("Twelve Data rate limited"));
+
+        var first = service.getStockHistory("AAPL", "ALL");
+        assertThat(first.getHistory()).hasSize(2);
+
+        var second = service.getStockHistory("AAPL", "ALL");
+        assertThat(second.getHistory()).hasSize(2);
+        assertThat(second.getHistory().get(1).getClose()).isEqualByComparingTo("180.00");
+    }
+
     private static MarketDataService.CachedQuote quote(String symbol, String price) {
         return new MarketDataService.CachedQuote(
                 new BigDecimal(price),
@@ -144,7 +209,7 @@ class MarketDataServiceTest {
         TestableMarketDataService(RestClient finnhubRestClient,
                                   List<String> calls,
                                   SymbolFetcher fetcher) {
-            super(finnhubRestClient, "AAPL,MSFT,TSLA", 2);
+            super(finnhubRestClient, mock(TwelveDataClient.class), "AAPL,MSFT,TSLA", 2);
             this.calls = calls;
             this.fetcher = fetcher;
         }

@@ -96,6 +96,14 @@ export async function getStockQuote(ticker) {
 }
 
 /**
+ * Fetch daily price history for a stock ticker, for the History chart.
+ * GET /api/v1/market/{ticker}/history?range=1M|3M|6M|1Y|ALL
+ */
+export async function getStockHistory(ticker, range = "ALL") {
+  return apiFetch(`/market/${encodeURIComponent(ticker)}/history?range=${encodeURIComponent(range)}`);
+}
+
+/**
  * Fetch cached quotes for multiple tickers in one call.
  * Uses the in-memory cache populated by the backend's scheduled poll (every 10 s).
  * Returns a map of { "TICKER": { ticker, price, currency, asOf }, ... }

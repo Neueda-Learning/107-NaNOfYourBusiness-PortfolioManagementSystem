@@ -15,6 +15,7 @@ import {
   getBatchQuotes,
   getPortfolioItems,
   getStockCatalog,
+  getStockHistory,
   getStockQuote,
   refreshPortfolioItemPrice,
   sellPortfolioItem,
@@ -28,7 +29,9 @@ let filteredTickers = [];
 let activeSuggestion = -1;
 let heldItems = [];
 let liveTimer = null;
-let featuredCollapsed = true;
+let featuredCollapsed = false;
+let historyChart = null;
+let currentHistoryTicker = null;
 const LIVE_INTERVAL = 10_000;
 const FEATURED_COUNT = 24;
 
@@ -95,19 +98,32 @@ function renderFeaturedRows(quotes = {}) {
     const quote = quotes[ticker];
     const price = quote?.price != null ? fmtNum(quote.price) : null;
 
-    const chip = document.createElement("button");
-    chip.type = "button";
+    const chip = document.createElement("div");
+    chip.tabIndex = 0;
+    chip.setAttribute("role", "button");
     chip.className = "featured-ticker-chip js-featured-select";
     chip.dataset.ticker = ticker;
     chip.dataset.featuredTicker = ticker;
     chip.innerHTML = `
       <span class="featured-chip__symbol">${ticker}</span>
       <span class="featured-chip__price js-featured-price${price ? "" : " featured-chip__price--empty"}">${price ?? "—"}</span>
+      <button type="button" class="btn-secondary history-btn js-featured-history" data-ticker="${ticker}">History</button>
     `;
-    chip.addEventListener("click", async () => {
+    chip.addEventListener("click", async (e) => {
+      if (e.target.closest(".js-featured-history")) return;
       const tickerInput = byId("browse-ticker");
       if (tickerInput) tickerInput.value = ticker;
       await handleFetchQuote();
+    });
+    chip.querySelector(".js-featured-history")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      window.__stockShowHistory(ticker);
+    });
+    chip.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        chip.click();
+      }
     });
     body.appendChild(chip);
   });
@@ -333,6 +349,8 @@ function buildHoldingsRow(item, livePrices) {
     <td class="holdings-table__actions">
       <button type="button" class="btn-refresh-price js-refresh-btn"
               data-id="${item.id}" title="Refresh price from market">↻</button>
+      <button type="button" class="btn-secondary history-btn js-holding-history"
+              data-ticker="${symbol}">History</button>
       <div class="holdings-trade">
         <input type="number" min="0.0001" step="0.0001" value="1"
                class="input-field holdings-trade__qty js-trade-qty"
@@ -368,6 +386,12 @@ function updateRowGainLoss(row, item) {
 
 function wireRowActions(row) {
   const refreshBtn = row.querySelector(".js-refresh-btn");
+  const historyBtn = row.querySelector(".js-holding-history");
+  if (historyBtn) {
+    historyBtn.addEventListener("click", () => {
+      window.__stockShowHistory(historyBtn.dataset.ticker);
+    });
+  }
   if (refreshBtn) {
     refreshBtn.addEventListener("click", async () => {
       const id = refreshBtn.dataset.id;
@@ -606,6 +630,140 @@ async function handleAddStock() {
   }
 }
 
+// ── Price History Chart ───────────────────────────────
+
+async function renderStockHistoryChart(ticker, range) {
+  const loadingEl = byId("stock-history-loading");
+  const emptyEl = byId("stock-history-empty");
+  const canvas = byId("stock-history-chart");
+
+  if (loadingEl) loadingEl.style.display = "flex";
+  if (emptyEl) emptyEl.style.display = "none";
+  if (canvas) canvas.style.display = "none";
+
+  try {
+    const data = await getStockHistory(ticker, range);
+    const points = data.history || [];
+
+    if (loadingEl) loadingEl.style.display = "none";
+
+    if (!points.length) {
+      if (emptyEl) emptyEl.style.display = "flex";
+      return;
+    }
+
+    if (canvas) canvas.style.display = "block";
+
+    const labels = points.map((p) => p.date);
+    const closeValues = points.map((p) => Number(p.close));
+
+    if (historyChart) {
+      historyChart.destroy();
+      historyChart = null;
+    }
+
+    const ctx = canvas.getContext("2d");
+    const accentColor = cssVar("--color-stock") || "#7c3aed";
+
+    historyChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          label: "Close ($)",
+          data: closeValues,
+          borderColor: accentColor,
+          backgroundColor: accentColor + "22",
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          fill: true,
+          tension: 0.25,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        scales: {
+          x: {
+            ticks: { maxTicksLimit: 8, color: cssVar("--color-text-faint") },
+            grid: { display: false },
+          },
+          y: {
+            ticks: { color: cssVar("--color-text-faint") },
+            grid: { color: cssVar("--color-border") },
+          },
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => `Close: $${fmtNum(ctx.parsed.y, 2)}`,
+            },
+          },
+        },
+      },
+    });
+
+    // Update subtitle with change over the period
+    const first = closeValues[0];
+    const last = closeValues[closeValues.length - 1];
+    const change = last - first;
+    const changePct = first !== 0 ? (change / first) * 100 : 0;
+    const sign = change >= 0 ? "+" : "";
+    const subtitleEl = byId("stock-history-subtitle");
+    if (subtitleEl) {
+      subtitleEl.innerHTML = `Latest close: $${fmtNum(last, 2)} &nbsp;•&nbsp; ` +
+        `<span style="color:${change >= 0 ? 'var(--color-success,#38a169)' : 'var(--color-danger,#e53e3e)'}">` +
+        `${sign}$${fmtNum(Math.abs(change), 2)} (${sign}${fmtNum(changePct, 2)}%)</span> over selected range`;
+    }
+  } catch (err) {
+    if (loadingEl) loadingEl.style.display = "none";
+    if (emptyEl) {
+      emptyEl.style.display = "flex";
+      emptyEl.querySelector(".empty-state__text").textContent = "Failed to load history: " + err.message;
+    }
+  }
+}
+
+window.__stockShowHistory = function (ticker) {
+  currentHistoryTicker = ticker;
+  const modal = byId("stock-history-modal");
+  const titleEl = byId("stock-history-title");
+  if (titleEl) titleEl.textContent = ticker;
+  if (modal) modal.style.display = "flex";
+
+  // Reset range buttons to "ALL"
+  document.querySelectorAll(".stock-range-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.range === "ALL");
+  });
+
+  renderStockHistoryChart(ticker, "ALL");
+};
+
+window.__stockCloseHistory = function () {
+  const modal = byId("stock-history-modal");
+  if (modal) modal.style.display = "none";
+  if (historyChart) {
+    historyChart.destroy();
+    historyChart = null;
+  }
+  currentHistoryTicker = null;
+};
+
+function wireStockHistoryRangeButtons() {
+  document.querySelectorAll(".stock-range-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".stock-range-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      if (currentHistoryTicker != null) {
+        renderStockHistoryChart(currentHistoryTicker, btn.dataset.range);
+      }
+    });
+  });
+}
+
 export async function loadMarketBrowse() {
   if (!initialized) {
     initialized = true;
@@ -626,6 +784,7 @@ export async function loadMarketBrowse() {
     byId("browse-ticker")?.addEventListener("keydown", handleTickerKeydown);
     byId("browse-ticker")?.addEventListener("blur", () => setTimeout(closeDropdown, 120));
     wireOutsideClick();
+    wireStockHistoryRangeButtons();
   }
 
   await loadTickers();
@@ -633,3 +792,6 @@ export async function loadMarketBrowse() {
   await loadFeaturedStocks();
   await loadPortfolioStocks();
 }
+
+
+
