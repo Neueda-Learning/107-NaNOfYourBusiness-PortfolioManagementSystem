@@ -49,6 +49,29 @@ CREATE TABLE IF NOT EXISTS portfolio_item (
         ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- NOTE: `CREATE TABLE IF NOT EXISTS` above is a no-op when the table already exists
+-- from an earlier (smaller) version of this schema, so columns added later (bond/
+-- mutual-fund/stock specific fields) can silently be missing on existing databases,
+-- causing "column not found" 500 errors from repositories that SELECT *.
+-- Standard MySQL (unlike MariaDB) does not support `ADD COLUMN IF NOT EXISTS`, so that
+-- guard can't live here as portable SQL. Instead, `SchemaColumnMigration`
+-- (com.example.portfolio.config) runs on startup and adds any missing portfolio_item
+-- columns via JDBC metadata inspection, working identically against H2 and MySQL.
+
+-- Trade history table (buy/sell audit trail per holding). Kept here so fresh
+-- databases provision it automatically; existing databases already have it.
+CREATE TABLE IF NOT EXISTS portfolio_trade (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    portfolio_item_id BIGINT NOT NULL,
+    asset_type VARCHAR(20) NOT NULL,
+    symbol_or_name VARCHAR(100) NOT NULL,
+    side VARCHAR(10) NOT NULL,
+    quantity DECIMAL(19,4) NOT NULL,
+    execution_price DECIMAL(19,4) NOT NULL,
+    executed_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 --- SQL script to create the user_data table. The MVP is single-user only, so this
 --- table is expected to hold exactly one row representing the sole investor,
 --- with wallet_balance tracking their available cash for buy/sell trades.
