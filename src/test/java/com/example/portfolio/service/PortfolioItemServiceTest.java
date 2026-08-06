@@ -80,6 +80,50 @@ class PortfolioItemServiceTest {
     }
 
     @Test
+    void create_stockAlreadyHeld_mergesIntoExistingHoldingWithWeightedAveragePrice() {
+        PortfolioItem existing = new PortfolioItem();
+        existing.setId(21L);
+        existing.setType(AssetType.STOCK);
+        existing.setSymbolOrName("AAPL");
+        existing.setQuantity(new BigDecimal("10"));
+        existing.setPurchasePrice(new BigDecimal("100.00"));
+        existing.setPurchaseDate(LocalDate.of(2025, 1, 1));
+        existing.setCurrentPrice(new BigDecimal("100.00"));
+
+        PortfolioItemRequest request = new PortfolioItemRequest();
+        request.setType(AssetType.STOCK);
+        request.setSymbolOrName("AAPL");
+        request.setQuantity(new BigDecimal("5"));
+        request.setPurchasePrice(new BigDecimal("130.00"));
+        request.setCurrentPrice(new BigDecimal("130.00"));
+        request.setPurchaseDate(LocalDate.of(2026, 8, 6));
+
+        when(handlerRegistry.resolve(AssetType.STOCK)).thenReturn(stockHandler);
+        when(repository.findByTypeAndSymbolOrName(AssetType.STOCK, "AAPL"))
+                .thenReturn(Optional.of(existing));
+
+        PortfolioItemResponse response = service.create(request);
+
+        // weighted average = (10*100 + 5*130) / 15 = 110.0000
+        verify(repository).updateHoldingAfterTrade(
+                org.mockito.ArgumentMatchers.eq(21L),
+                org.mockito.ArgumentMatchers.eq(new BigDecimal("15")),
+                org.mockito.ArgumentMatchers.eq(new BigDecimal("110.0000")),
+                org.mockito.ArgumentMatchers.eq(new BigDecimal("130.00")),
+                org.mockito.ArgumentMatchers.any());
+        verify(tradeRepository).saveTrade(
+                org.mockito.ArgumentMatchers.eq(existing),
+                org.mockito.ArgumentMatchers.eq(com.example.portfolio.model.TradeSide.BUY),
+                org.mockito.ArgumentMatchers.eq(new BigDecimal("5")),
+                org.mockito.ArgumentMatchers.eq(new BigDecimal("130.00")),
+                org.mockito.ArgumentMatchers.any());
+        verify(repository, org.mockito.Mockito.never()).save(any(PortfolioItem.class));
+        assertThat(response.getId()).isEqualTo(21L);
+        assertThat(response.getQuantity()).isEqualByComparingTo("15");
+        assertThat(response.getPurchasePrice()).isEqualByComparingTo("110.0000");
+    }
+
+    @Test
     void findAll_withType_usesFilteredRepositoryMethod() {
         PortfolioItem stock = new PortfolioItem();
         stock.setId(7L);

@@ -44,6 +44,18 @@ PortfolioItemRepository {
         return results.stream().findFirst();
     }
 
+    /**
+     * Finds an existing holding of the given type with a matching symbol/name
+     * (case-insensitive). Used to merge repeat purchases of the same asset
+     * into a single holding row instead of creating duplicate entries.
+     */
+    public Optional<PortfolioItem> findByTypeAndSymbolOrName(AssetType type, String symbolOrName) {
+        List<PortfolioItem> results = jdbc.query(
+                "SELECT * FROM portfolio_item WHERE type = ? AND UPPER(symbol_or_name) = UPPER(?)",
+                rowMapper, type.name(), symbolOrName);
+        return results.stream().findFirst();
+    }
+
     public PortfolioItem save(PortfolioItem item) {
         LocalDateTime now = LocalDateTime.now();
         Number generatedId = insert.executeAndReturnKey(new MapSqlParameterSource()
