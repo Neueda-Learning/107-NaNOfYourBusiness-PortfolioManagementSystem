@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PortfolioItemService {
@@ -50,6 +51,7 @@ public class PortfolioItemService {
         return mapper.toResponse(requireItem(id));
     }
 
+    @Transactional
     public PortfolioItemResponse create(PortfolioItemRequest request) {
         // For non-STOCK asset types the caller must supply purchasePrice explicitly,
         // since there is no market-data auto-fill for those types.
@@ -58,7 +60,49 @@ public class PortfolioItemService {
         }
         PortfolioItem item = mapper.toModel(request);
         handlerRegistry.resolve(item.getType()).applyCreateDefaults(item);
+
+        // For STOCK holdings, buying more of a symbol that is already held should
+        // update the existing holding (weighted-average purchase price) instead
+        // of creating a duplicate row in "My Holdings".
+        if (item.getType() == AssetType.STOCK) {
+            Optional<PortfolioItem> existing = repository.findByTypeAndSymbolOrName(
+                    AssetType.STOCK, item.getSymbolOrName());
+            if (existing.isPresent()) {
+                return mergeIntoExistingStockHolding(existing.get(), item);
+            }
+        }
+
         return mapper.toResponse(repository.save(item));
+    }
+
+    /**
+     * Merges an additional stock purchase into an already-existing holding:
+     * quantities are summed and the purchase price becomes the weighted
+     * average of the old and new costs (weighted by units bought).
+     */
+    private PortfolioItemResponse mergeIntoExistingStockHolding(PortfolioItem existing, PortfolioItem incoming) {
+        BigDecimal oldQuantity = existing.getQuantity();
+        BigDecimal addedQuantity = incoming.getQuantity();
+        BigDecimal newQuantity = oldQuantity.add(addedQuantity);
+
+        BigDecimal oldCost = oldQuantity.multiply(existing.getPurchasePrice());
+        BigDecimal newCost = addedQuantity.multiply(incoming.getPurchasePrice());
+        BigDecimal weightedAveragePrice = oldCost.add(newCost)
+                .divide(newQuantity, 4, RoundingMode.HALF_UP);
+
+        BigDecimal executionPrice = incoming.getCurrentPrice() != null
+                ? incoming.getCurrentPrice()
+                : incoming.getPurchasePrice();
+        LocalDateTime executedAt = LocalDateTime.now();
+
+        repository.updateHoldingAfterTrade(existing.getId(), newQuantity, weightedAveragePrice, executionPrice, executedAt);
+        tradeRepository.saveTrade(existing, TradeSide.BUY, addedQuantity, executionPrice, executedAt);
+
+        existing.setQuantity(newQuantity);
+        existing.setPurchasePrice(weightedAveragePrice);
+        existing.setCurrentPrice(executionPrice);
+        existing.setUpdatedAt(executedAt);
+        return mapper.toResponse(existing);
     }
 
     public PortfolioItemResponse update(Long id, PortfolioItemRequest request) {

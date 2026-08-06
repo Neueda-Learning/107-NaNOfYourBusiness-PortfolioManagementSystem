@@ -16,7 +16,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
 
@@ -34,6 +33,9 @@ class MutualFundServiceTest {
     private PortfolioItemRepository portfolioItemRepository;
 
     @Mock
+    private PortfolioTradeRepository portfolioTradeRepository;
+
+    @Mock
     private MFAPIClient mfapiClient;
 
     @Mock
@@ -49,12 +51,7 @@ class MutualFundServiceTest {
     @BeforeEach
     void setUp() {
         mutualFundCatalogue = new MutualFundCatalogue();
-        service = new MutualFundService(
-                portfolioItemRepository,
-                portfolioTradeRepository,
-                mfapiClient,
-                mutualFundCatalogue,
-                walletService);
+        service = new MutualFundService(portfolioItemRepository, portfolioTradeRepository, mfapiClient, mutualFundCatalogue);
     }
 
     @Test
