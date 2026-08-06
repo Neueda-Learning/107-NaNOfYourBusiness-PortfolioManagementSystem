@@ -67,6 +67,175 @@
   transition: color var(--duration-slow) var(--ease-out);
 }
 
+/* ── Card icon badge ───────────────────────────────────────────── */
+.card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px; height: 30px;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-3);
+  color: var(--color-gain);
+  background: var(--color-gain-bg);
+  transition: background-color var(--duration-slow) var(--ease-out),
+              color var(--duration-slow) var(--ease-out);
+}
+.card__icon svg { width: 15px; height: 15px; }
+.card__icon--neutral {
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+}
+.card__icon--loss {
+  color: var(--color-loss);
+  background: var(--color-loss-bg);
+}
+
+/* ── Sparkline (mini SVG trend line inside a card) ─────────────── */
+.card__sparkline {
+  width: 100%;
+  height: 28px;
+  margin-top: var(--space-2);
+  overflow: visible;
+  display: block;
+}
+.card__sparkline:empty { display: none; }
+.card__sparkline polyline {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* ── Dashboard toolbar (last updated + refresh) ────────────────── */
+.dashboard-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.dashboard-toolbar__updated {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-faint);
+  letter-spacing: 0.01em;
+  transition: color var(--duration-slow) var(--ease-out);
+}
+
+/* ── Chart insight text ─────────────────────────────────────────── */
+.chart-insight {
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  width: 100%;
+  font-size: var(--font-size-xs);
+  line-height: 1.6;
+  color: var(--color-text-muted);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  text-align: center;
+  transition: color var(--duration-slow) var(--ease-out),
+              background-color var(--duration-slow) var(--ease-out);
+}
+.chart-insight:empty { display: none; }
+
+/* ── Empty state CTA ───────────────────────────────────────────── */
+.empty-state__cta {
+  margin-top: var(--space-5);
+}
+
+/* ── Skeleton loading state ─────────────────────────────────────── */
+.dashboard-skeleton { display: flex; flex-direction: column; gap: var(--space-6); max-width: 1200px; }
+.skeleton-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+}
+.skeleton-card {
+  height: 118px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+.skeleton-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+}
+.skeleton-chart {
+  height: 280px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+.skeleton-card, .skeleton-chart {
+  position: relative;
+  overflow: hidden;
+}
+.skeleton-card::after, .skeleton-chart::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(var(--color-accent-r), var(--color-accent-g), var(--color-accent-b), 0.09) 50%,
+    transparent 100%);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+@keyframes shimmer {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(100%); }
+}
+@media (max-width: 1024px) {
+  .skeleton-cards { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+  .skeleton-charts { grid-template-columns: 1fr; }
+}
+
+/* ── Top movers widget ──────────────────────────────────────────── */
+.top-movers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+.top-mover {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out);
+}
+.top-mover:hover { transform: translateY(-1px); }
+.top-mover--gain:hover { background: var(--color-gain-bg); }
+.top-mover--loss:hover { background: var(--color-loss-bg); }
+.top-mover__label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 600;
+}
+.top-mover__name {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-top: 2px;
+}
+.top-mover__pct {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+.top-mover__pct--gain { color: var(--color-gain); }
+.top-mover__pct--loss { color: var(--color-loss); }
+@media (max-width: 640px) {
+  .top-movers { grid-template-columns: 1fr; }
+}
+
 /* ── Chart Card ────────────────────────────────────────────────── */
 .chart-card {
   background: var(--color-surface);
@@ -86,6 +255,41 @@
   margin-bottom: var(--space-5);
 }
 
+/* ── Performance chart range toggle ─────────────────────────────── */
+.perf-range-group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.perf-range-btn {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 4px 11px;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  transition: background var(--duration-fast) var(--ease-out),
+              color var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out);
+}
+.perf-range-btn.active,
+.perf-range-btn:hover {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+}
+.perf-range-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.performance-canvas-wrap {
+  width: 100%;
+  height: 260px;
+  position: relative;
+}
+
+
 .chart-card__title {
   font-size: var(--font-size-sm);
   font-weight: 600;
@@ -104,6 +308,21 @@
   width: 100%;
   max-width: 260px;
   margin: 0 auto;
+}
+.chart-canvas-wrap--donut {
+  max-width: 320px;
+}
+
+/* ── Static cards (no hover lift / 3D tilt) ─────────────────────
+   Used for cards that contain data tables, where a moving/tilting
+   card while the user is trying to click a row action feels broken. */
+.card--static:hover {
+  transform: none !important;
+  box-shadow: var(--shadow-card);
+  border-color: var(--color-border);
+}
+.card--static:hover::before {
+  opacity: 0;
 }
 
 /* ── Loading State ─────────────────────────────────────────────── */
