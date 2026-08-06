@@ -5,6 +5,8 @@ import com.example.portfolio.model.PortfolioItem;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -16,6 +18,8 @@ import java.util.Objects;
 @Repository
 public class
 PortfolioItemRepository {
+
+    private static final Logger log = LoggerFactory.getLogger(PortfolioItemRepository.class);
 
     private final JdbcTemplate jdbc;
     private final SimpleJdbcInsert insert;
@@ -71,6 +75,7 @@ PortfolioItemRepository {
         item.setId(generatedId.longValue());
         item.setCreatedAt(now);
         item.setUpdatedAt(now);
+        log.debug("Inserted portfolio item: id={}, type={}, symbolOrName={}", item.getId(), item.getType(), item.getSymbolOrName());
         return item;
     }
 
@@ -88,12 +93,14 @@ PortfolioItemRepository {
                 now,
                 item.getId());
         item.setUpdatedAt(now);
+        log.debug("Updated portfolio item: id={}", item.getId());
         return item;
     }
 
     public void updateCurrentPrice(Long id, BigDecimal price) {
         jdbc.update("UPDATE portfolio_item SET current_price = ?, updated_at = ? WHERE id = ?",
                 price, LocalDateTime.now(), id);
+        log.debug("Updated current price: id={}, price={}", id, price);
     }
 
     public void updateHoldingAfterTrade(Long id,
@@ -108,9 +115,11 @@ PortfolioItemRepository {
                 currentPrice,
                 updatedAt,
                 id);
+        log.debug("Updated holding after trade: id={}, quantity={}, currentPrice={}", id, quantity, currentPrice);
     }
 
     public void deleteById(Long id) {
         jdbc.update("DELETE FROM portfolio_item WHERE id = ?", id);
+        log.debug("Deleted portfolio item: id={}", id);
     }
 }

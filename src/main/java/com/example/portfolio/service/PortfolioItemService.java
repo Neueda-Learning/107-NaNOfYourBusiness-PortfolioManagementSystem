@@ -10,6 +10,8 @@ import com.example.portfolio.model.TradeSide;
 import com.example.portfolio.repository.PortfolioItemRepository;
 import com.example.portfolio.repository.PortfolioTradeRepository;
 import com.example.portfolio.service.portfolio.PortfolioItemTypeHandlerRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +23,8 @@ import java.util.Optional;
 
 @Service
 public class PortfolioItemService {
+
+    private static final Logger log = LoggerFactory.getLogger(PortfolioItemService.class);
 
     private final PortfolioItemRepository repository;
     private final PortfolioTradeRepository tradeRepository;
@@ -83,6 +87,8 @@ public class PortfolioItemService {
             walletService.debitForBuy(purchaseAmount, saved.getType(), saved.getId(), saved.getSymbolOrName());
         }
 
+        log.info("Portfolio item created: id={}, type={}, symbolOrName={}, quantity={}",
+                saved.getId(), saved.getType(), saved.getSymbolOrName(), saved.getQuantity());
         return mapper.toResponse(saved);
     }
 
@@ -116,6 +122,8 @@ public class PortfolioItemService {
         existing.setPurchasePrice(weightedAveragePrice);
         existing.setCurrentPrice(executionPrice);
         existing.setUpdatedAt(executedAt);
+        log.info("Merged additional stock purchase into existing holding: id={}, symbolOrName={}, newQuantity={}, weightedAveragePrice={}",
+                existing.getId(), existing.getSymbolOrName(), newQuantity, weightedAveragePrice);
         return mapper.toResponse(existing);
     }
 
@@ -123,12 +131,15 @@ public class PortfolioItemService {
         requireItem(id); // ensure it exists before update
         PortfolioItem item = mapper.toModel(request);
         item.setId(id);
-        return mapper.toResponse(repository.update(item));
+        PortfolioItem updated = repository.update(item);
+        log.info("Portfolio item updated: id={}, type={}, symbolOrName={}", id, updated.getType(), updated.getSymbolOrName());
+        return mapper.toResponse(updated);
     }
 
     public void delete(Long id) {
         requireItem(id);
         repository.deleteById(id);
+        log.info("Portfolio item deleted: id={}", id);
     }
 
     public PortfolioItemResponse refreshPrice(Long id) {
@@ -136,6 +147,7 @@ public class PortfolioItemService {
         BigDecimal newPrice = handlerRegistry.resolve(item.getType()).resolveRefreshedPrice(item);
         repository.updateCurrentPrice(id, newPrice);
         item.setCurrentPrice(newPrice);
+        log.info("Portfolio item price refreshed: id={}, symbolOrName={}, newPrice={}", id, item.getSymbolOrName(), newPrice);
         return mapper.toResponse(item);
     }
 
@@ -162,6 +174,8 @@ public class PortfolioItemService {
         item.setPurchasePrice(averagePrice);
         item.setCurrentPrice(executionPrice);
         item.setUpdatedAt(executedAt);
+        log.info("Stock bought: id={}, symbolOrName={}, quantity={}, executionPrice={}, newQuantity={}",
+                item.getId(), item.getSymbolOrName(), quantity, executionPrice, newQuantity);
         return mapper.toResponse(item);
     }
 
@@ -170,6 +184,8 @@ public class PortfolioItemService {
         PortfolioItem item = requireStockHolding(id);
 
         if (quantity.compareTo(item.getQuantity()) > 0) {
+            log.warn("Sell rejected: id={}, requestedQuantity={} exceeds held quantity={}",
+                    id, quantity, item.getQuantity());
             throw new IllegalArgumentException("Sell quantity exceeds current holding");
         }
 
@@ -185,6 +201,8 @@ public class PortfolioItemService {
             item.setQuantity(BigDecimal.ZERO);
             item.setCurrentPrice(executionPrice);
             item.setUpdatedAt(executedAt);
+            log.info("Stock holding fully sold and closed: id={}, symbolOrName={}, quantitySold={}",
+                    item.getId(), item.getSymbolOrName(), quantity);
             return mapper.toResponse(item);
         }
 
@@ -192,12 +210,15 @@ public class PortfolioItemService {
         item.setQuantity(remainingQuantity);
         item.setCurrentPrice(executionPrice);
         item.setUpdatedAt(executedAt);
+        log.info("Stock partially sold: id={}, symbolOrName={}, quantitySold={}, remainingQuantity={}",
+                item.getId(), item.getSymbolOrName(), quantity, remainingQuantity);
         return mapper.toResponse(item);
     }
 
     private PortfolioItem requireStockHolding(Long id) {
         PortfolioItem item = requireItem(id);
         if (item.getType() != AssetType.STOCK) {
+            log.warn("Buy/sell rejected: id={} is not a STOCK holding (type={})", id, item.getType());
             throw new IllegalArgumentException("Buy/sell is currently supported for STOCK holdings only");
         }
         return item;
@@ -209,7 +230,9 @@ public class PortfolioItemService {
 
     private PortfolioItem requireItem(Long id) {
         return repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Portfolio item not found with id: " + id));
+                .orElseThrow(() -> {
+                    log.warn("Portfolio item not found: id={}", id);
+                    return new ResourceNotFoundException("Portfolio item not found with id: " + id);
+                });
     }
 }
