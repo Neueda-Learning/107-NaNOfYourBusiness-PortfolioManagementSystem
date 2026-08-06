@@ -72,7 +72,18 @@ public class PortfolioItemService {
             }
         }
 
-        return mapper.toResponse(repository.save(item));
+        PortfolioItem saved = repository.save(item);
+
+        // Buying a stock (whether via "Add to Portfolio" or otherwise) must debit
+        // the wallet and be recorded in the wallet transaction ledger, just like
+        // the dedicated buy() endpoint does for existing holdings.
+        if (saved.getType() == AssetType.STOCK) {
+            BigDecimal purchaseAmount = saved.getQuantity().multiply(saved.getPurchasePrice())
+                    .setScale(4, RoundingMode.HALF_UP);
+            walletService.debitForBuy(purchaseAmount, saved.getType(), saved.getId(), saved.getSymbolOrName());
+        }
+
+        return mapper.toResponse(saved);
     }
 
     /**
@@ -94,6 +105,9 @@ public class PortfolioItemService {
                 ? incoming.getCurrentPrice()
                 : incoming.getPurchasePrice();
         LocalDateTime executedAt = LocalDateTime.now();
+        BigDecimal purchaseAmount = addedQuantity.multiply(executionPrice).setScale(4, RoundingMode.HALF_UP);
+
+        walletService.debitForBuy(purchaseAmount, existing.getType(), existing.getId(), existing.getSymbolOrName());
 
         repository.updateHoldingAfterTrade(existing.getId(), newQuantity, weightedAveragePrice, executionPrice, executedAt);
         tradeRepository.saveTrade(existing, TradeSide.BUY, addedQuantity, executionPrice, executedAt);

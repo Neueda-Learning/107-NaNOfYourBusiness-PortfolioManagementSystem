@@ -75,6 +75,11 @@ class PortfolioItemServiceTest {
         PortfolioItemResponse response = service.create(request);
 
         verify(stockHandler).applyCreateDefaults(any(PortfolioItem.class));
+        verify(walletService).debitForBuy(
+                org.mockito.ArgumentMatchers.eq(new BigDecimal("1000.0000")),
+                org.mockito.ArgumentMatchers.eq(AssetType.STOCK),
+                org.mockito.ArgumentMatchers.eq(1L),
+                org.mockito.ArgumentMatchers.eq("TCS"));
         assertThat(response.getId()).isEqualTo(1L);
         assertThat(response.getSymbolOrName()).isEqualTo("TCS");
         assertThat(response.getCurrentPrice()).isEqualByComparingTo("123.45");
@@ -108,6 +113,11 @@ class PortfolioItemServiceTest {
         PortfolioItemResponse response = service.create(request);
 
         // weighted average = (10*100 + 5*130) / 15 = 110.0000
+        verify(walletService).debitForBuy(
+                org.mockito.ArgumentMatchers.eq(new BigDecimal("650.0000")),
+                org.mockito.ArgumentMatchers.eq(AssetType.STOCK),
+                org.mockito.ArgumentMatchers.eq(21L),
+                org.mockito.ArgumentMatchers.eq("AAPL"));
         verify(repository).updateHoldingAfterTrade(
                 org.mockito.ArgumentMatchers.eq(21L),
                 org.mockito.ArgumentMatchers.eq(new BigDecimal("15")),
