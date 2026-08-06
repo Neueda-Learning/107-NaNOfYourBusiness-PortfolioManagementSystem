@@ -10,6 +10,8 @@
  *  - Show loading (skeleton), error, and empty states
  */
 
+import { getPortfolioSummary } from "./api.js?v=2";
+import { renderAllocationChart } from "./charts.js";
 import { getPortfolioSummary, getPortfolioItems, getPortfolioPerformance } from "./api.js";
 import { renderAllocationChart, renderSparkline, renderPerformanceChart } from "./charts.js";
 

@@ -3,6 +3,7 @@ package com.example.portfolio.controller;
 import com.example.portfolio.dto.BuyMutualFundRequest;
 import com.example.portfolio.dto.MutualFundHistoryResponse;
 import com.example.portfolio.dto.MutualFundSummaryResponse;
+import com.example.portfolio.dto.MutualFundTransactionResponse;
 import com.example.portfolio.dto.SellMutualFundRequest;
 import com.example.portfolio.service.MutualFundService;
 import jakarta.validation.Valid;
@@ -69,6 +70,16 @@ public class MutualFundController {
     public ResponseEntity<Map<String, Object>> sellMutualFund(
             @Valid @RequestBody SellMutualFundRequest request) {
         return ResponseEntity.ok(mutualFundService.sellMutualFund(request));
+    }
+
+    /**
+     * GET /api/mutual-funds/{schemeCode}/transactions
+     * Returns the buy/sell transaction history for a specific fund, most recent first.
+     */
+    @GetMapping("/{schemeCode}/transactions")
+    public ResponseEntity<List<MutualFundTransactionResponse>> getTransactionHistory(
+            @PathVariable Integer schemeCode) {
+        return ResponseEntity.ok(mutualFundService.getTransactionHistory(schemeCode));
     }
 }
 

@@ -6,11 +6,14 @@ import com.example.portfolio.dto.BuyMutualFundRequest;
 import com.example.portfolio.dto.MutualFundHistoryPoint;
 import com.example.portfolio.dto.MutualFundHistoryResponse;
 import com.example.portfolio.dto.MutualFundSummaryResponse;
+import com.example.portfolio.dto.MutualFundTransactionResponse;
 import com.example.portfolio.dto.SellMutualFundRequest;
 import com.example.portfolio.exception.ResourceNotFoundException;
 import com.example.portfolio.model.AssetType;
 import com.example.portfolio.model.PortfolioItem;
+import com.example.portfolio.model.TradeSide;
 import com.example.portfolio.repository.PortfolioItemRepository;
+import com.example.portfolio.repository.PortfolioTradeRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -32,13 +35,16 @@ public class MutualFundService {
     private static final Logger log = LoggerFactory.getLogger(MutualFundService.class);
 
     private final PortfolioItemRepository portfolioItemRepository;
+    private final PortfolioTradeRepository portfolioTradeRepository;
     private final MFAPIClient mfapiClient;
     private final MutualFundCatalogue mutualFundCatalogue;
 
     public MutualFundService(PortfolioItemRepository portfolioItemRepository,
+                             PortfolioTradeRepository portfolioTradeRepository,
                              MFAPIClient mfapiClient,
                              MutualFundCatalogue mutualFundCatalogue) {
         this.portfolioItemRepository = portfolioItemRepository;
+        this.portfolioTradeRepository = portfolioTradeRepository;
         this.mfapiClient = mfapiClient;
         this.mutualFundCatalogue = mutualFundCatalogue;
     }
@@ -145,9 +151,8 @@ public class MutualFundService {
         }
 
         String schemeName = mutualFundCatalogue.getSchemeName(schemeCode);
-        LocalDate purchaseDate = request.getPurchaseDate() != null
-                ? request.getPurchaseDate()
-                : LocalDate.now();
+        // Buying date is always set to the current date automatically — not user-supplied.
+        LocalDate purchaseDate = LocalDate.now();
 
         // Fetch latest NAV from MFAPI
         Map<String, Object> mfapiResponse = mfapiClient.getMutualFundDetails(schemeCode);
@@ -173,6 +178,10 @@ public class MutualFundService {
 
         log.info("Successfully purchased mutual fund. Portfolio item id: {}", item.getId());
 
+        // Record this purchase in the shared trade history table (per-fund transaction log)
+        LocalDateTime executedAt = LocalDateTime.now();
+        portfolioTradeRepository.saveTrade(item, TradeSide.BUY, units, currentNav, executedAt);
+
         // Return success message
         return Map.of(
                 "message", "Mutual fund purchased successfully",
@@ -181,6 +190,7 @@ public class MutualFundService {
                 "units", units,
                 "nav", currentNav,
                 "totalAmount", amount,
+                "purchaseDate", purchaseDate,
                 "portfolioItemId", item.getId()
         );
     }
@@ -224,6 +234,11 @@ public class MutualFundService {
 
         // Calculate remaining units
         BigDecimal remainingUnits = holding.getQuantity().subtract(unitsToSell);
+        LocalDateTime executedAt = LocalDateTime.now();
+
+        // Record this sale in the shared trade history table (per-fund transaction log)
+        // Recorded before deletion so the trade log survives holding closure.
+        portfolioTradeRepository.saveTrade(holding, TradeSide.SELL, unitsToSell, currentNav, executedAt);
 
         if (remainingUnits.compareTo(BigDecimal.ZERO) <= 0) {
             // Delete holding if all units sold (or if remaining is effectively zero/negative)
@@ -269,6 +284,28 @@ public class MutualFundService {
 
         Map<String, Object> mfapiResponse = mfapiClient.getMutualFundDetails(matchingSchemeCode);
         return mfapiClient.extractLatestNav(mfapiResponse);
+    }
+
+    /**
+     * Get the buy/sell transaction history for a specific mutual fund scheme,
+     * most recent first. Backed by the shared portfolio_trade table.
+     */
+    public List<MutualFundTransactionResponse> getTransactionHistory(Integer schemeCode) {
+        if (!mutualFundCatalogue.isSupported(schemeCode)) {
+            throw new ResourceNotFoundException("Mutual fund is not supported");
+        }
+        String schemeName = mutualFundCatalogue.getSchemeName(schemeCode);
+
+        return portfolioTradeRepository.findBySymbolAndType(schemeName, AssetType.MUTUAL_FUND).stream()
+                .map(t -> new MutualFundTransactionResponse(
+                        t.id(),
+                        t.side().name(),
+                        t.quantity(),
+                        t.executionPrice(),
+                        t.quantity().multiply(t.executionPrice()).setScale(2, RoundingMode.HALF_UP),
+                        t.executedAt()
+                ))
+                .toList();
     }
 }
 
