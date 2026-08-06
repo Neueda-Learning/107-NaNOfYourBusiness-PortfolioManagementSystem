@@ -1,7 +1,6 @@
 -- Seed data for local development profile.
 -- This script is intentionally dev-only and loaded via application-dev.properties.
 
-DELETE FROM portfolio_trade;
 DELETE FROM portfolio_item;
 
 INSERT INTO portfolio_item (type, symbol_or_name, quantity, purchase_price, purchase_date, current_price, created_at, updated_at)

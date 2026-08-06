@@ -18,11 +18,16 @@ async function apiFetch(path, options = {}) {
 
   if (!res.ok) {
     let message = `Request failed (${res.status})`;
+    let errorCode = null;
     try {
       const body = await res.json();
       message = body.message || message;
+      errorCode = body.error || null;
     } catch (_) { /* ignore parse errors */ }
-    throw new Error(message);
+    const err = new Error(message);
+    err.status = res.status;
+    err.errorCode = errorCode;
+    throw err;
   }
 
   // 204 No Content
@@ -151,4 +156,37 @@ export async function sellMutualFund(payload) {
 export async function refreshPortfolioItemPrice(id) {
   return apiFetch(`/portfolio-items/${id}/refresh-price`, { method: "POST" });
 }
+
+// ── Bonds ─────────────────────────────────────────────
+/** GET /api/v1/bonds — active bond holdings */
+export async function getBonds() {
+  return apiFetch("/bonds");
+}
+
+/** GET /api/v1/bonds/redeemed — redemption history */
+export async function getRedeemedBonds() {
+  return apiFetch("/bonds/redeemed");
+}
+
+/** GET /api/v1/bonds/all — every bond in the database (ACTIVE + REDEEMED), for the catalog */
+export async function getBondCatalog() {
+  return apiFetch("/bonds/all");
+}
+
+/** POST /api/v1/bonds/buy */
+export async function buyBond(payload) {
+  return apiFetch("/bonds/buy", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+/** POST /api/v1/bonds/redeem */
+export async function redeemBond(symbol) {
+  return apiFetch("/bonds/redeem", {
+    method: "POST",
+    body: JSON.stringify({ symbol }),
+  });
+}
+
 
